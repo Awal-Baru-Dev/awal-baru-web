@@ -6,6 +6,7 @@ import * as Sentry from "@sentry/tanstackstart-react";
 
 import { env } from "@/lib/config/env";
 import { featureFlags } from "@/lib/config/features";
+import { RouteLoadingIndicator } from "@/components/shared";
 
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
@@ -24,6 +25,11 @@ export const getRouter = () => {
 		},
 
 		defaultPreload: "intent",
+
+		// Route loading indicator configuration
+		defaultPendingComponent: RouteLoadingIndicator,
+		defaultPendingMs: 0, // Show immediately when navigation starts
+		defaultPendingMinMs: 400, // Minimum 400ms display to prevent flash
 	});
 
 	setupRouterSsrQueryIntegration({

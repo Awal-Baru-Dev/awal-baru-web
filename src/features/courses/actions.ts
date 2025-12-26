@@ -8,8 +8,8 @@
 import { createBrowserClient } from "@/lib/db/client";
 import type { Course, ListResult, QueryResult } from "@/lib/db/types";
 
-// Debug helper
-const DEBUG = true;
+// Debug helper - set to true only for local debugging
+const DEBUG = false;
 const log = (fn: string, message: string, data?: unknown) => {
 	if (!DEBUG) return;
 	const timestamp = new Date().toISOString().split("T")[1].slice(0, 12);
@@ -146,12 +146,21 @@ export async function getCourseById(
 	}
 }
 
+// Maximum allowed search query length
+const MAX_SEARCH_QUERY_LENGTH = 100;
+
 /**
  * Search courses by query string
  * Matches against title, short_description, category, and instructor_name
  */
 export async function searchCourses(query: string): Promise<ListResult<Course>> {
 	log("searchCourses", "Starting...", { query });
+
+	// Validate input length
+	if (query && query.length > MAX_SEARCH_QUERY_LENGTH) {
+		return { data: [], error: null };
+	}
+
 	try {
 		const supabase = createBrowserClient();
 		log("searchCourses", "Got client, querying...");
@@ -171,7 +180,8 @@ export async function searchCourses(query: string): Promise<ListResult<Course>> 
 
 		const { data, error } = await queryBuilder
 			.order("display_order", { ascending: true })
-			.order("created_at", { ascending: false });
+			.order("created_at", { ascending: false })
+			.limit(50);
 
 		log("searchCourses", "Query returned", { count: data?.length, error: error?.message });
 
@@ -186,7 +196,7 @@ export async function searchCourses(query: string): Promise<ListResult<Course>> 
 		log("searchCourses", "EXCEPTION", error);
 		return {
 			data: [],
-			error: error instanceof Error ? error.message : "Search failed",
+			error: error instanceof Error ? error.message : "Unknown error",
 		};
 	}
 }

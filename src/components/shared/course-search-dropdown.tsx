@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useDebounce } from "use-debounce";
-import { Search, Loader2, BookOpen } from "lucide-react";
+import { Search, Loader2, BookOpen, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSearchCourses } from "@/features/courses";
 import type { Course } from "@/lib/db/types";
@@ -16,7 +16,7 @@ export function CourseSearchDropdown() {
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	// Fetch results based on debounced query
-	const { data: results, isLoading } = useSearchCourses(debouncedQuery);
+	const { data: results, isLoading, isError, refetch } = useSearchCourses(debouncedQuery);
 
 	// Show dropdown when typing and has query
 	const showDropdown = isOpen && query.trim().length > 0;
@@ -73,6 +73,23 @@ export function CourseSearchDropdown() {
 						<div className="p-4 flex items-center justify-center gap-2 text-muted-foreground">
 							<Loader2 className="w-4 h-4 animate-spin" />
 							<span className="text-sm">Mencari...</span>
+						</div>
+					) : isError ? (
+						// Error state
+						<div className="p-4 text-center">
+							<div className="w-10 h-10 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2">
+								<AlertCircle className="w-5 h-5 text-destructive" />
+							</div>
+							<p className="text-sm text-muted-foreground mb-2">
+								Pencarian gagal
+							</p>
+							<button
+								type="button"
+								onClick={() => refetch()}
+								className="text-sm text-brand-primary hover:underline"
+							>
+								Coba lagi
+							</button>
 						</div>
 					) : results && results.length > 0 ? (
 						// Results list

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, Clock, Users, Gift } from "lucide-react";
+import { z } from "zod";
 import { AuthAwareLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,14 +12,22 @@ import {
 import { useCourses, useFeaturedCourses, useSearchCourses } from "@/features/courses";
 import { useUser } from "@/contexts/user-context";
 
-interface CoursesSearchParams {
-	q?: string;
-}
+// Search params validation schema
+const searchParamsSchema = z.object({
+	q: z.string().max(100).optional(),
+});
+
+type CoursesSearchParams = z.infer<typeof searchParamsSchema>;
 
 export const Route = createFileRoute("/courses/")({
-	validateSearch: (search: Record<string, unknown>): CoursesSearchParams => ({
-		q: typeof search.q === "string" ? search.q : undefined,
-	}),
+	validateSearch: (search: Record<string, unknown>): CoursesSearchParams => {
+		const result = searchParamsSchema.safeParse(search);
+		if (result.success) {
+			return result.data;
+		}
+		// Return empty params on validation failure
+		return {};
+	},
 	component: CoursesPage,
 });
 
@@ -26,13 +35,14 @@ function CoursesPage() {
 	const { isAuthenticated } = useUser();
 	const { q: searchQuery } = Route.useSearch();
 
+	// Determine if we're in search mode
+	const hasSearchQuery = !!searchQuery?.trim();
+
 	// Fetch all courses or search results based on query
-	const { data: allCourses, isLoading: isLoadingAll, error: allError, refetch: refetchAll } = useCourses();
+	// Only fetch all courses when NOT searching to avoid race condition
+	const { data: allCourses, isLoading: isLoadingAll, error: allError, refetch: refetchAll } = useCourses({ enabled: !hasSearchQuery });
 	const { data: searchResults, isLoading: isSearching, error: searchError } = useSearchCourses(searchQuery || "");
 	const { data: featuredCourses } = useFeaturedCourses();
-
-	// Use search results when query exists, otherwise use all courses
-	const hasSearchQuery = !!searchQuery?.trim();
 	const courses = hasSearchQuery ? searchResults : allCourses;
 	const isLoading = hasSearchQuery ? isSearching : isLoadingAll;
 	const error = hasSearchQuery ? searchError : allError;

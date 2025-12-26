@@ -30,7 +30,7 @@ export const courseKeys = {
 /**
  * Hook to fetch all published courses
  */
-export function useCourses() {
+export function useCourses(options?: { enabled?: boolean }) {
 	return useQuery({
 		queryKey: courseKeys.list(),
 		queryFn: async () => {
@@ -41,6 +41,7 @@ export function useCourses() {
 			return result.data;
 		},
 		staleTime: 5 * 60 * 1000, // 5 minutes
+		enabled: options?.enabled ?? true,
 	});
 }
 
