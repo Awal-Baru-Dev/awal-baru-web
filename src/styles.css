@@ -1,0 +1,314 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Font faces - Geist Sans */
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/GeistVF.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMonoVF.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  @apply m-0;
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: 'Geist Mono', source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/*
+ * AwalBaru.com Theme System
+ *
+ * Brand Colors:
+ * - Primary (Sky Blue): #1c9af1
+ * - Primary Dark: #1580d1
+ * - Primary Light: #50b8f5
+ * - CTA (Red): #dc2626
+ * - CTA Hover: #b91c1c
+ */
+
+:root {
+  /* === Light Theme (Default) === */
+
+  /* Brand Colors */
+  --brand-primary: oklch(0.66 0.17 237);           /* #1c9af1 - Sky Blue */
+  --brand-primary-dark: oklch(0.58 0.16 237);      /* #1580d1 */
+  --brand-primary-light: oklch(0.75 0.14 237);     /* #50b8f5 */
+  --brand-cta: oklch(0.577 0.245 27.325);          /* #dc2626 - Red */
+  --brand-cta-hover: oklch(0.505 0.213 27.518);    /* #b91c1c */
+  --brand-cta-foreground: oklch(1 0 0);            /* White */
+
+  /* Background & Foreground */
+  --background: oklch(1 0 0);                       /* #FFFFFF */
+  --foreground: oklch(0.208 0.042 265.755);         /* #1E293B - Dark Slate */
+
+  /* Card */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.208 0.042 265.755);
+
+  /* Popover */
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.208 0.042 265.755);
+
+  /* Primary (uses brand blue) */
+  --primary: var(--brand-primary);
+  --primary-foreground: oklch(1 0 0);
+
+  /* Secondary */
+  --secondary: oklch(0.968 0.007 247.896);          /* #F1F5F9 */
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+
+  /* Muted */
+  --muted: oklch(0.968 0.007 247.896);              /* #F8FAFC / #F1F5F9 */
+  --muted-foreground: oklch(0.554 0.046 257.417);   /* #64748B - Medium Slate */
+
+  /* Accent */
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.208 0.042 265.755);
+
+  /* Destructive (uses brand red) */
+  --destructive: var(--brand-cta);
+  --destructive-foreground: oklch(1 0 0);
+
+  /* Border & Input */
+  --border: oklch(0.905 0.011 252.894);             /* #E2E8F0 */
+  --input: oklch(0.905 0.011 252.894);
+  --ring: var(--brand-primary);
+
+  /* Radius */
+  --radius: 0.75rem;
+
+  /* Sidebar (Dashboard) */
+  --sidebar: oklch(0.985 0.002 247.839);            /* #F8FAFC */
+  --sidebar-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
+  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-border: oklch(0.905 0.011 252.894);
+  --sidebar-ring: var(--brand-primary);
+
+  /* Chart colors */
+  --chart-1: var(--brand-primary);
+  --chart-2: var(--brand-cta);
+  --chart-3: oklch(0.696 0.17 162.48);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+
+  /* Success / Warning / Info */
+  --success: oklch(0.723 0.191 142.506);            /* Green */
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.795 0.184 86.047);             /* Amber */
+  --warning-foreground: oklch(0.208 0.042 265.755);
+  --info: var(--brand-primary);
+  --info-foreground: oklch(1 0 0);
+}
+
+.dark {
+  /* === Dark Theme === */
+  /*
+   * Dark mode uses a shifted color palette:
+   * - Primary: Soft teal/cyan (easier on eyes, fresh feel)
+   * - CTA: Soft coral/rose (warm, inviting)
+   * - These colors are optimized for dark backgrounds
+   */
+
+  /* Brand Colors - shifted for dark mode harmony */
+  --brand-primary: oklch(0.78 0.15 195);            /* Soft teal #22d3ee - cyan-400 */
+  --brand-primary-dark: oklch(0.70 0.14 195);       /* Darker teal #06b6d4 - cyan-500 */
+  --brand-primary-light: oklch(0.85 0.12 195);      /* Lighter teal #67e8f9 - cyan-300 */
+  --brand-cta: oklch(0.70 0.18 25);                 /* Soft coral #f87171 - red-400 */
+  --brand-cta-hover: oklch(0.64 0.20 25);           /* Hover coral #ef4444 - red-500 */
+  --brand-cta-foreground: oklch(1 0 0);             /* White */
+
+  /* Background & Foreground */
+  --background: oklch(0.145 0.024 264.364);         /* Dark blue-gray #0F172A */
+  --foreground: oklch(0.968 0.007 247.896);         /* Light gray #F1F5F9 */
+
+  /* Card */
+  --card: oklch(0.178 0.032 264.695);               /* Slightly lighter than bg #1E293B */
+  --card-foreground: oklch(0.968 0.007 247.896);
+
+  /* Popover */
+  --popover: oklch(0.178 0.032 264.695);
+  --popover-foreground: oklch(0.968 0.007 247.896);
+
+  /* Primary */
+  --primary: var(--brand-primary);
+  --primary-foreground: oklch(0.15 0.02 264);       /* Dark text on teal */
+
+  /* Secondary */
+  --secondary: oklch(0.233 0.035 264.585);          /* #334155 */
+  --secondary-foreground: oklch(0.968 0.007 247.896);
+
+  /* Muted */
+  --muted: oklch(0.233 0.035 264.585);
+  --muted-foreground: oklch(0.704 0.04 256.788);    /* #94A3B8 */
+
+  /* Accent */
+  --accent: oklch(0.233 0.035 264.585);
+  --accent-foreground: oklch(0.968 0.007 247.896);
+
+  /* Destructive */
+  --destructive: oklch(0.70 0.18 25);
+  --destructive-foreground: oklch(1 0 0);
+
+  /* Border & Input */
+  --border: oklch(0.28 0.03 264);                   /* Slightly lighter border */
+  --input: oklch(0.28 0.03 264);
+  --ring: var(--brand-primary);
+
+  /* Sidebar (Dashboard) */
+  --sidebar: oklch(0.13 0.02 264);                  /* Slightly darker than bg */
+  --sidebar-foreground: oklch(0.968 0.007 247.896);
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: oklch(0.15 0.02 264);
+  --sidebar-accent: oklch(0.233 0.035 264.585);
+  --sidebar-accent-foreground: oklch(0.968 0.007 247.896);
+  --sidebar-border: oklch(0.28 0.03 264);
+  --sidebar-ring: var(--brand-primary);
+
+  /* Chart colors adjusted for dark mode */
+  --chart-1: var(--brand-primary);
+  --chart-2: var(--brand-cta);
+  --chart-3: oklch(0.75 0.15 160);                  /* Emerald */
+  --chart-4: oklch(0.80 0.15 85);                   /* Amber */
+  --chart-5: oklch(0.75 0.15 300);                  /* Purple */
+
+  /* Success / Warning / Info */
+  --success: oklch(0.75 0.17 155);                  /* Emerald-400 */
+  --success-foreground: oklch(0.15 0.02 155);
+  --warning: oklch(0.80 0.16 85);                   /* Amber-400 */
+  --warning-foreground: oklch(0.15 0.02 85);
+  --info: var(--brand-primary);
+  --info-foreground: oklch(0.15 0.02 195);
+}
+
+@theme inline {
+  /* Map CSS variables to Tailwind theme */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand colors as theme colors */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-dark: var(--brand-primary-dark);
+  --color-brand-primary-light: var(--brand-primary-light);
+  --color-brand-cta: var(--brand-cta);
+  --color-brand-cta-hover: var(--brand-cta-hover);
+  --color-brand-cta-foreground: var(--brand-cta-foreground);
+
+  /* Status colors */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Chart */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom utility classes for brand colors */
+@layer utilities {
+  /* Brand primary text */
+  .text-brand {
+    color: var(--brand-primary);
+  }
+
+  /* Brand CTA button styles */
+  .btn-cta {
+    @apply bg-brand-cta text-brand-cta-foreground hover:bg-brand-cta-hover font-semibold shadow-md transition-colors;
+  }
+
+  /* Brand primary button styles */
+  .btn-primary {
+    @apply bg-brand-primary text-white hover:bg-brand-primary-dark font-semibold shadow-md transition-colors;
+  }
+
+  /* Hero gradient background - uses exact hex values for color accuracy */
+  .bg-hero-gradient {
+    background: linear-gradient(to bottom right, #1580d1, #1c9af1, #50b8f5);
+  }
+
+  /* Dark mode hero gradient - uses teal/cyan palette */
+  .dark .bg-hero-gradient {
+    background: linear-gradient(to bottom right, var(--brand-primary-dark), var(--brand-primary), var(--brand-primary-light));
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+
+  /* Dark mode specific: softer glow effects */
+  .dark .glow-primary {
+    box-shadow: 0 0 30px -5px var(--brand-primary);
+  }
+
+  .dark .glow-cta {
+    box-shadow: 0 0 30px -5px var(--brand-cta);
+  }
+}
