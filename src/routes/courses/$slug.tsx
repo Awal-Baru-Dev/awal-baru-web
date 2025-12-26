@@ -83,6 +83,12 @@ function CourseDetailPage() {
 		return (
 			<AuthAwareLayout showFooter={false}>
 				<div className="container mx-auto max-w-6xl">
+					{/* Breadcrumb skeleton */}
+					<nav className="flex items-center gap-2 text-sm mb-4">
+						<span className="text-muted-foreground">Katalog Kursus</span>
+						<span className="text-muted-foreground/50">/</span>
+						<span className="h-4 w-32 bg-muted animate-pulse rounded" />
+					</nav>
 					<div className="grid lg:grid-cols-3 gap-8">
 						{/* Main Content */}
 						<div className="lg:col-span-2 space-y-8">
@@ -108,15 +114,19 @@ function CourseDetailPage() {
 	return (
 		<AuthAwareLayout showFooter={false}>
 			<div className="container mx-auto max-w-6xl">
-				{/* Back button - only show when not authenticated (no sidebar navigation) */}
-				{!isAuthenticated && (
-					<Button variant="ghost" size="sm" asChild className="mb-4">
-						<Link to="/courses">
-							<ArrowLeft className="w-4 h-4 mr-2" />
-							Kembali
-						</Link>
-					</Button>
-				)}
+				{/* Breadcrumb */}
+				<nav className="flex items-center gap-2 text-sm mb-4" aria-label="Breadcrumb">
+					<Link
+						to="/courses"
+						className="text-muted-foreground hover:text-foreground transition-colors"
+					>
+						Katalog Kursus
+					</Link>
+					<span className="text-muted-foreground/50">/</span>
+					<span className="text-foreground font-medium truncate max-w-[300px]">
+						{course?.title ?? "..."}
+					</span>
+				</nav>
 
 				<div className="grid lg:grid-cols-3 gap-8">
 					{/* Main Content */}
