@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { APP_NAME } from "@/lib/config/constants";
 import { PasswordInput, PasswordStrength, FormField } from "@/components/auth";
 import { signupFn, resendConfirmationFn } from "@/features/auth";
-import { registerSchema, type RegisterFormData } from "@/lib/validations/auth";
+import { registerSchema, registerFieldSchemas, type RegisterFormData } from "@/lib/validations/auth";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/daftar")({
@@ -32,44 +32,83 @@ function DaftarPage() {
 	const [registeredEmail, setRegisteredEmail] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 
-	// Validate a single field
+	// Validate a single field using safeParse
 	const validateField = useCallback((field: keyof RegisterFormData, value: string) => {
-		const testData = { ...formData, [field]: value };
-
-		try {
-			registerSchema.parse(testData);
-			setErrors((prev) => ({ ...prev, [field]: undefined }));
-		} catch (error) {
-			if (error instanceof Error && "errors" in error) {
-				const zodError = error as { errors: Array<{ path: (string | number)[]; message: string }> };
-				const fieldError = zodError.errors.find(
-					(e) => e.path[0] === field
-				);
-				setErrors((prev) => ({
-					...prev,
-					[field]: fieldError?.message,
-				}));
+		// Special handling for confirmPassword - check match directly
+		if (field === "confirmPassword") {
+			if (value.length === 0) {
+				setErrors((prev) => ({ ...prev, confirmPassword: "Konfirmasi password wajib diisi" }));
+			} else if (value !== formData.password) {
+				setErrors((prev) => ({ ...prev, confirmPassword: "Password tidak cocok" }));
+			} else {
+				setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
 			}
+			return;
 		}
+
+		// Skip error message for password - it has PasswordStrength component
+		if (field === "password") {
+			// Still update confirmPassword error if password changes and confirmPassword has content
+			if (formData.confirmPassword.length > 0) {
+				if (formData.confirmPassword !== value) {
+					setErrors((prev) => ({ ...prev, confirmPassword: "Password tidak cocok" }));
+				} else {
+					setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+				}
+			}
+			return;
+		}
+
+		// Use safeParse for fullName and email fields
+		const result = registerFieldSchemas[field].safeParse(value);
+
+		if (result.success) {
+			setErrors((prev) => ({ ...prev, [field]: undefined }));
+		} else {
+			// Access the first issue from the ZodError
+			const firstError = result.error.issues?.[0]?.message || "Input tidak valid";
+			setErrors((prev) => ({ ...prev, [field]: firstError }));
+		}
+	}, [formData.password, formData.confirmPassword]);
+
+	// Check if form is valid for submit button
+	const isFormValid = useCallback(() => {
+		// Check all required fields are filled
+		if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
+			return false;
+		}
+		// Check minimum requirements
+		if (formData.fullName.length < 2) return false;
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return false;
+		if (formData.password.length < 8) return false;
+		if (!/[a-z]/.test(formData.password)) return false;
+		if (!/[A-Z]/.test(formData.password)) return false;
+		if (!/[0-9]/.test(formData.password)) return false;
+		if (formData.password !== formData.confirmPassword) return false;
+		return true;
 	}, [formData]);
 
-	// Handle field change
+	// Handle field change - just update the value, don't validate
 	const handleChange = (field: keyof RegisterFormData) => (
 		e: React.ChangeEvent<HTMLInputElement>
 	) => {
 		const value = e.target.value;
 		setFormData((prev) => ({ ...prev, [field]: value }));
 
-		// Validate on change if field has been touched
-		if (touched[field]) {
-			validateField(field, value);
+		// Clear error when user starts typing again (better UX)
+		if (errors[field]) {
+			setErrors((prev) => ({ ...prev, [field]: undefined }));
 		}
 	};
 
-	// Handle field blur
+	// Handle field blur - validate only on blur when field has content
 	const handleBlur = (field: keyof RegisterFormData) => () => {
-		setTouched((prev) => ({ ...prev, [field]: true }));
-		validateField(field, formData[field]);
+		const value = formData[field];
+		// Only validate on blur if there's content
+		if (value.length > 0) {
+			setTouched((prev) => ({ ...prev, [field]: true }));
+			validateField(field, value);
+		}
 	};
 
 	// Handle form submit
@@ -296,7 +335,7 @@ function DaftarPage() {
 							>
 								<Input
 									id="email"
-									type="email"
+									type="text"
 									inputMode="email"
 									placeholder="nama@email.com"
 									className={cn(
@@ -355,7 +394,7 @@ function DaftarPage() {
 							<Button
 								type="submit"
 								className="w-full h-12 btn-cta"
-								disabled={isLoading}
+								disabled={isLoading || !isFormValid()}
 							>
 								{isLoading ? (
 									<>

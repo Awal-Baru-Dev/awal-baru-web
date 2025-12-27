@@ -1,4 +1,5 @@
-import { Play, Clock, BookOpen, Star, Users, CheckCircle } from "lucide-react";
+import { useState } from "react";
+import { Play, Clock, BookOpen, Star, Users, CheckCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,23 +10,7 @@ import type { Course } from "@/lib/db/types";
 interface CourseHeroProps {
 	course: Course;
 	isEnrolled?: boolean;
-	onPreviewClick?: () => void;
 	className?: string;
-}
-
-/**
- * Get first video ID from course content
- */
-function getFirstVideoId(course: Course): string | null {
-	const sections = course.content?.sections || [];
-	for (const section of sections) {
-		for (const lesson of section.lessons || []) {
-			if (lesson.videoId) {
-				return lesson.videoId;
-			}
-		}
-	}
-	return null;
 }
 
 /**
@@ -56,28 +41,44 @@ function formatDuration(minutes: number): string {
 export function CourseHero({
 	course,
 	isEnrolled = false,
-	onPreviewClick,
 	className,
 }: CourseHeroProps) {
+	const [showPreview, setShowPreview] = useState(false);
 	const rating = course.metadata?.stats?.rating || 0;
 	const students = course.metadata?.stats?.students || 0;
 	const tags = course.metadata?.tags || [];
 
-	// Get first video ID from course content for enrolled users
-	const firstVideoId = getFirstVideoId(course);
+	// Get preview video ID (stored in preview_video_url field)
+	const previewVideoId = course.preview_video_url;
 
 	return (
 		<div className={cn("space-y-6", className)}>
-			{/* Video Player for enrolled users / Thumbnail for non-enrolled */}
+			{/* Video Preview / Thumbnail - always shows preview video regardless of enrollment */}
 			<div className="relative aspect-video rounded-xl overflow-hidden bg-muted group">
-				{isEnrolled && firstVideoId ? (
+				{showPreview && previewVideoId ? (
 					<>
-						<WistiaPlayer mediaId={firstVideoId} className="w-full h-full" />
+						<WistiaPlayer mediaId={previewVideoId} className="w-full h-full" />
+						{/* Close preview button */}
+						<Button
+							size="icon"
+							variant="secondary"
+							className="absolute top-4 right-4 rounded-full bg-black/50 hover:bg-black/70 text-white"
+							onClick={() => setShowPreview(false)}
+						>
+							<X className="w-4 h-4" />
+						</Button>
 						{/* Enrolled badge */}
-						<Badge className="absolute top-4 left-4 bg-green-600 text-white">
-							<CheckCircle className="w-3 h-3 mr-1" />
-							Sudah Terdaftar
-						</Badge>
+						{isEnrolled ? (
+							<Badge className="absolute top-4 left-4 bg-green-600 text-white">
+								<CheckCircle className="w-3 h-3 mr-1" />
+								Sudah Terdaftar
+							</Badge>
+						) : (
+							<Badge className="absolute top-4 left-4 bg-brand-primary/90 text-white">
+								<Play className="w-3 h-3 mr-1" />
+								Preview Gratis
+							</Badge>
+						)}
 					</>
 				) : course.thumbnail_url ? (
 					<img
@@ -93,25 +94,32 @@ export function CourseHero({
 					</div>
 				)}
 
-				{/* Play button overlay - only for non-enrolled with preview */}
-				{!isEnrolled && (course.preview_video_url || onPreviewClick) && (
+				{/* Play button overlay - show for anyone with preview video (when not showing preview) */}
+				{previewVideoId && !showPreview && (
 					<div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
 						<Button
 							size="lg"
 							className="rounded-full w-16 h-16"
-							onClick={onPreviewClick}
+							onClick={() => setShowPreview(true)}
 						>
 							<Play className="w-8 h-8 fill-current" />
 						</Button>
 					</div>
 				)}
 
-				{/* Preview badge - only for non-enrolled */}
-				{!isEnrolled && course.preview_video_url && (
-					<Badge className="absolute bottom-4 left-4 bg-brand-primary/90 text-white">
-						<Play className="w-3 h-3 mr-1" />
-						Preview Gratis
-					</Badge>
+				{/* Badge overlay - when not showing preview */}
+				{!showPreview && (
+					isEnrolled ? (
+						<Badge className="absolute top-4 left-4 bg-green-600 text-white">
+							<CheckCircle className="w-3 h-3 mr-1" />
+							Sudah Terdaftar
+						</Badge>
+					) : previewVideoId ? (
+						<Badge className="absolute bottom-4 left-4 bg-brand-primary/90 text-white">
+							<Play className="w-3 h-3 mr-1" />
+							Preview Gratis
+						</Badge>
+					) : null
 				)}
 			</div>
 

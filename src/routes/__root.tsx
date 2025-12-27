@@ -65,7 +65,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 			},
 			{
 				rel: "icon",
-				href: "/favicon.ico",
+				type: "image/jpeg",
+				href: "/awalbaru-logo.jpeg",
+			},
+			{
+				rel: "apple-touch-icon",
+				href: "/awalbaru-logo.jpeg",
 			},
 		],
 		scripts: [

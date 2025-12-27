@@ -14,14 +14,18 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as MasukRouteImport } from './routes/masuk'
 import { Route as LupaPasswordRouteImport } from './routes/lupa-password'
 import { Route as LogoutRouteImport } from './routes/logout'
+import { Route as KontakRouteImport } from './routes/kontak'
 import { Route as HargaRouteImport } from './routes/harga'
 import { Route as DaftarRouteImport } from './routes/daftar'
+import { Route as BantuanRouteImport } from './routes/bantuan'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoursesIndexRouteImport } from './routes/courses/index'
 import { Route as CoursesSlugRouteImport } from './routes/courses/$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
+import { Route as AuthedDashboardProfilRouteImport } from './routes/_authed/dashboard_.profil'
+import { Route as AuthedDashboardKursusRouteImport } from './routes/_authed/dashboard_.kursus'
 import { Route as AuthedCoursesSlugLearnRouteImport } from './routes/_authed/courses.$slug.learn'
 
 const TentangRoute = TentangRouteImport.update({
@@ -49,6 +53,11 @@ const LogoutRoute = LogoutRouteImport.update({
   path: '/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KontakRoute = KontakRouteImport.update({
+  id: '/kontak',
+  path: '/kontak',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HargaRoute = HargaRouteImport.update({
   id: '/harga',
   path: '/harga',
@@ -57,6 +66,11 @@ const HargaRoute = HargaRouteImport.update({
 const DaftarRoute = DaftarRouteImport.update({
   id: '/daftar',
   path: '/daftar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BantuanRoute = BantuanRouteImport.update({
+  id: '/bantuan',
+  path: '/bantuan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthedRoute = AuthedRouteImport.update({
@@ -88,6 +102,16 @@ const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedDashboardProfilRoute = AuthedDashboardProfilRouteImport.update({
+  id: '/dashboard_/profil',
+  path: '/dashboard/profil',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedDashboardKursusRoute = AuthedDashboardKursusRouteImport.update({
+  id: '/dashboard_/kursus',
+  path: '/dashboard/kursus',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedCoursesSlugLearnRoute = AuthedCoursesSlugLearnRouteImport.update({
   id: '/courses/$slug/learn',
   path: '/courses/$slug/learn',
@@ -96,8 +120,10 @@ const AuthedCoursesSlugLearnRoute = AuthedCoursesSlugLearnRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bantuan': typeof BantuanRoute
   '/daftar': typeof DaftarRoute
   '/harga': typeof HargaRoute
+  '/kontak': typeof KontakRoute
   '/logout': typeof LogoutRoute
   '/lupa-password': typeof LupaPasswordRoute
   '/masuk': typeof MasukRoute
@@ -107,12 +133,16 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/courses': typeof CoursesIndexRoute
+  '/dashboard/kursus': typeof AuthedDashboardKursusRoute
+  '/dashboard/profil': typeof AuthedDashboardProfilRoute
   '/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bantuan': typeof BantuanRoute
   '/daftar': typeof DaftarRoute
   '/harga': typeof HargaRoute
+  '/kontak': typeof KontakRoute
   '/logout': typeof LogoutRoute
   '/lupa-password': typeof LupaPasswordRoute
   '/masuk': typeof MasukRoute
@@ -122,14 +152,18 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/courses': typeof CoursesIndexRoute
+  '/dashboard/kursus': typeof AuthedDashboardKursusRoute
+  '/dashboard/profil': typeof AuthedDashboardProfilRoute
   '/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authed': typeof AuthedRouteWithChildren
+  '/bantuan': typeof BantuanRoute
   '/daftar': typeof DaftarRoute
   '/harga': typeof HargaRoute
+  '/kontak': typeof KontakRoute
   '/logout': typeof LogoutRoute
   '/lupa-password': typeof LupaPasswordRoute
   '/masuk': typeof MasukRoute
@@ -139,14 +173,18 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/courses/': typeof CoursesIndexRoute
+  '/_authed/dashboard_/kursus': typeof AuthedDashboardKursusRoute
+  '/_authed/dashboard_/profil': typeof AuthedDashboardProfilRoute
   '/_authed/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/bantuan'
     | '/daftar'
     | '/harga'
+    | '/kontak'
     | '/logout'
     | '/lupa-password'
     | '/masuk'
@@ -156,12 +194,16 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/courses/$slug'
     | '/courses'
+    | '/dashboard/kursus'
+    | '/dashboard/profil'
     | '/courses/$slug/learn'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/bantuan'
     | '/daftar'
     | '/harga'
+    | '/kontak'
     | '/logout'
     | '/lupa-password'
     | '/masuk'
@@ -171,13 +213,17 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/courses/$slug'
     | '/courses'
+    | '/dashboard/kursus'
+    | '/dashboard/profil'
     | '/courses/$slug/learn'
   id:
     | '__root__'
     | '/'
     | '/_authed'
+    | '/bantuan'
     | '/daftar'
     | '/harga'
+    | '/kontak'
     | '/logout'
     | '/lupa-password'
     | '/masuk'
@@ -187,14 +233,18 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/courses/$slug'
     | '/courses/'
+    | '/_authed/dashboard_/kursus'
+    | '/_authed/dashboard_/profil'
     | '/_authed/courses/$slug/learn'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthedRoute: typeof AuthedRouteWithChildren
+  BantuanRoute: typeof BantuanRoute
   DaftarRoute: typeof DaftarRoute
   HargaRoute: typeof HargaRoute
+  KontakRoute: typeof KontakRoute
   LogoutRoute: typeof LogoutRoute
   LupaPasswordRoute: typeof LupaPasswordRoute
   MasukRoute: typeof MasukRoute
@@ -242,6 +292,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kontak': {
+      id: '/kontak'
+      path: '/kontak'
+      fullPath: '/kontak'
+      preLoaderRoute: typeof KontakRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/harga': {
       id: '/harga'
       path: '/harga'
@@ -254,6 +311,13 @@ declare module '@tanstack/react-router' {
       path: '/daftar'
       fullPath: '/daftar'
       preLoaderRoute: typeof DaftarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bantuan': {
+      id: '/bantuan'
+      path: '/bantuan'
+      fullPath: '/bantuan'
+      preLoaderRoute: typeof BantuanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authed': {
@@ -298,6 +362,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedDashboardRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/dashboard_/profil': {
+      id: '/_authed/dashboard_/profil'
+      path: '/dashboard/profil'
+      fullPath: '/dashboard/profil'
+      preLoaderRoute: typeof AuthedDashboardProfilRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/dashboard_/kursus': {
+      id: '/_authed/dashboard_/kursus'
+      path: '/dashboard/kursus'
+      fullPath: '/dashboard/kursus'
+      preLoaderRoute: typeof AuthedDashboardKursusRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/courses/$slug/learn': {
       id: '/_authed/courses/$slug/learn'
       path: '/courses/$slug/learn'
@@ -310,11 +388,15 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteChildren {
   AuthedDashboardRoute: typeof AuthedDashboardRoute
+  AuthedDashboardKursusRoute: typeof AuthedDashboardKursusRoute
+  AuthedDashboardProfilRoute: typeof AuthedDashboardProfilRoute
   AuthedCoursesSlugLearnRoute: typeof AuthedCoursesSlugLearnRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedDashboardRoute: AuthedDashboardRoute,
+  AuthedDashboardKursusRoute: AuthedDashboardKursusRoute,
+  AuthedDashboardProfilRoute: AuthedDashboardProfilRoute,
   AuthedCoursesSlugLearnRoute: AuthedCoursesSlugLearnRoute,
 }
 
@@ -324,8 +406,10 @@ const AuthedRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
+  BantuanRoute: BantuanRoute,
   DaftarRoute: DaftarRoute,
   HargaRoute: HargaRoute,
+  KontakRoute: KontakRoute,
   LogoutRoute: LogoutRoute,
   LupaPasswordRoute: LupaPasswordRoute,
   MasukRoute: MasukRoute,

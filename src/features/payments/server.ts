@@ -41,18 +41,18 @@ function generateInvoiceNumber(isBundle: boolean, courseId?: string): string {
 /**
  * Get callback URLs for payment
  */
-function getCallbackUrls(isBundle: boolean, courseSlug?: string) {
+function getCallbackUrls(isBundle: boolean, invoiceNumber: string, courseSlug?: string) {
 	const appUrl = process.env.VITE_APP_URL || "http://localhost:3000";
 
 	if (isBundle) {
 		return {
-			success: `${appUrl}/courses?payment=success&type=bundle`,
+			success: `${appUrl}/courses?payment=success&type=bundle&invoice=${invoiceNumber}`,
 			cancel: `${appUrl}/courses?payment=cancelled`,
 		};
 	}
 
 	return {
-		success: `${appUrl}/courses/${courseSlug}?payment=success`,
+		success: `${appUrl}/courses/${courseSlug}?payment=success&invoice=${invoiceNumber}`,
 		cancel: `${appUrl}/courses/${courseSlug}?payment=cancelled`,
 	};
 }
@@ -149,7 +149,7 @@ export const createPaymentFn = createServerFn({ method: "POST" })
 			// Use price from database instead of hardcoded constant
 			amount = bundleCourse.price;
 			itemName = bundleCourse.title;
-			callbackUrls = getCallbackUrls(true);
+			callbackUrls = getCallbackUrls(true, invoiceNumber);
 
 			// Create enrollment data for all unpurchased courses
 			const expiresAt = new Date(Date.now() + PAYMENT.expiryMinutes * 60 * 1000).toISOString();
@@ -181,7 +181,7 @@ export const createPaymentFn = createServerFn({ method: "POST" })
 			invoiceNumber = generateInvoiceNumber(false, courseId);
 			amount = coursePrice;
 			itemName = courseName;
-			callbackUrls = getCallbackUrls(false, courseSlug);
+			callbackUrls = getCallbackUrls(false, invoiceNumber, courseSlug);
 
 			const expiresAt = new Date(Date.now() + PAYMENT.expiryMinutes * 60 * 1000).toISOString();
 			enrollmentData = [

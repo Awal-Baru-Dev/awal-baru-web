@@ -1,72 +1,508 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Construction } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect, useCallback } from "react";
+import { z } from "zod";
+import {
+	ArrowLeft,
+	Menu,
+	X,
+	AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+	WistiaPlayer,
+	CourseLearnSidebar,
+	VideoLessonNav,
+	type LessonNavInfo,
+} from "@/components/course";
+import { useCourse } from "@/features/courses";
+import { useEnrollmentStatus } from "@/features/enrollments";
 import { APP_NAME } from "@/lib/config/constants";
+import { cn } from "@/lib/utils";
+import type { Course } from "@/lib/db/types";
+
+// Search params schema for lesson navigation
+const learnSearchSchema = z.object({
+	section: z.string().optional(),
+	lesson: z.coerce.number().optional(),
+});
 
 export const Route = createFileRoute("/_authed/courses/$slug/learn")({
 	component: CourseLearnPage,
+	validateSearch: learnSearchSchema,
 });
+
+interface CurrentLesson {
+	sectionId: string;
+	lessonIndex: number;
+	title: string;
+	videoId: string;
+}
+
+/**
+ * Get lesson info from course content
+ */
+function getLessonFromCourse(
+	course: Course,
+	sectionId: string,
+	lessonIndex: number,
+): CurrentLesson | null {
+	const sections = course.content?.sections || [];
+	const section = sections.find((s) => s.id === sectionId);
+
+	if (!section || !section.lessons[lessonIndex]) {
+		return null;
+	}
+
+	const lesson = section.lessons[lessonIndex];
+	return {
+		sectionId,
+		lessonIndex,
+		title: lesson.title,
+		videoId: lesson.videoId || "",
+	};
+}
+
+/**
+ * Get first available lesson from course
+ */
+function getFirstLesson(course: Course): CurrentLesson | null {
+	const sections = course.content?.sections || [];
+
+	for (const section of sections) {
+		if (section.lessons.length > 0) {
+			const lesson = section.lessons[0];
+			return {
+				sectionId: section.id,
+				lessonIndex: 0,
+				title: lesson.title,
+				videoId: lesson.videoId || "",
+			};
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Get previous lesson info
+ */
+function getPreviousLesson(
+	course: Course,
+	currentSectionId: string,
+	currentLessonIndex: number,
+): LessonNavInfo | null {
+	const sections = course.content?.sections || [];
+	const currentSectionIdx = sections.findIndex((s) => s.id === currentSectionId);
+
+	if (currentSectionIdx < 0) return null;
+
+	// Try previous lesson in same section
+	if (currentLessonIndex > 0) {
+		const section = sections[currentSectionIdx];
+		return {
+			sectionId: currentSectionId,
+			lessonIndex: currentLessonIndex - 1,
+			title: section.lessons[currentLessonIndex - 1].title,
+		};
+	}
+
+	// Try last lesson of previous section
+	if (currentSectionIdx > 0) {
+		const prevSection = sections[currentSectionIdx - 1];
+		const lastLessonIndex = prevSection.lessons.length - 1;
+		if (lastLessonIndex >= 0) {
+			return {
+				sectionId: prevSection.id,
+				lessonIndex: lastLessonIndex,
+				title: prevSection.lessons[lastLessonIndex].title,
+			};
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Get next lesson info
+ */
+function getNextLesson(
+	course: Course,
+	currentSectionId: string,
+	currentLessonIndex: number,
+): LessonNavInfo | null {
+	const sections = course.content?.sections || [];
+	const currentSectionIdx = sections.findIndex((s) => s.id === currentSectionId);
+
+	if (currentSectionIdx < 0) return null;
+
+	const currentSection = sections[currentSectionIdx];
+
+	// Try next lesson in same section
+	if (currentLessonIndex < currentSection.lessons.length - 1) {
+		return {
+			sectionId: currentSectionId,
+			lessonIndex: currentLessonIndex + 1,
+			title: currentSection.lessons[currentLessonIndex + 1].title,
+		};
+	}
+
+	// Try first lesson of next section
+	if (currentSectionIdx < sections.length - 1) {
+		const nextSection = sections[currentSectionIdx + 1];
+		if (nextSection.lessons.length > 0) {
+			return {
+				sectionId: nextSection.id,
+				lessonIndex: 0,
+				title: nextSection.lessons[0].title,
+			};
+		}
+	}
+
+	return null;
+}
 
 /**
  * Course Learn Page (Video Player)
  *
- * This page will be implemented in the next phase.
- * For now, it shows a placeholder.
+ * Full-screen video learning experience with:
+ * - Video player (Wistia)
+ * - Sidebar with progress and curriculum navigation
+ * - Previous/Next navigation
  *
  * This route is protected by the _authed layout.
  */
 function CourseLearnPage() {
 	const { slug } = Route.useParams();
+	const { section: sectionParam, lesson: lessonParam } = Route.useSearch();
+	const navigate = useNavigate();
+
+	// State
+	const [currentLesson, setCurrentLesson] = useState<CurrentLesson | null>(null);
+	const [sidebarOpen, setSidebarOpen] = useState(true);
+	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+	const [playerKey, setPlayerKey] = useState(0); // Force re-mount of player
+
+	// Fetch course data
+	const {
+		data: course,
+		isLoading: isCourseLoading,
+		error: courseError,
+	} = useCourse(slug);
+
+	// Check enrollment status
+	const { data: enrollment, isLoading: isEnrollmentLoading } =
+		useEnrollmentStatus(course?.id ?? "");
+
+	const isLoading = isCourseLoading || isEnrollmentLoading;
+	const isEnrolled = !!enrollment;
+
+	// Initialize current lesson from URL params or first lesson
+	useEffect(() => {
+		if (!course) return;
+
+		let lesson: CurrentLesson | null = null;
+
+		// Try to get lesson from URL params
+		if (sectionParam && lessonParam !== undefined) {
+			lesson = getLessonFromCourse(course, sectionParam, lessonParam);
+		}
+
+		// Fall back to first lesson
+		if (!lesson) {
+			lesson = getFirstLesson(course);
+		}
+
+		if (lesson) {
+			setCurrentLesson(lesson);
+		}
+	}, [course, sectionParam, lessonParam]);
+
+	// Handle lesson selection
+	const handleLessonSelect = useCallback(
+		(sectionId: string, lessonIndex: number) => {
+			if (!course) return;
+
+			const lesson = getLessonFromCourse(course, sectionId, lessonIndex);
+			if (!lesson) return;
+
+			setCurrentLesson(lesson);
+			setPlayerKey((prev) => prev + 1); // Force player re-mount
+			setMobileSidebarOpen(false); // Close mobile sidebar
+
+			// Update URL without navigation
+			navigate({
+				to: "/courses/$slug/learn",
+				params: { slug },
+				search: { section: sectionId, lesson: lessonIndex },
+				replace: true,
+			});
+		},
+		[course, slug, navigate],
+	);
+
+	// Handle navigation
+	const handleNavigate = useCallback(
+		(sectionId: string, lessonIndex: number) => {
+			handleLessonSelect(sectionId, lessonIndex);
+		},
+		[handleLessonSelect],
+	);
+
+	// Hardcoded progress for Phase A
+	const progress = {
+		completedLessons: 0,
+		totalLessons: course?.lessons_count ?? 0,
+		overallProgress: 0,
+	};
+
+	// Get previous/next lessons
+	const previousLesson = currentLesson
+		? getPreviousLesson(course!, currentLesson.sectionId, currentLesson.lessonIndex)
+		: null;
+	const nextLesson = currentLesson
+		? getNextLesson(course!, currentLesson.sectionId, currentLesson.lessonIndex)
+		: null;
+
+	// Not enrolled - redirect to course detail page
+	if (!isLoading && course && !isEnrolled) {
+		return (
+			<div className="min-h-screen bg-background flex items-center justify-center">
+				<div className="text-center max-w-md mx-auto px-6">
+					<div className="w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+						<AlertCircle className="w-8 h-8 text-destructive" />
+					</div>
+					<h1 className="text-xl font-bold text-foreground mb-3">
+						Akses Ditolak
+					</h1>
+					<p className="text-muted-foreground mb-6">
+						Kamu belum terdaftar di kursus ini. Silakan beli kursus terlebih
+						dahulu untuk mengakses materi pembelajaran.
+					</p>
+					<div className="flex flex-col gap-3">
+						<Button asChild>
+							<Link to="/courses/$slug" params={{ slug }}>
+								Lihat Detail Kursus
+							</Link>
+						</Button>
+						<Button variant="outline" asChild>
+							<Link to="/dashboard/kursus">Kursus Saya</Link>
+						</Button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	// Error state
+	if (courseError) {
+		return (
+			<div className="min-h-screen bg-background flex items-center justify-center">
+				<div className="text-center max-w-md mx-auto px-6">
+					<div className="w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+						<AlertCircle className="w-8 h-8 text-destructive" />
+					</div>
+					<h1 className="text-xl font-bold text-foreground mb-3">
+						Kursus Tidak Ditemukan
+					</h1>
+					<p className="text-muted-foreground mb-6">
+						Kursus yang kamu cari tidak tersedia atau telah dihapus.
+					</p>
+					<Button asChild>
+						<Link to="/courses">Lihat Semua Kursus</Link>
+					</Button>
+				</div>
+			</div>
+		);
+	}
+
+	// Loading state
+	if (isLoading || !course || !currentLesson) {
+		return (
+			<div className="min-h-screen bg-background">
+				{/* Header skeleton */}
+				<header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+					<div className="flex items-center justify-between h-14 px-4">
+						<Skeleton className="h-8 w-32" />
+						<Skeleton className="h-8 w-24" />
+						<Skeleton className="h-8 w-8" />
+					</div>
+				</header>
+
+				<div className="pt-14 flex">
+					{/* Main content skeleton */}
+					<div className="flex-1 p-4 lg:p-6">
+						<Skeleton className="aspect-video w-full rounded-xl mb-4" />
+						<Skeleton className="h-6 w-48 mb-2" />
+						<Skeleton className="h-8 w-64" />
+					</div>
+
+					{/* Sidebar skeleton */}
+					<div className="hidden lg:block w-80 border-l border-border p-4">
+						<Skeleton className="h-24 w-full rounded-lg mb-4" />
+						<Skeleton className="h-64 w-full rounded-lg" />
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	// Get section title for current lesson
+	const currentSection = course.content?.sections?.find(
+		(s) => s.id === currentLesson.sectionId,
+	);
 
 	return (
 		<div className="min-h-screen bg-background">
 			{/* Header */}
 			<header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-				<div className="container mx-auto max-w-6xl px-6">
-					<div className="flex items-center justify-between h-16">
-						<Button variant="ghost" size="sm" asChild>
-							<Link to="/courses/$slug" params={{ slug }}>
-								<ArrowLeft className="w-4 h-4 mr-2" />
-								Kembali ke Kursus
-							</Link>
-						</Button>
-
-						<Link to="/" className="flex items-center gap-2">
-							<div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center">
-								<span className="text-white font-bold text-sm">A</span>
-							</div>
-							<span className="font-semibold text-foreground hidden sm:inline">
-								{APP_NAME}
-							</span>
+				<div className="flex items-center justify-between h-14 px-4">
+					{/* Back button */}
+					<Button variant="ghost" size="sm" asChild>
+						<Link to="/courses/$slug" params={{ slug }}>
+							<ArrowLeft className="w-4 h-4 mr-2" />
+							<span className="hidden sm:inline">Kembali</span>
 						</Link>
+					</Button>
 
-						<div className="w-20" />
+					{/* Course title */}
+					<div className="flex-1 text-center px-4">
+						<h1 className="text-sm font-medium text-foreground truncate">
+							{course.title}
+						</h1>
 					</div>
+
+					{/* Mobile sidebar toggle */}
+					<Button
+						variant="ghost"
+						size="icon"
+						className="lg:hidden"
+						onClick={() => setMobileSidebarOpen(true)}
+					>
+						<Menu className="w-5 h-5" />
+					</Button>
+
+					{/* Logo - desktop */}
+					<Link
+						to="/"
+						className="hidden lg:flex items-center gap-2"
+					>
+						<img
+							src="/awalbaru-logo.jpeg"
+							alt={APP_NAME}
+							className="h-8 w-8 rounded-lg"
+						/>
+					</Link>
 				</div>
 			</header>
 
-			{/* Content */}
-			<main className="pt-24 pb-20 px-6">
-				<div className="container mx-auto max-w-4xl">
-					<div className="text-center py-20">
-						<div className="w-20 h-20 bg-brand-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-							<Construction className="w-10 h-10 text-brand-primary" />
+			{/* Mobile sidebar overlay */}
+			{mobileSidebarOpen && (
+				<div
+					className="lg:hidden fixed inset-0 bg-black/50 z-50"
+					onClick={() => setMobileSidebarOpen(false)}
+				/>
+			)}
+
+			{/* Mobile sidebar */}
+			<aside
+				className={cn(
+					"lg:hidden fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-background z-50 transform transition-transform duration-300 overflow-y-auto",
+					mobileSidebarOpen ? "translate-x-0" : "translate-x-full",
+				)}
+			>
+				<div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+					<span className="font-semibold">Konten Kursus</span>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={() => setMobileSidebarOpen(false)}
+					>
+						<X className="w-5 h-5" />
+					</Button>
+				</div>
+				<div className="p-4">
+					<CourseLearnSidebar
+						course={course}
+						currentLesson={{
+							sectionId: currentLesson.sectionId,
+							lessonIndex: currentLesson.lessonIndex,
+						}}
+						progress={progress}
+						onLessonSelect={handleLessonSelect}
+					/>
+				</div>
+			</aside>
+
+			{/* Main content */}
+			<div className="pt-14 flex">
+				{/* Video area */}
+				<div className={cn(
+					"flex-1 transition-all duration-300",
+					sidebarOpen ? "lg:mr-80" : "lg:mr-14",
+				)}>
+					<div className="p-4 lg:p-6 max-w-5xl mx-auto">
+						{/* Current lesson info */}
+						<div className="mb-4">
+							<div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+								<span>{currentSection?.title || `Bagian ${currentLesson.sectionId}`}</span>
+								<span>•</span>
+								<span>Pelajaran {currentLesson.lessonIndex + 1}</span>
+							</div>
+							<h2 className="text-xl font-semibold text-foreground">
+								{currentLesson.title}
+							</h2>
 						</div>
-						<h1 className="text-2xl font-bold text-foreground mb-4">
-							Video Player Segera Hadir
-						</h1>
-						<p className="text-muted-foreground max-w-md mx-auto mb-6">
-							Fitur video player sedang dalam pengembangan. Kamu akan bisa
-							menonton video pelajaran di sini.
-						</p>
-						<Button asChild>
-							<Link to="/courses/$slug" params={{ slug }}>
-								Kembali ke Detail Kursus
-							</Link>
-						</Button>
+
+						{/* Video Player */}
+						<div className="relative rounded-xl overflow-hidden shadow-lg mb-6">
+							{currentLesson.videoId ? (
+								<WistiaPlayer
+									key={playerKey}
+									mediaId={currentLesson.videoId}
+									className="w-full"
+								/>
+							) : (
+								<div className="aspect-video bg-muted flex items-center justify-center">
+									<div className="text-center">
+										<AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+										<p className="text-muted-foreground">
+											Video tidak tersedia untuk pelajaran ini.
+										</p>
+									</div>
+								</div>
+							)}
+						</div>
+
+						{/* Navigation buttons */}
+						<VideoLessonNav
+							previousLesson={previousLesson}
+							nextLesson={nextLesson}
+							onNavigate={handleNavigate}
+						/>
 					</div>
 				</div>
-			</main>
+
+				{/* Desktop sidebar */}
+				<aside
+					className={cn(
+						"hidden lg:block fixed top-14 right-0 h-[calc(100vh-3.5rem)] bg-background border-l border-border overflow-y-auto transition-all duration-300",
+						sidebarOpen ? "w-80" : "w-14",
+					)}
+				>
+					<CourseLearnSidebar
+						course={course}
+						currentLesson={{
+							sectionId: currentLesson.sectionId,
+							lessonIndex: currentLesson.lessonIndex,
+						}}
+						progress={progress}
+						onLessonSelect={handleLessonSelect}
+						open={sidebarOpen}
+						onToggle={() => setSidebarOpen(!sidebarOpen)}
+					/>
+				</aside>
+			</div>
 		</div>
 	);
 }

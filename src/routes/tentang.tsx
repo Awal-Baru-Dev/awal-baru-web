@@ -3,11 +3,12 @@ import { LandingHeader, LandingFooter } from "@/components/layout";
 import { LandingCTA } from "@/components/landing";
 import {
 	Award,
-	Calendar,
+	Rocket,
 	MapPin,
-	ChefHat,
+	Baby,
 	Plane,
 	GraduationCap,
+	Briefcase,
 } from "lucide-react";
 import { APP_NAME, BRAND } from "@/lib/config/constants";
 
@@ -36,7 +37,7 @@ function TentangPage() {
 								</p>
 								<div className="flex items-center gap-2 text-white/80">
 									<Award className="w-5 h-5" />
-									<span>DV Lottery Winner 2020</span>
+									<span>DV Lottery Winner 2021</span>
 								</div>
 							</div>
 							<div className="flex justify-center lg:justify-end">
@@ -117,42 +118,41 @@ interface TimelineItem {
 
 const TIMELINE_ITEMS: TimelineItem[] = [
 	{
-		year: "2015",
-		title: "Memulai Karir Chef",
-		description: "Memulai perjalanan sebagai chef profesional di Indonesia",
-		icon: ChefHat,
+		year: "1995",
+		title: "Lahir dan Tumbuh di Indonesia",
+		description: "Memulai perjalanan hidup di Indonesia",
+		icon: Baby,
 	},
 	{
-		year: "2019",
-		title: "Mendaftar DV Lottery",
-		description: "Pertama kali mendaftar program DV Lottery Amerika Serikat",
+		year: "2017",
+		title: "Kuliah di Luar Negeri",
+		description: "Pengalaman pertama kuliah di luar negeri (Perancis)",
 		icon: GraduationCap,
 	},
 	{
-		year: "2020",
-		title: "Menang DV Lottery",
-		description: "Terpilih sebagai pemenang DV Lottery — American Dream dimulai",
-		icon: Award,
+		year: "2018",
+		title: "Kerja di Luar Negeri",
+		description: "Pengalaman kerja pertama di luar negeri (Australia)",
+		icon: Briefcase,
 	},
 	{
 		year: "2021",
-		title: "Pindah ke Amerika",
-		description: "Resmi pindah ke Amerika Serikat dengan Green Card",
-		icon: Plane,
+		title: "Mencoba DV Lottery",
+		description: "Mendaftar program DV Lottery Amerika Serikat",
+		icon: Award,
 	},
 	{
 		year: "2023",
-		title: "Jr. Sous Chef NYC",
-		description:
-			"Menjadi Jr. Executive Sous Chef di restoran ternama New York City",
-		icon: MapPin,
+		title: "Pindah ke Amerika Serikat",
+		description: "Resmi pindah ke Amerika Serikat sebagai Green Card holder",
+		icon: Plane,
 	},
 	{
-		year: "2024",
-		title: "Mendirikan AwalBaru.com",
+		year: "2025",
+		title: "Membangun AwalBaru.com",
 		description:
 			"Memulai misi untuk membantu orang Indonesia lainnya meraih American Dream",
-		icon: Calendar,
+		icon: Rocket,
 	},
 ];
 

@@ -37,7 +37,7 @@ INSERT INTO courses (
   149000,
   299000,
   'https://gwdtwvoykaznscrisyry.supabase.co/storage/v1/object/public/course-assets/dv-lottery-green-card.jpg',
-  '5inp6y66ic',
+  'hu02uiarql',
   'Teddy Cahyadi',
   'DV Lottery Winner & Jr. Executive Sous Chef',
   'Pemula',
@@ -53,52 +53,52 @@ INSERT INTO courses (
         "id": "01",
         "title": "Pengenalan DV Lottery",
         "lessons": [
-          {"title": "Selamat Datang di Kursus", "duration": "3:00", "videoId": "intro1", "isFree": true},
-          {"title": "Apa itu DV Lottery?", "duration": "8:00", "videoId": "intro2", "isFree": true},
-          {"title": "Syarat & Kelayakan", "duration": "12:00", "videoId": "intro3", "isFree": false},
-          {"title": "Timeline & Jadwal Penting", "duration": "7:00", "videoId": "intro4", "isFree": false},
-          {"title": "Peluang & Statistik", "duration": "5:00", "videoId": "intro5", "isFree": false}
+          {"title": "Selamat Datang di Kursus", "duration": "3:00", "videoId": "5inp6y66ic", "isFree": true},
+          {"title": "Apa itu DV Lottery?", "duration": "8:00", "videoId": "5inp6y66ic", "isFree": true},
+          {"title": "Syarat & Kelayakan", "duration": "12:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Timeline & Jadwal Penting", "duration": "7:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Peluang & Statistik", "duration": "5:00", "videoId": "5inp6y66ic", "isFree": false}
         ]
       },
       {
         "id": "02",
         "title": "Proses Pendaftaran",
         "lessons": [
-          {"title": "Persiapan Dokumen", "duration": "15:00", "videoId": "reg1", "isFree": false},
-          {"title": "Foto Requirements", "duration": "10:00", "videoId": "reg2", "isFree": false},
-          {"title": "Mengisi Formulir Entry", "duration": "25:00", "videoId": "reg3", "isFree": false},
-          {"title": "Tips Meningkatkan Peluang", "duration": "15:00", "videoId": "reg4", "isFree": false},
-          {"title": "Common Mistakes to Avoid", "duration": "10:00", "videoId": "reg5", "isFree": false}
+          {"title": "Persiapan Dokumen", "duration": "15:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Foto Requirements", "duration": "10:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Mengisi Formulir Entry", "duration": "25:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Tips Meningkatkan Peluang", "duration": "15:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Common Mistakes to Avoid", "duration": "10:00", "videoId": "5inp6y66ic", "isFree": false}
         ]
       },
       {
         "id": "03",
         "title": "Setelah Menang",
         "lessons": [
-          {"title": "Notifikasi & Confirmation Number", "duration": "8:00", "videoId": "win1", "isFree": false},
-          {"title": "Form DS-260 Step by Step", "duration": "20:00", "videoId": "win2", "isFree": false},
-          {"title": "Supporting Documents", "duration": "12:00", "videoId": "win3", "isFree": false},
-          {"title": "Paying Fees", "duration": "5:00", "videoId": "win4", "isFree": false}
+          {"title": "Notifikasi & Confirmation Number", "duration": "8:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Form DS-260 Step by Step", "duration": "20:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Supporting Documents", "duration": "12:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Paying Fees", "duration": "5:00", "videoId": "5inp6y66ic", "isFree": false}
         ]
       },
       {
         "id": "04",
         "title": "Persiapan Interview",
         "lessons": [
-          {"title": "Dokumen yang Dibawa ke Konsulat", "duration": "15:00", "videoId": "int1", "isFree": false},
-          {"title": "Pertanyaan Interview Umum", "duration": "25:00", "videoId": "int2", "isFree": false},
-          {"title": "Tips Menjawab dengan Percaya Diri", "duration": "20:00", "videoId": "int3", "isFree": false},
-          {"title": "Dress Code & Etika", "duration": "10:00", "videoId": "int4", "isFree": false},
-          {"title": "Simulasi Interview", "duration": "20:00", "videoId": "int5", "isFree": false}
+          {"title": "Dokumen yang Dibawa ke Konsulat", "duration": "15:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Pertanyaan Interview Umum", "duration": "25:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Tips Menjawab dengan Percaya Diri", "duration": "20:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Dress Code & Etika", "duration": "10:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Simulasi Interview", "duration": "20:00", "videoId": "5inp6y66ic", "isFree": false}
         ]
       },
       {
         "id": "05",
         "title": "Medical Exam & Vaksinasi",
         "lessons": [
-          {"title": "Persiapan Medical Exam", "duration": "12:00", "videoId": "med1", "isFree": false},
-          {"title": "Vaksinasi yang Diperlukan", "duration": "15:00", "videoId": "med2", "isFree": false},
-          {"title": "Biaya dan Prosedur", "duration": "13:00", "videoId": "med3", "isFree": false}
+          {"title": "Persiapan Medical Exam", "duration": "12:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Vaksinasi yang Diperlukan", "duration": "15:00", "videoId": "5inp6y66ic", "isFree": false},
+          {"title": "Biaya dan Prosedur", "duration": "13:00", "videoId": "5inp6y66ic", "isFree": false}
         ]
       }
     ]

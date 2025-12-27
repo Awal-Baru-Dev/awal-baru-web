@@ -338,10 +338,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <a href="/dashboard/profil" onClick={() => setSidebarOpen(false)}>
+                <Link to="/dashboard/profil" onClick={() => setSidebarOpen(false)}>
                   <User className="w-4 h-4" />
                   Profil
-                </a>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <a href="/dashboard/pengaturan" onClick={() => setSidebarOpen(false)}>

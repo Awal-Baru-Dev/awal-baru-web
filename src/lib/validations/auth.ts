@@ -57,8 +57,9 @@ export function calculatePasswordStrength(password: string): {
  */
 export const loginSchema = z.object({
 	email: z
-		.email("Format email tidak valid")
-		.min(1, "Email wajib diisi"),
+		.string()
+		.min(1, "Email wajib diisi")
+		.email("Format email tidak valid"),
 	password: z
 		.string()
 		.min(1, "Password wajib diisi"),
@@ -67,34 +68,41 @@ export const loginSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>;
 
 /**
+ * Registration form field schemas (for individual field validation)
+ */
+export const registerFieldSchemas = {
+	fullName: z
+		.string()
+		.min(1, "Nama wajib diisi")
+		.min(2, "Nama minimal 2 karakter")
+		.max(100, "Nama maksimal 100 karakter"),
+	email: z
+		.string()
+		.min(1, "Email wajib diisi")
+		.email("Format email tidak valid"),
+	password: z
+		.string()
+		.min(PASSWORD_MIN_LENGTH, `Password minimal ${PASSWORD_MIN_LENGTH} karakter`)
+		.refine(
+			(p) => /[a-z]/.test(p),
+			"Password harus mengandung huruf kecil"
+		)
+		.refine(
+			(p) => /[A-Z]/.test(p),
+			"Password harus mengandung huruf besar"
+		)
+		.refine(
+			(p) => /[0-9]/.test(p),
+			"Password harus mengandung angka"
+		),
+	confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi"),
+};
+
+/**
  * Registration form schema
  */
 export const registerSchema = z
-	.object({
-		fullName: z
-			.string()
-			.min(2, "Nama minimal 2 karakter")
-			.max(100, "Nama maksimal 100 karakter"),
-		email: z
-			.email("Format email tidak valid")
-			.min(1, "Email wajib diisi"),
-		password: z
-			.string()
-			.min(PASSWORD_MIN_LENGTH, `Password minimal ${PASSWORD_MIN_LENGTH} karakter`)
-			.refine(
-				(p) => /[a-z]/.test(p),
-				"Password harus mengandung huruf kecil"
-			)
-			.refine(
-				(p) => /[A-Z]/.test(p),
-				"Password harus mengandung huruf besar"
-			)
-			.refine(
-				(p) => /[0-9]/.test(p),
-				"Password harus mengandung angka"
-			),
-		confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi"),
-	})
+	.object(registerFieldSchemas)
 	.refine((data) => data.password === data.confirmPassword, {
 		message: "Password tidak cocok",
 		path: ["confirmPassword"],
@@ -107,8 +115,9 @@ export type RegisterFormData = z.infer<typeof registerSchema>;
  */
 export const forgotPasswordSchema = z.object({
 	email: z
-		.email("Format email tidak valid")
-		.min(1, "Email wajib diisi"),
+		.string()
+		.min(1, "Email wajib diisi")
+		.email("Format email tidak valid"),
 });
 
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
