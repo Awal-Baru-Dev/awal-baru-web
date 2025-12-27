@@ -20,3 +20,4 @@ export {
 	CourseSidebarSkeleton,
 } from "./course-sidebar";
 export { WhatYouLearn, WhatYouLearnSkeleton } from "./what-you-learn";
+export { WistiaPlayer } from "./wistia-player";

@@ -27,11 +27,10 @@ export const BUNDLE_CONFIG = {
 	originalPrice: 999000,
 	description: "Akses semua kursus premium dengan satu pembelian.",
 	features: [
-		"Akses selamanya ke semua kursus",
+		"Akses 12 bulan ke semua kursus",
 		"Total 40+ jam konten video",
-		"Sertifikat untuk setiap kursus",
+		"Update materi gratis",
 		"Akses komunitas eksklusif",
-		"Update materi gratis selamanya",
 	],
 } as const;
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, X, Moon, Sun, User, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
+import { Menu, X, Moon, Sun, User, LogOut, LayoutDashboard, ChevronDown, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -22,24 +22,60 @@ export function LandingHeader() {
 	return (
 		<header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-sm border-b border-border">
 			<div className="container mx-auto px-4 sm:px-6 lg:px-16">
-				<div className="flex items-center justify-between h-16 sm:h-20">
-					{/* Logo */}
+				{/* Mobile Header */}
+				<div className="flex md:hidden items-center justify-between h-16">
+					{/* Menu Button - Left */}
+					<button
+						onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+						className="p-2 text-muted-foreground hover:text-brand-primary"
+						aria-label="Toggle menu"
+					>
+						{mobileMenuOpen ? (
+							<X className="w-6 h-6" />
+						) : (
+							<Menu className="w-6 h-6" />
+						)}
+					</button>
+
+					{/* Logo - Center */}
 					<Link to="/" className="flex items-center gap-2">
 						<img
 							src="/awalbaru-logo.jpeg"
 							alt={`${APP_NAME} Logo`}
 							width={40}
 							height={40}
-							className="object-contain rounded-md sm:w-[50px] sm:h-[50px]"
+							className="object-contain rounded-md"
 						/>
-						<div className="text-lg sm:text-xl font-bold">
+						<span className="text-lg font-bold text-brand-primary">
+							Awal<span className="text-foreground">Baru</span>
+						</span>
+					</Link>
+
+					{/* Notification Bell - Right */}
+					<Button variant="ghost" size="icon" className="relative">
+						<Bell className="h-5 w-5" />
+					</Button>
+				</div>
+
+				{/* Desktop Header */}
+				<div className="hidden md:flex items-center justify-between h-20">
+					{/* Logo */}
+					<Link to="/" className="flex items-center gap-2">
+						<img
+							src="/awalbaru-logo.jpeg"
+							alt={`${APP_NAME} Logo`}
+							width={50}
+							height={50}
+							className="object-contain rounded-md"
+						/>
+						<div className="text-xl font-bold">
 							<span className="text-foreground">Awal</span>
 							<span className="text-brand-primary">Baru.com</span>
 						</div>
 					</Link>
 
-					{/* Center Navigation - Desktop */}
-					<nav className="hidden md:flex items-center gap-8">
+					{/* Center Navigation */}
+					<nav className="flex items-center gap-8">
 						<Link
 							to="/courses"
 							className="text-muted-foreground hover:text-brand-primary transition-colors text-base font-medium"
@@ -103,38 +139,6 @@ export function LandingHeader() {
 						)}
 					</div>
 
-					{/* Mobile Menu Button */}
-					<div className="flex md:hidden items-center gap-2">
-						{/* Theme Toggle - Mobile */}
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={toggleTheme}
-							aria-label={
-								theme === "light"
-									? "Beralih ke mode gelap"
-									: "Beralih ke mode terang"
-							}
-						>
-							{theme === "light" ? (
-								<Moon className="h-5 w-5" />
-							) : (
-								<Sun className="h-5 w-5" />
-							)}
-						</Button>
-
-						<button
-							onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-							className="p-2 text-muted-foreground hover:text-brand-primary"
-							aria-label="Toggle menu"
-						>
-							{mobileMenuOpen ? (
-								<X className="w-6 h-6" />
-							) : (
-								<Menu className="w-6 h-6" />
-							)}
-						</button>
-					</div>
 				</div>
 			</div>
 

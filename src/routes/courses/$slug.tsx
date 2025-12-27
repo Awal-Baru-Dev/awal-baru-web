@@ -1,5 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { z } from "zod";
 import { AuthAwareLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,18 +16,29 @@ import {
 	WhatYouLearn,
 	WhatYouLearnSkeleton,
 } from "@/components/course";
+import { PaymentLoadingOverlay } from "@/components/shared";
 import { useCourse } from "@/features/courses";
-import { useEnrollmentStatus } from "@/features/enrollments";
+import { useEnrollmentStatus, enrollmentKeys } from "@/features/enrollments";
+import { useCreatePayment, useVerifyPayment, getDokuJsUrl } from "@/features/payments";
 import { useUser } from "@/contexts/user-context";
+
+const courseSearchSchema = z.object({
+	payment: z.enum(["success", "cancelled"]).optional(),
+	invoice: z.string().optional(),
+});
 
 export const Route = createFileRoute("/courses/$slug")({
 	component: CourseDetailPage,
+	validateSearch: courseSearchSchema,
 });
 
 function CourseDetailPage() {
 	const { slug } = Route.useParams();
+	const { payment, invoice } = Route.useSearch();
 	const navigate = useNavigate();
-	const { user, isLoading: isAuthLoading, isAuthenticated } = useUser();
+	const queryClient = useQueryClient();
+	const { user, isLoading: isAuthLoading } = useUser();
+	const paymentProcessedRef = useRef(false);
 
 	// Fetch course data
 	const {
@@ -34,10 +48,97 @@ function CourseDetailPage() {
 	} = useCourse(slug);
 
 	// Check enrollment status
-	const { data: enrollment } = useEnrollmentStatus(course?.id ?? "");
+	const { data: enrollment, refetch: refetchEnrollment } = useEnrollmentStatus(
+		course?.id ?? "",
+	);
+
+	// Payment mutations
+	const createPayment = useCreatePayment();
+	const verifyPayment = useVerifyPayment();
 
 	const isLoading = isCourseLoading || isAuthLoading;
 	const isEnrolled = !!enrollment;
+
+	// Load DOKU checkout script
+	useEffect(() => {
+		const scriptId = "doku-checkout-script";
+		if (document.getElementById(scriptId)) return;
+
+		const script = document.createElement("script");
+		script.id = scriptId;
+		script.src = getDokuJsUrl();
+		script.async = true;
+		document.head.appendChild(script);
+	}, []);
+
+	// Handle payment success/cancelled redirect
+	useEffect(() => {
+		if (paymentProcessedRef.current) return;
+
+		if (payment === "success" && invoice) {
+			paymentProcessedRef.current = true;
+
+			// Verify payment status
+			verifyPayment.mutate(
+				{ invoiceNumber: invoice },
+				{
+					onSuccess: (result) => {
+						if (result.success) {
+							if (result.status === "paid") {
+								toast.success("Pembayaran Berhasil!", {
+									description:
+										"Selamat! Kursus sudah dapat diakses.",
+								});
+								// Refetch enrollment status
+								refetchEnrollment();
+								queryClient.invalidateQueries({
+									queryKey: enrollmentKeys.all,
+								});
+							} else if (result.status === "pending") {
+								toast.info("Menunggu Konfirmasi", {
+									description:
+										"Pembayaran sedang diproses. Mohon tunggu beberapa saat.",
+								});
+							} else {
+								toast.error("Pembayaran Gagal", {
+									description: result.message,
+								});
+							}
+						}
+					},
+				},
+			);
+
+			// Clear search params
+			navigate({
+				to: "/courses/$slug",
+				params: { slug },
+				search: {},
+				replace: true,
+			});
+		} else if (payment === "cancelled") {
+			paymentProcessedRef.current = true;
+			toast.info("Pembayaran Dibatalkan", {
+				description: "Kamu bisa mencoba lagi kapan saja.",
+			});
+
+			// Clear search params
+			navigate({
+				to: "/courses/$slug",
+				params: { slug },
+				search: {},
+				replace: true,
+			});
+		}
+	}, [
+		payment,
+		invoice,
+		slug,
+		navigate,
+		verifyPayment,
+		refetchEnrollment,
+		queryClient,
+	]);
 
 	// Handle purchase
 	const handlePurchase = () => {
@@ -50,8 +151,33 @@ function CourseDetailPage() {
 			return;
 		}
 
-		// TODO: Implement payment flow
-		console.log("Purchase course:", course?.id);
+		if (!course) return;
+
+		// Create payment
+		createPayment.mutate(
+			{
+				isBundle: false,
+				courseId: course.id,
+				courseSlug: course.slug,
+				courseName: course.title,
+				coursePrice: course.price,
+			},
+			{
+				onSuccess: (result) => {
+					if (!result.success) {
+						toast.error("Gagal Memproses Pembayaran", {
+							description: result.error || "Silakan coba lagi.",
+						});
+					}
+					// Success case is handled by the hook (opens DOKU modal)
+				},
+				onError: () => {
+					toast.error("Gagal Memproses Pembayaran", {
+						description: "Terjadi kesalahan. Silakan coba lagi.",
+					});
+				},
+			},
+		);
 	};
 
 	// Error state
@@ -112,7 +238,9 @@ function CourseDetailPage() {
 	const whatYouWillLearn = course.metadata?.whatYouWillLearn || [];
 
 	return (
-		<AuthAwareLayout showFooter={false}>
+		<>
+			<PaymentLoadingOverlay isLoading={createPayment.isPending} />
+			<AuthAwareLayout showFooter={false}>
 			<div className="container mx-auto max-w-6xl">
 				{/* Breadcrumb */}
 				<nav className="flex items-center gap-2 text-sm mb-4" aria-label="Breadcrumb">
@@ -131,7 +259,7 @@ function CourseDetailPage() {
 				<div className="grid lg:grid-cols-3 gap-8">
 					{/* Main Content */}
 					<div className="lg:col-span-2 space-y-8">
-						<CourseHero course={course} />
+						<CourseHero course={course} isEnrolled={isEnrolled} />
 
 						{whatYouWillLearn.length > 0 && (
 							<WhatYouLearn points={whatYouWillLearn} />
@@ -173,6 +301,7 @@ function CourseDetailPage() {
 				onPurchase={handlePurchase}
 			/>
 		</AuthAwareLayout>
+		</>
 	);
 }
 

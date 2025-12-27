@@ -115,9 +115,8 @@ INSERT INTO courses (
       "Cara menghindari kesalahan umum yang sering terjadi"
     ],
     "features": [
-      "Akses selamanya",
+      "Akses 12 bulan",
       "24 video pelajaran",
-      "Sertifikat penyelesaian",
       "Akses komunitas eksklusif",
       "Update materi gratis"
     ],
@@ -198,10 +197,10 @@ INSERT INTO courses (
       "Tips menjawab pertanyaan interview dengan percaya diri"
     ],
     "features": [
-      "Akses selamanya",
+      "Akses 12 bulan",
       "15 video pelajaran",
-      "Sertifikat penyelesaian",
-      "Template dokumen"
+      "Template dokumen",
+      "Update materi gratis"
     ],
     "tags": [],
     "stats": {
@@ -292,10 +291,10 @@ INSERT INTO courses (
       "Teknik interview yang efektif"
     ],
     "features": [
-      "Akses selamanya",
+      "Akses 12 bulan",
       "32 video pelajaran",
       "Template essay",
-      "Sertifikat penyelesaian"
+      "Update materi gratis"
     ],
     "tags": ["populer"],
     "stats": {
@@ -387,10 +386,10 @@ INSERT INTO courses (
       "Kehidupan sehari-hari sebagai Au Pair"
     ],
     "features": [
-      "Akses selamanya",
+      "Akses 12 bulan",
       "20 video pelajaran",
       "Template aplikasi",
-      "Sertifikat penyelesaian"
+      "Update materi gratis"
     ],
     "tags": [],
     "stats": {
@@ -480,10 +479,10 @@ INSERT INTO courses (
       "Bekerja di professional kitchen"
     ],
     "features": [
-      "Akses selamanya",
+      "Akses 12 bulan",
       "25 video pelajaran",
       "Template resume",
-      "Sertifikat penyelesaian"
+      "Update materi gratis"
     ],
     "tags": [],
     "stats": {
@@ -580,10 +579,10 @@ INSERT INTO courses (
       "Pathway menuju CPA certification"
     ],
     "features": [
-      "Akses selamanya",
+      "Akses 12 bulan",
       "28 video pelajaran",
       "Template resume",
-      "Sertifikat penyelesaian"
+      "Update materi gratis"
     ],
     "tags": [],
     "stats": {
@@ -683,10 +682,10 @@ INSERT INTO courses (
       "Tips wawancara dan LGD"
     ],
     "features": [
-      "Akses selamanya",
+      "Akses 12 bulan",
       "35 video pelajaran",
       "Template essay",
-      "Sertifikat penyelesaian"
+      "Update materi gratis"
     ],
     "tags": ["populer"],
     "stats": {
@@ -793,10 +792,10 @@ INSERT INTO courses (
       "Proses visa F1"
     ],
     "features": [
-      "Akses selamanya",
+      "Akses 12 bulan",
       "27 video pelajaran",
       "Template essay",
-      "Sertifikat penyelesaian"
+      "Update materi gratis"
     ],
     "tags": [],
     "stats": {
@@ -930,10 +929,10 @@ INSERT INTO courses (
       "Postdoc applications dan career planning"
     ],
     "features": [
-      "Akses selamanya",
+      "Akses 12 bulan",
       "40 video pelajaran",
       "Template CV akademik",
-      "Sertifikat penyelesaian"
+      "Update materi gratis"
     ],
     "tags": [],
     "stats": {
@@ -1031,10 +1030,10 @@ INSERT INTO courses (
       "Membangun jaringan alumni internasional"
     ],
     "features": [
-      "Akses selamanya",
+      "Akses 12 bulan",
       "22 video pelajaran",
       "Template aplikasi",
-      "Sertifikat penyelesaian"
+      "Update materi gratis"
     ],
     "tags": [],
     "stats": {
@@ -1069,8 +1068,8 @@ INSERT INTO courses (
     "features": [
       "Akses ke semua kursus",
       "Total 40+ jam konten video",
-      "Sertifikat untuk setiap kursus",
-      "Akses komunitas eksklusif"
+      "Akses 12 bulan",
+      "Update materi gratis"
     ],
     "stats": {
       "students": 500,

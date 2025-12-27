@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { CourseSearchDropdown } from "@/components/shared";
 import {
   DropdownMenu,
@@ -85,27 +84,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen bg-background">
       {/* Mobile header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border flex items-center justify-between px-4 z-50">
-        <Button
-          variant="ghost"
-          size="icon"
+        <button
           onClick={() => setSidebarOpen(true)}
+          className="p-2 text-muted-foreground hover:text-brand-primary"
           aria-label="Open menu"
         >
-          <Menu className="w-5 h-5" />
-        </Button>
+          <Menu className="w-6 h-6" />
+        </button>
 
         <Link to="/" className="flex items-center gap-2">
           <img
             src="/awalbaru-logo.jpeg"
             alt={APP_NAME}
-            className="h-8 w-8 rounded-lg"
+            className="h-10 w-10 rounded-lg"
           />
-          <span className="font-bold text-brand-primary">
+          <span className="text-lg font-bold text-brand-primary">
             Awal<span className="text-foreground">Baru</span>
           </span>
         </Link>
 
-        <ThemeToggle />
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {/* Notification badge - uncomment when needed */}
+          {/* <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" /> */}
+        </Button>
       </header>
 
       {/* Mobile sidebar overlay */}

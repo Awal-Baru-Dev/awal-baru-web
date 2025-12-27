@@ -6,13 +6,9 @@ export const env = createEnv({
 		// Supabase (server-side only)
 		SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
 
-		// DOKU Payment Gateway
+		// DOKU Payment Gateway (server-side secrets)
 		DOKU_CLIENT_ID: z.string().min(1).optional(),
 		DOKU_SECRET_KEY: z.string().min(1).optional(),
-		DOKU_ENVIRONMENT: z
-			.enum(["sandbox", "production"])
-			.default("sandbox")
-			.optional(),
 
 		// Server URL (for callbacks)
 		SERVER_URL: z.string().url().optional(),
@@ -36,7 +32,7 @@ export const env = createEnv({
 		// Sentry
 		VITE_SENTRY_DSN: z.string().url().optional(),
 
-		// DOKU (client-side environment for JS loading)
+		// DOKU environment (sandbox/production) - used for both client JS and server API
 		VITE_DOKU_ENVIRONMENT: z
 			.enum(["sandbox", "production"])
 			.default("sandbox")
@@ -45,15 +41,33 @@ export const env = createEnv({
 		// Feature Flags
 		VITE_REQUIRE_EMAIL_VERIFICATION: z
 			.string()
-			.transform((val) => val !== "false")
-			.default("true"),
+			.default("true")
+			.transform((val) => val !== "false"),
 	},
 
 	/**
-	 * What object holds the environment variables at runtime. This is usually
-	 * `process.env` or `import.meta.env`.
+	 * What object holds the environment variables at runtime.
+	 *
+	 * Server variables come from process.env (not exposed to client bundle).
+	 * Client variables (VITE_*) come from import.meta.env (available everywhere).
 	 */
-	runtimeEnv: import.meta.env,
+	runtimeEnv: {
+		// Server-only variables from process.env
+		SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+		DOKU_CLIENT_ID: process.env.DOKU_CLIENT_ID,
+		DOKU_SECRET_KEY: process.env.DOKU_SECRET_KEY,
+		SERVER_URL: process.env.SERVER_URL,
+
+		// Client variables from import.meta.env (also available on server)
+		VITE_APP_TITLE: import.meta.env.VITE_APP_TITLE,
+		VITE_APP_URL: import.meta.env.VITE_APP_URL,
+		VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+		VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+		VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
+		VITE_DOKU_ENVIRONMENT: import.meta.env.VITE_DOKU_ENVIRONMENT,
+		VITE_REQUIRE_EMAIL_VERIFICATION:
+			import.meta.env.VITE_REQUIRE_EMAIL_VERIFICATION,
+	},
 
 	/**
 	 * By default, this library will feed the environment variables directly to

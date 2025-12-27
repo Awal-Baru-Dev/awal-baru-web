@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BookOpen, Clock, Trophy, TrendingUp } from "lucide-react";
+import { BookOpen, Clock, CheckCircle2, TrendingUp } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 export const Route = createFileRoute("/_authed/dashboard")({
@@ -53,8 +53,8 @@ function DashboardPage() {
 						bgColor="bg-blue-500/10"
 					/>
 					<StatCard
-						icon={Trophy}
-						label="Sertifikat"
+						icon={CheckCircle2}
+						label="Kursus Selesai"
 						value="0"
 						color="text-amber-500"
 						bgColor="bg-amber-500/10"

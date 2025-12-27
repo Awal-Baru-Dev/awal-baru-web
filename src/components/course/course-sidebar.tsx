@@ -62,16 +62,16 @@ export function CourseSidebar({
 		features.length > 0
 			? features
 			: [
-					"Akses selamanya",
+					"Akses 12 bulan",
 					`${course.lessons_count} video pelajaran`,
-					"Sertifikat kelulusan",
-					"Akses komunitas",
+					"Update materi gratis",
+					"Akses komunitas eksklusif",
 				];
 
 	const featureIcons: Record<string, React.ReactNode> = {
 		akses: <Infinity className="w-4 h-4" />,
 		video: <PlayCircle className="w-4 h-4" />,
-		sertifikat: <Award className="w-4 h-4" />,
+		update: <FileText className="w-4 h-4" />,
 		komunitas: <Users className="w-4 h-4" />,
 		materi: <FileText className="w-4 h-4" />,
 	};

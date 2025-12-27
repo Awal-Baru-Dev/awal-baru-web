@@ -23,7 +23,7 @@ function HargaPage() {
 						</h1>
 						<p className="text-xl text-white/90 max-w-2xl mx-auto">
 							Pilih paket yang sesuai dengan kebutuhanmu. Semua kursus sudah
-							termasuk akses selamanya dan update materi gratis.
+							termasuk akses 12 bulan dan update materi gratis.
 						</p>
 					</div>
 				</section>
@@ -135,9 +135,8 @@ const PRICING_TIERS: PricingTier[] = [
 		features: [
 			"Akses 1 kursus pilihan",
 			"Video HD profesional",
-			"Akses selamanya",
+			"Akses 12 bulan",
 			"Update materi gratis",
-			"Sertifikat kelulusan",
 		],
 		buttonText: "Pilih Kursus",
 	},
@@ -149,9 +148,8 @@ const PRICING_TIERS: PricingTier[] = [
 		features: [
 			"Akses SEMUA kursus",
 			"40+ jam konten video",
-			"Akses selamanya",
+			"Akses 12 bulan",
 			"Update materi gratis",
-			"Sertifikat untuk setiap kursus",
 			"Akses komunitas eksklusif",
 			"Prioritas dukungan",
 		],
@@ -235,8 +233,8 @@ interface FAQItemProps {
 
 const FAQ_ITEMS: FAQItemProps[] = [
 	{
-		question: "Apakah saya mendapat akses selamanya?",
-		answer: `Ya! Semua pembelian kursus di ${APP_NAME} memberikan akses selamanya. Kamu juga akan mendapat semua update materi di masa depan secara gratis.`,
+		question: "Berapa lama akses kursus saya?",
+		answer: `Semua pembelian kursus di ${APP_NAME} memberikan akses selama 12 bulan. Selama periode tersebut, kamu juga akan mendapat semua update materi secara gratis.`,
 	},
 	{
 		question: "Bagaimana metode pembayarannya?",
