@@ -193,20 +193,24 @@ export interface Notification {
 }
 
 /**
- * Lesson progress data structure
+ * Course progress data structure (MVP: position-based tracking)
+ *
+ * Tracks the user's current position in a course.
+ * Progress = current_lesson_position / total_lessons
+ *
+ * See docs/PROGRESS_TRACKING.md for detailed documentation.
  */
-export interface LessonProgress {
+export interface CourseProgress {
 	id: string;
 	user_id: string;
 	course_id: string;
-	section_id: string;
-	lesson_index: number;
-	percent_watched: number;
-	seconds_watched: number;
-	last_position: number;
-	video_duration: number;
-	is_completed: boolean;
-	completed_at: string | null;
+	/** Current section ID (maps to content.sections[].id) */
+	current_section_id: string;
+	/** 0-based lesson index within the section */
+	current_lesson_index: number;
+	/** Overall progress 0-100, derived from position */
+	progress_percent: number;
+	last_accessed_at: string;
 	created_at: string;
 	updated_at: string;
 }
@@ -219,7 +223,7 @@ export interface Database {
 	courses: Course;
 	enrollments: Enrollment;
 	notifications: Notification;
-	lesson_progress: LessonProgress;
+	course_progress: CourseProgress;
 }
 
 export type TableName = keyof Database;

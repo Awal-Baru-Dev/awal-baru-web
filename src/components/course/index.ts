@@ -27,3 +27,4 @@ export {
 } from "./wistia-player";
 export { CourseLearnSidebar } from "./course-learn-sidebar";
 export { VideoLessonNav, type LessonNavInfo } from "./video-lesson-nav";
+export { CourseCarousel } from "./course-carousel";

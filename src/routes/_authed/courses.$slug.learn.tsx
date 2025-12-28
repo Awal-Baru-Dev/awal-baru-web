@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { z } from "zod";
+import { toast } from "sonner";
 import {
 	ArrowLeft,
 	Menu,
 	X,
 	AlertCircle,
 	ChevronRight,
+	Play,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +22,12 @@ import {
 } from "@/components/course";
 import { useCourse } from "@/features/courses";
 import { useEnrollmentStatus } from "@/features/enrollments";
+import {
+	useCourseProgress,
+	useUpdateProgress,
+	getProgressDisplayData,
+	calculateLessonPosition,
+} from "@/features/progress";
 import { APP_NAME } from "@/lib/config/constants";
 import { cn } from "@/lib/utils";
 import type { Course } from "@/lib/db/types";
@@ -260,7 +268,10 @@ function CourseLearnPage() {
 	const [currentLesson, setCurrentLesson] = useState<CurrentLesson | null>(null);
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-	const [showNextPrompt, setShowNextPrompt] = useState(false);
+
+	// Overlay state: 'manual' for sidebar clicks, 'auto-next' for video end
+	const [overlayType, setOverlayType] = useState<'manual' | 'auto-next' | null>(null);
+	const [pendingLesson, setPendingLesson] = useState<CurrentLesson | null>(null);
 
 	// Fetch course data
 	const {
@@ -273,21 +284,35 @@ function CourseLearnPage() {
 	const { data: enrollment, isLoading: isEnrollmentLoading } =
 		useEnrollmentStatus(course?.id ?? "");
 
-	const isLoading = isCourseLoading || isEnrollmentLoading;
+	// Fetch and manage progress
+	const { data: progressData, isLoading: isProgressLoading } =
+		useCourseProgress(course?.id ?? "");
+	const updateProgress = useUpdateProgress();
+
+	const isLoading = isCourseLoading || isEnrollmentLoading || isProgressLoading;
 	const isEnrolled = !!enrollment;
 
-	// Initialize current lesson from URL params or first lesson
+	// Initialize current lesson from URL params, saved progress, or first lesson
 	useEffect(() => {
 		if (!course) return;
 
 		let lesson: CurrentLesson | null = null;
 
-		// Try to get lesson from URL params
+		// Priority 1: Try to get lesson from URL params
 		if (sectionParam && lessonParam !== undefined) {
 			lesson = getLessonFromCourse(course, sectionParam, lessonParam);
 		}
 
-		// Fall back to first lesson
+		// Priority 2: Resume from saved progress
+		if (!lesson && progressData) {
+			lesson = getLessonFromCourse(
+				course,
+				progressData.current_section_id,
+				progressData.current_lesson_index,
+			);
+		}
+
+		// Priority 3: Fall back to first lesson
 		if (!lesson) {
 			lesson = getFirstLesson(course);
 		}
@@ -295,9 +320,9 @@ function CourseLearnPage() {
 		if (lesson) {
 			setCurrentLesson(lesson);
 		}
-	}, [course, sectionParam, lessonParam]);
+	}, [course, sectionParam, lessonParam, progressData]);
 
-	// Handle lesson selection - seek within video instead of remounting
+	// Handle lesson selection - show confirmation overlay before playing
 	const handleLessonSelect = useCallback(
 		(sectionId: string, lessonIndex: number) => {
 			if (!course) return;
@@ -306,14 +331,17 @@ function CourseLearnPage() {
 			if (!lesson) return;
 
 			setCurrentLesson(lesson);
-			setShowNextPrompt(false); // Hide prompt if visible
 			setMobileSidebarOpen(false); // Close mobile sidebar
 
-			// Seek to lesson's start time
+			// Seek to lesson's start time and pause
 			if (playerRef.current) {
 				playerRef.current.seekTo(lesson.startTime);
-				playerRef.current.play();
+				playerRef.current.pause();
 			}
+
+			// Show manual confirmation overlay
+			setPendingLesson(lesson);
+			setOverlayType('manual');
 
 			// Update URL without navigation
 			navigate({
@@ -322,8 +350,40 @@ function CourseLearnPage() {
 				search: { section: sectionId, lesson: lessonIndex },
 				replace: true,
 			});
+
+			// Calculate new lesson position
+			const newPosition = calculateLessonPosition(course, sectionId, lessonIndex);
+
+			// Calculate saved position (0 if no progress saved yet)
+			const savedPosition = progressData
+				? calculateLessonPosition(
+						course,
+						progressData.current_section_id,
+						progressData.current_lesson_index,
+					)
+				: 0;
+
+			// Only save progress if the new position is greater than saved position
+			// (progress can only increase, never decrease)
+			if (newPosition > savedPosition) {
+				updateProgress.mutate({
+					courseId: course.id,
+					course,
+					sectionId,
+					lessonIndex,
+				});
+
+				// Show completion toast when reaching the last lesson for the first time
+				const totalLessons = course.lessons_count || 0;
+				if (newPosition === totalLessons && !hasShownCompletionToast.current) {
+					hasShownCompletionToast.current = true;
+					toast.success("Selamat! Kamu telah menyelesaikan kursus ini.", {
+						duration: 5000,
+					});
+				}
+			}
 		},
-		[course, slug, navigate],
+		[course, slug, navigate, updateProgress, progressData],
 	);
 
 	// Handle navigation
@@ -334,15 +394,70 @@ function CourseLearnPage() {
 		[handleLessonSelect],
 	);
 
-	// Go to next lesson (called from prompt)
-	const goToNextLesson = useCallback(() => {
-		if (!course || !currentLesson) return;
+	// Track if we've shown the course completion toast
+	const hasShownCompletionToast = useRef(false);
 
-		const next = getNextLesson(course, currentLesson.sectionId, currentLesson.lessonIndex);
-		if (next) {
-			handleLessonSelect(next.sectionId, next.lessonIndex);
+	// Confirm overlay action - start playing current or next lesson
+	const confirmOverlay = useCallback(() => {
+		if (!course) return;
+
+		if (overlayType === 'manual' && pendingLesson) {
+			// Manual selection: just play the video at current position
+			setOverlayType(null);
+			setPendingLesson(null);
+			playerRef.current?.play();
+		} else if (overlayType === 'auto-next' && pendingLesson) {
+			// Auto-next: seek to next lesson, update state, and play
+			setCurrentLesson(pendingLesson);
+			setOverlayType(null);
+			setPendingLesson(null);
+
+			// Seek and play
+			if (playerRef.current) {
+				playerRef.current.seekTo(pendingLesson.startTime);
+				playerRef.current.play();
+			}
+
+			// Update URL
+			navigate({
+				to: "/courses/$slug/learn",
+				params: { slug },
+				search: {
+					section: pendingLesson.sectionId,
+					lesson: pendingLesson.lessonIndex,
+				},
+				replace: true,
+			});
+
+			// Update progress if advancing
+			const newPosition = calculateLessonPosition(course, pendingLesson.sectionId, pendingLesson.lessonIndex);
+			const savedPosition = progressData
+				? calculateLessonPosition(
+						course,
+						progressData.current_section_id,
+						progressData.current_lesson_index,
+					)
+				: 0;
+
+			if (newPosition > savedPosition) {
+				updateProgress.mutate({
+					courseId: course.id,
+					course,
+					sectionId: pendingLesson.sectionId,
+					lessonIndex: pendingLesson.lessonIndex,
+				});
+
+				// Show completion toast when reaching the last lesson
+				const totalLessons = course.lessons_count || 0;
+				if (newPosition === totalLessons && !hasShownCompletionToast.current) {
+					hasShownCompletionToast.current = true;
+					toast.success("Selamat! Kamu telah menyelesaikan kursus ini.", {
+						duration: 5000,
+					});
+				}
+			}
 		}
-	}, [course, currentLesson, handleLessonSelect]);
+	}, [course, overlayType, pendingLesson, slug, navigate, progressData, updateProgress]);
 
 	// Handle video progress - detect lesson boundaries and manual seeks
 	const handleProgress = useCallback(
@@ -352,11 +467,29 @@ function CourseLearnPage() {
 			// Get the end time for current lesson
 			const endTime = getLessonEndTime(course, currentLesson.sectionId, currentLesson.lessonIndex);
 
+			// Check if there's a next lesson
+			const next = getNextLesson(course, currentLesson.sectionId, currentLesson.lessonIndex);
+
 			// Check if we've reached the lesson's end time (with 1 second buffer)
-			if (endTime !== Number.POSITIVE_INFINITY && data.currentTime >= endTime - 1 && !showNextPrompt) {
-				// Pause and show the next lesson prompt
-				playerRef.current?.pause();
-				setShowNextPrompt(true);
+			if (endTime !== Number.POSITIVE_INFINITY && data.currentTime >= endTime - 1 && !overlayType) {
+				if (next) {
+					// There's a next lesson - pause and show the auto-next prompt
+					playerRef.current?.pause();
+					const nextLesson = getLessonFromCourse(course, next.sectionId, next.lessonIndex);
+					if (nextLesson) {
+						setPendingLesson(nextLesson);
+						setOverlayType('auto-next');
+					}
+				} else {
+					// This is the last lesson - show a toast instead (only once)
+					if (!hasShownCompletionToast.current) {
+						hasShownCompletionToast.current = true;
+						toast.success("Selamat! Kamu telah menyelesaikan kursus ini.", {
+							duration: 5000,
+						});
+					}
+					// Don't pause or show overlay - let the video continue/end naturally
+				}
 				return;
 			}
 
@@ -369,7 +502,8 @@ function CourseLearnPage() {
 			) {
 				// Update current lesson to match where user seeked
 				setCurrentLesson(lessonAtCurrentTime);
-				setShowNextPrompt(false);
+				setOverlayType(null);
+				setPendingLesson(null);
 
 				// Update URL silently
 				navigate({
@@ -383,15 +517,13 @@ function CourseLearnPage() {
 				});
 			}
 		},
-		[course, currentLesson, showNextPrompt, slug, navigate],
+		[course, currentLesson, overlayType, slug, navigate],
 	);
 
-	// Hardcoded progress for Phase A
-	const progress = {
-		completedLessons: 0,
-		totalLessons: course?.lessons_count ?? 0,
-		overallProgress: 0,
-	};
+	// Calculate progress display data
+	const progress = course
+		? getProgressDisplayData(course, progressData)
+		: { completedLessons: 0, totalLessons: 0, overallProgress: 0 };
 
 	// Get previous/next lessons
 	const previousLesson = currentLesson
@@ -566,6 +698,7 @@ function CourseLearnPage() {
 							lessonIndex: currentLesson.lessonIndex,
 						}}
 						progress={progress}
+						progressData={progressData}
 						onLessonSelect={handleLessonSelect}
 					/>
 				</div>
@@ -602,41 +735,43 @@ function CourseLearnPage() {
 										initialTime={currentLesson.startTime}
 										onProgress={handleProgress}
 									/>
-									{/* Next Lesson Prompt Overlay */}
-									{showNextPrompt && nextLesson && (
+									{/* Lesson Confirmation Overlay */}
+									{overlayType && pendingLesson && (
 										<div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10">
 											<div className="text-center px-6">
-												<p className="text-white text-lg font-medium mb-2">
-													Pelajaran selesai!
-												</p>
-												<p className="text-white/70 text-sm mb-6">
-													Lanjut ke: {nextLesson.title}
-												</p>
-												<Button
-													onClick={goToNextLesson}
-													className="bg-brand-primary hover:bg-brand-primary/90"
-												>
-													Lanjut ke Pelajaran Berikutnya
-													<ChevronRight className="w-4 h-4 ml-2" />
-												</Button>
-											</div>
-										</div>
-									)}
-									{/* Course Completed Overlay */}
-									{showNextPrompt && !nextLesson && (
-										<div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10">
-											<div className="text-center px-6">
-												<p className="text-white text-lg font-medium mb-2">
-													Selamat! Kursus selesai!
-												</p>
-												<p className="text-white/70 text-sm mb-6">
-													Kamu telah menyelesaikan semua pelajaran.
-												</p>
-												<Button asChild variant="outline">
-													<Link to="/courses/$slug" params={{ slug }}>
-														Kembali ke Detail Kursus
-													</Link>
-												</Button>
+												{overlayType === 'manual' ? (
+													<>
+														<p className="text-white text-lg font-medium mb-2">
+															Siap menonton?
+														</p>
+														<p className="text-white/70 text-sm mb-6">
+															{pendingLesson.title}
+														</p>
+														<Button
+															onClick={confirmOverlay}
+															className="bg-brand-primary hover:bg-brand-primary/90"
+														>
+															<Play className="w-4 h-4 mr-2" />
+															Mulai Menonton
+														</Button>
+													</>
+												) : (
+													<>
+														<p className="text-white text-lg font-medium mb-2">
+															Pelajaran selesai!
+														</p>
+														<p className="text-white/70 text-sm mb-6">
+															Lanjut ke: {pendingLesson.title}
+														</p>
+														<Button
+															onClick={confirmOverlay}
+															className="bg-brand-primary hover:bg-brand-primary/90"
+														>
+															Lanjut ke Pelajaran Berikutnya
+															<ChevronRight className="w-4 h-4 ml-2" />
+														</Button>
+													</>
+												)}
 											</div>
 										</div>
 									)}
@@ -676,6 +811,7 @@ function CourseLearnPage() {
 							lessonIndex: currentLesson.lessonIndex,
 						}}
 						progress={progress}
+						progressData={progressData}
 						onLessonSelect={handleLessonSelect}
 						open={sidebarOpen}
 						onToggle={() => setSidebarOpen(!sidebarOpen)}

@@ -12,14 +12,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Course, CourseSection } from "@/lib/db/types";
+import type { Course, CourseSection, CourseProgress as CourseProgressData } from "@/lib/db/types";
+import { isLessonCompleted as checkLessonCompleted } from "@/features/progress";
 
 interface CurrentLesson {
 	sectionId: string;
 	lessonIndex: number;
 }
 
-interface CourseProgress {
+interface CourseProgressDisplay {
 	completedLessons: number;
 	totalLessons: number;
 	overallProgress: number;
@@ -28,7 +29,9 @@ interface CourseProgress {
 interface CourseLearnSidebarProps {
 	course: Course;
 	currentLesson: CurrentLesson | undefined;
-	progress: CourseProgress;
+	progress: CourseProgressDisplay;
+	/** Raw progress data for completion checking */
+	progressData?: CourseProgressData | null;
 	onLessonSelect: (sectionId: string, lessonIndex: number) => void;
 	open?: boolean;
 	onToggle?: () => void;
@@ -65,6 +68,7 @@ export function CourseLearnSidebar({
 	course,
 	currentLesson,
 	progress,
+	progressData,
 	onLessonSelect,
 	open = true,
 	onToggle,
@@ -84,15 +88,12 @@ export function CourseLearnSidebar({
 		}
 	}, [currentLesson?.sectionId]);
 
-	// For Phase A, we use hardcoded completed lessons (none)
-	const completedLessons = new Set<string>();
-
-	// Check if a lesson is completed (hardcoded to false for Phase A)
+	// Check if a lesson is completed (before current position)
 	const isLessonCompleted = (sectionId: string, lessonIndex: number): boolean => {
-		return completedLessons.has(`${sectionId}-${lessonIndex}`);
+		return checkLessonCompleted(course, progressData, sectionId, lessonIndex);
 	};
 
-	// Count completed lessons in a section (hardcoded to 0 for Phase A)
+	// Count completed lessons in a section
 	const getSectionCompletedCount = (section: CourseSection): number => {
 		return section.lessons.filter((_, idx) =>
 			isLessonCompleted(section.id, idx),
