@@ -47,8 +47,8 @@ function KontakPage() {
 				<div className="grid md:grid-cols-2 gap-6">
 					{/* WhatsApp Card */}
 					<div className="bg-card border border-border rounded-xl p-6 text-center">
-						<div className="w-14 h-14 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-							<MessageCircle className="w-7 h-7 text-green-600" />
+						<div className="w-14 h-14 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+							<MessageCircle className="w-7 h-7 text-brand-primary" />
 						</div>
 						<h3 className="text-xl font-semibold text-foreground mb-2">
 							WhatsApp
@@ -63,7 +63,7 @@ function KontakPage() {
 							href={whatsappLink}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+							className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors font-medium"
 						>
 							<MessageCircle className="w-5 h-5" />
 							Chat via WhatsApp
@@ -72,8 +72,8 @@ function KontakPage() {
 
 					{/* Email Card */}
 					<div className="bg-card border border-border rounded-xl p-6 text-center">
-						<div className="w-14 h-14 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-							<Mail className="w-7 h-7 text-blue-600" />
+						<div className="w-14 h-14 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+							<Mail className="w-7 h-7 text-brand-primary" />
 						</div>
 						<h3 className="text-xl font-semibold text-foreground mb-2">
 							Email
@@ -86,7 +86,7 @@ function KontakPage() {
 						</p>
 						<a
 							href={`mailto:${contactInfo.email}`}
-							className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+							className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors font-medium"
 						>
 							<Mail className="w-5 h-5" />
 							Kirim Email
@@ -96,8 +96,8 @@ function KontakPage() {
 
 				{/* Operating Hours */}
 				<div className="bg-card border border-border rounded-xl p-6 text-center">
-					<div className="w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-						<Clock className="w-6 h-6 text-amber-600" />
+					<div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+						<Clock className="w-6 h-6 text-brand-primary" />
 					</div>
 					<h2 className="text-xl font-semibold text-foreground mb-4">
 						Jam Operasional

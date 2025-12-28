@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, Clock, Play, Calendar, BookMarked } from "lucide-react";
+import { useMemo } from "react";
 import { z } from "zod";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useUserEnrollments } from "@/features/enrollments";
+import { useAllCourseProgress } from "@/features/progress";
 import type { EnrollmentWithCourse } from "@/lib/db/types";
 
 // Status filter types
@@ -101,15 +103,30 @@ function KursusSayaPage() {
 	const { status } = Route.useSearch();
 
 	// Fetch user enrollments
-	const { data: enrollments, isLoading } = useUserEnrollments();
+	const { data: enrollments, isLoading: enrollmentsLoading } = useUserEnrollments();
 
-	// For now, all courses have 0% progress until progress tracking is implemented
-	const getProgress = (_courseId: string) => 0;
+	// Extract course IDs for progress fetching
+	const courseIds = useMemo(
+		() => enrollments?.map((e) => e.course_id) ?? [],
+		[enrollments]
+	);
+
+	// Fetch progress for all enrolled courses
+	const { data: progressData, isLoading: progressLoading } = useAllCourseProgress(courseIds);
+
+	// Combined loading state
+	const isLoading = enrollmentsLoading || progressLoading;
+
+	// Get progress for a course from the fetched data
+	const getProgress = (courseId: string): number => {
+		const progress = progressData?.find((p) => p.course_id === courseId);
+		return progress?.progress_percent ?? 0;
+	};
 
 	// Filter enrollments based on status
 	const filteredEnrollments = enrollments
 		? filterEnrollmentsByStatus(enrollments, status, getProgress)
-		: []
+		: [];
 
 	// Count courses by status for tab badges
 	const allCount = enrollments?.length ?? 0;
@@ -267,15 +284,15 @@ function EnrolledCourseCardExpanded({
 				{/* Status Badge */}
 				<div className="absolute top-3 left-3">
 					{status === "completed" ? (
-						<Badge className="bg-green-500 text-white border-0">
+						<Badge className="bg-brand-primary text-white border-0">
 							Selesai
 						</Badge>
 					) : status === "in_progress" ? (
-						<Badge className="bg-blue-500 text-white border-0">
-							Sedang Dipelajari
+						<Badge className="bg-brand-primary/80 text-white border-0">
+							{progress}% Selesai
 						</Badge>
 					) : (
-						<Badge className="bg-amber-500 text-white border-0">
+						<Badge className="bg-brand-primary/60 text-white border-0">
 							Baru
 						</Badge>
 					)}
@@ -291,10 +308,7 @@ function EnrolledCourseCardExpanded({
 				{/* Progress bar */}
 				<div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/20">
 					<div
-						className={cn(
-							"h-full transition-all",
-							status === "completed" ? "bg-green-500" : "bg-brand-primary"
-						)}
+						className="h-full transition-all bg-brand-primary"
 						style={{ width: `${Math.max(progress, 0)}%` }}
 					/>
 				</div>
@@ -330,7 +344,7 @@ function EnrolledCourseCardExpanded({
 						</span>
 					)}
 					{progress >= 100 && (
-						<span className="text-xs font-medium text-green-600">
+						<span className="text-xs font-medium text-brand-primary">
 							Selesai
 						</span>
 					)}
