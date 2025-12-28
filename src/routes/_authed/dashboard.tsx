@@ -21,12 +21,18 @@ import {
 	ChevronDown,
 	Activity,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { CourseCarousel } from "@/components/course";
 import { useUserEnrollments } from "@/features/enrollments";
+import {
+	useAllCourseProgress,
+	useWeeklyActivity,
+	useActivityStreak,
+	formatWeeklyChartData,
+} from "@/features/progress";
 import type { Course } from "@/lib/db/types";
 import {
 	RadialBarChart,
@@ -80,23 +86,60 @@ function DashboardPage() {
 	const { user } = Route.useRouteContext();
 
 	// Fetch user enrollments
-	const { data: enrollments, isLoading } = useUserEnrollments();
+	const { data: enrollments, isLoading: enrollmentsLoading } = useUserEnrollments();
+
+	// Extract course IDs for progress fetching
+	const courseIds = useMemo(
+		() => enrollments?.map((e) => e.course?.id).filter(Boolean) as string[] ?? [],
+		[enrollments]
+	);
+
+	// Fetch progress for all enrolled courses
+	const { data: allProgress, isLoading: progressLoading } = useAllCourseProgress(courseIds);
+
+	// Fetch weekly activity data for charts
+	const { data: weeklyActivityRaw } = useWeeklyActivity();
+	const { data: activityStreak } = useActivityStreak();
+
+	// Format weekly activity for charts
+	const weeklyChartData = useMemo(
+		() => formatWeeklyChartData(weeklyActivityRaw ?? []),
+		[weeklyActivityRaw]
+	);
+
+	const isLoading = enrollmentsLoading || progressLoading;
 
 	const displayName = getDisplayName(user);
 	const firstName = displayName.split(" ")[0];
 
-	// Compute dashboard stats
+	// Compute dashboard stats from real progress data
 	const activeCourses = enrollments?.length ?? 0;
-	const totalLearningMinutes =
-		enrollments?.reduce(
-			(sum, enrollment) => sum + (enrollment.course?.duration_minutes ?? 0),
-			0,
-		) ?? 0;
-	const completedCourses = 0; // TODO: Implement with progress tracking
-	const overallProgress = 0; // TODO: Implement with progress tracking
+
+	// Calculate completed courses (100% progress)
+	const completedCourses = useMemo(
+		() => allProgress?.filter((p) => p.progress_percent === 100).length ?? 0,
+		[allProgress]
+	);
+
+	// Calculate overall progress (average of all courses)
+	const overallProgress = useMemo(() => {
+		if (!allProgress || allProgress.length === 0) return 0;
+		if (activeCourses === 0) return 0;
+
+		// Sum progress from tracked courses, treat untracked as 0%
+		const totalProgress = allProgress.reduce((sum, p) => sum + p.progress_percent, 0);
+		// Average across ALL enrolled courses (not just those with progress records)
+		return Math.round(totalProgress / activeCourses);
+	}, [allProgress, activeCourses]);
 
 	// Get featured course (first enrolled) and remaining courses
 	const featuredCourse = enrollments?.[0]?.course;
+	const featuredCourseProgress = useMemo(() => {
+		if (!featuredCourse || !allProgress) return 0;
+		const progress = allProgress.find((p) => p.course_id === featuredCourse.id);
+		return progress?.progress_percent ?? 0;
+	}, [featuredCourse, allProgress]);
+
 	const otherCourses = enrollments?.slice(1).map((e) => e.course) ?? [];
 
 	return (
@@ -119,16 +162,17 @@ function DashboardPage() {
 					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 						{/* Featured Course Card - 2/3 width */}
 						<div className="lg:col-span-2">
-							<FeaturedCourseCard course={featuredCourse!} progress={0} />
+							<FeaturedCourseCard course={featuredCourse!} progress={featuredCourseProgress} />
 						</div>
 
 						{/* Stats Sidebar - 1/3 width */}
 						<div className="lg:col-span-1">
 							<StatsSidebar
 								activeCourses={activeCourses}
-								learningMinutes={totalLearningMinutes}
 								completedCourses={completedCourses}
 								overallProgress={overallProgress}
+								weeklyChartData={weeklyChartData}
+								streak={activityStreak ?? 0}
 							/>
 						</div>
 					</div>
@@ -265,16 +309,25 @@ const STAT_OPTIONS: { value: StatType; label: string; icon: React.ComponentType<
 	{ value: "activity", label: "Aktivitas", icon: Activity },
 ];
 
+interface WeeklyChartDataItem {
+	day: string;
+	dayFull: string;
+	menit: number;
+	pelajaran: number;
+}
+
 function StatsSidebar({
 	activeCourses,
-	learningMinutes,
 	completedCourses,
 	overallProgress,
+	weeklyChartData,
+	streak,
 }: {
 	activeCourses: number;
-	learningMinutes: number;
 	completedCourses: number;
 	overallProgress: number;
+	weeklyChartData: WeeklyChartDataItem[];
+	streak: number;
 }) {
 	const [selectedStat, setSelectedStat] = useState<StatType>("progress");
 	const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -330,13 +383,13 @@ function StatsSidebar({
 					<ProgressVisualization percentage={overallProgress} />
 				)}
 				{selectedStat === "courses" && (
-					<CoursesVisualization active={activeCourses} completed={completedCourses} />
+					<CoursesVisualization total={activeCourses} completed={completedCourses} />
 				)}
 				{selectedStat === "time" && (
-					<TimeVisualization minutes={learningMinutes} />
+					<TimeVisualization weeklyData={weeklyChartData} />
 				)}
 				{selectedStat === "activity" && (
-					<ActivityVisualization />
+					<ActivityVisualization weeklyData={weeklyChartData} streak={streak} />
 				)}
 			</div>
 		</div>
@@ -353,13 +406,19 @@ const BRAND_PRIMARY_LIGHT = "#1c9af133";
  * Progress visualization - Radial bar chart with animation
  */
 function ProgressVisualization({ percentage }: { percentage: number }) {
+	// Calculate the end angle based on percentage
+	// Full circle is 360 degrees (90 to -270)
+	// For partial fill, we calculate proportionally
+	const endAngle = 90 - (percentage / 100) * 360;
+
 	const data = [
-		{ name: "Progress", value: percentage, fill: BRAND_PRIMARY },
+		{ name: "Progress", value: 100, fill: BRAND_PRIMARY },
 	];
 
 	return (
 		<div className="flex flex-col items-center">
 			<div className="relative w-40 h-40">
+				{/* Background circle */}
 				<ResponsiveContainer width="100%" height="100%">
 					<RadialBarChart
 						cx="50%"
@@ -367,20 +426,40 @@ function ProgressVisualization({ percentage }: { percentage: number }) {
 						innerRadius="70%"
 						outerRadius="100%"
 						barSize={14}
-						data={data}
+						data={[{ value: 100 }]}
 						startAngle={90}
 						endAngle={-270}
 					>
 						<RadialBar
-							background={{ fill: BRAND_PRIMARY_LIGHT }}
 							dataKey="value"
+							fill={BRAND_PRIMARY_LIGHT}
 							cornerRadius={10}
-							animationBegin={0}
-							animationDuration={1000}
-							animationEasing="ease-out"
 						/>
 					</RadialBarChart>
 				</ResponsiveContainer>
+				{/* Foreground progress arc */}
+				<div className="absolute inset-0">
+					<ResponsiveContainer width="100%" height="100%">
+						<RadialBarChart
+							cx="50%"
+							cy="50%"
+							innerRadius="70%"
+							outerRadius="100%"
+							barSize={14}
+							data={data}
+							startAngle={90}
+							endAngle={endAngle}
+						>
+							<RadialBar
+								dataKey="value"
+								cornerRadius={10}
+								animationBegin={0}
+								animationDuration={1000}
+								animationEasing="ease-out"
+							/>
+						</RadialBarChart>
+					</ResponsiveContainer>
+				</div>
 				<div className="absolute inset-0 flex flex-col items-center justify-center">
 					<span className="text-3xl font-bold text-foreground">{percentage}%</span>
 					<span className="text-xs text-muted-foreground">selesai</span>
@@ -395,12 +474,16 @@ function ProgressVisualization({ percentage }: { percentage: number }) {
 
 /**
  * Courses visualization - Pie/Donut chart with animation
+ * @param total - Total enrolled courses
+ * @param completed - Courses with 100% progress
  */
-function CoursesVisualization({ active, completed }: { active: number; completed: number }) {
-	const total = active + completed;
+function CoursesVisualization({ total, completed }: { total: number; completed: number }) {
+	// In-progress = total enrolled minus completed
+	const inProgress = total - completed;
+
 	const data = [
 		{ name: "Selesai", value: completed, fill: BRAND_PRIMARY },
-		{ name: "Aktif", value: active, fill: BRAND_PRIMARY_LIGHT },
+		{ name: "Aktif", value: inProgress, fill: BRAND_PRIMARY_LIGHT },
 	];
 
 	// If no courses, show empty state
@@ -451,7 +534,7 @@ function CoursesVisualization({ active, completed }: { active: number; completed
 			<div className="flex items-center gap-4 mt-3">
 				<div className="flex items-center gap-2">
 					<div className="w-3 h-3 rounded-full" style={{ backgroundColor: BRAND_PRIMARY_LIGHT }} />
-					<span className="text-sm text-muted-foreground">{active} aktif</span>
+					<span className="text-sm text-muted-foreground">{inProgress} aktif</span>
 				</div>
 				<div className="flex items-center gap-2">
 					<div className="w-3 h-3 rounded-full" style={{ backgroundColor: BRAND_PRIMARY }} />
@@ -464,21 +547,17 @@ function CoursesVisualization({ active, completed }: { active: number; completed
 
 /**
  * Time visualization - Large number with animated bar chart
+ * Shows actual time spent from activity logs (weekly total)
  */
-function TimeVisualization({ minutes }: { minutes: number }) {
-	const hours = Math.floor(minutes / 60);
-	const mins = minutes % 60;
-
-	// Mock weekly data (would come from real data later)
-	const weeklyData = [
-		{ day: "Sen", menit: 30 },
-		{ day: "Sel", menit: 45 },
-		{ day: "Rab", menit: 20 },
-		{ day: "Kam", menit: 60 },
-		{ day: "Jum", menit: 40 },
-		{ day: "Sab", menit: 25 },
-		{ day: "Min", menit: 50 },
-	];
+function TimeVisualization({
+	weeklyData,
+}: {
+	weeklyData: WeeklyChartDataItem[];
+}) {
+	// Calculate total minutes from weekly activity data
+	const totalMinutes = weeklyData.reduce((sum, d) => sum + d.menit, 0);
+	const hours = Math.floor(totalMinutes / 60);
+	const mins = totalMinutes % 60;
 
 	return (
 		<div className="flex flex-col items-center w-full">
@@ -490,12 +569,11 @@ function TimeVisualization({ minutes }: { minutes: number }) {
 					<span className="text-4xl font-bold text-foreground ml-2">{mins}</span>
 					<span className="text-lg text-muted-foreground">menit</span>
 				</div>
-				<p className="text-sm text-muted-foreground mt-1">total waktu belajar</p>
+				<p className="text-sm text-muted-foreground mt-1">waktu belajar minggu ini</p>
 			</div>
 
 			{/* Weekly bar chart */}
 			<div className="w-full h-28">
-				<p className="text-xs text-muted-foreground mb-1 text-center">Minggu ini</p>
 				<ResponsiveContainer width="100%" height="100%">
 					<BarChart data={weeklyData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
 						<XAxis
@@ -532,18 +610,15 @@ function TimeVisualization({ minutes }: { minutes: number }) {
 /**
  * Activity visualization - Weekly activity with animated bars
  */
-function ActivityVisualization() {
-	// Mock activity data (lessons completed per day)
-	const activityData = [
-		{ day: "Sen", pelajaran: 2 },
-		{ day: "Sel", pelajaran: 1 },
-		{ day: "Rab", pelajaran: 3 },
-		{ day: "Kam", pelajaran: 0 },
-		{ day: "Jum", pelajaran: 2 },
-		{ day: "Sab", pelajaran: 4 },
-		{ day: "Min", pelajaran: 1 },
-	];
-	const totalLessons = activityData.reduce((sum, d) => sum + d.pelajaran, 0);
+function ActivityVisualization({
+	weeklyData,
+	streak,
+}: {
+	weeklyData: WeeklyChartDataItem[];
+	streak: number;
+}) {
+	// Calculate total lessons from real data
+	const totalLessons = weeklyData.reduce((sum, d) => sum + d.pelajaran, 0);
 
 	return (
 		<div className="flex flex-col items-center w-full">
@@ -556,7 +631,7 @@ function ActivityVisualization() {
 			{/* Activity bars */}
 			<div className="w-full h-28">
 				<ResponsiveContainer width="100%" height="100%">
-					<BarChart data={activityData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+					<BarChart data={weeklyData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
 						<XAxis
 							dataKey="day"
 							axisLine={false}
@@ -586,9 +661,15 @@ function ActivityVisualization() {
 			</div>
 
 			{/* Streak indicator */}
-			<p className="text-sm text-brand-primary font-medium mt-2">
-				3 hari berturut-turut aktif
-			</p>
+			{streak > 0 ? (
+				<p className="text-sm text-brand-primary font-medium mt-2">
+					{streak} hari berturut-turut aktif
+				</p>
+			) : (
+				<p className="text-sm text-muted-foreground mt-2">
+					Mulai belajar untuk membangun streak!
+				</p>
+			)}
 		</div>
 	);
 }

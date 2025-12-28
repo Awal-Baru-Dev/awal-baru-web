@@ -216,6 +216,35 @@ export interface CourseProgress {
 }
 
 /**
+ * Activity log data structure
+ *
+ * Tracks daily user activity for dashboard stats (weekly charts, streak).
+ * One record per user per course per day.
+ */
+export interface ActivityLog {
+	id: string;
+	user_id: string;
+	course_id: string;
+	/** Date of activity (YYYY-MM-DD format) */
+	activity_date: string;
+	/** Number of lessons completed on this day */
+	lessons_completed: number;
+	/** Total time spent watching videos on this day (minutes) */
+	time_spent_minutes: number;
+	created_at: string;
+	updated_at: string;
+}
+
+/**
+ * Aggregated weekly activity (for dashboard)
+ */
+export interface WeeklyActivity {
+	day: string;
+	lessons: number;
+	minutes: number;
+}
+
+/**
  * Database tables mapping
  */
 export interface Database {
@@ -224,6 +253,7 @@ export interface Database {
 	enrollments: Enrollment;
 	notifications: Notification;
 	course_progress: CourseProgress;
+	activity_log: ActivityLog;
 }
 
 export type TableName = keyof Database;

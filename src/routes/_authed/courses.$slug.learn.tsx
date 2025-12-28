@@ -25,6 +25,7 @@ import { useEnrollmentStatus } from "@/features/enrollments";
 import {
 	useCourseProgress,
 	useUpdateProgress,
+	useLogActivity,
 	getProgressDisplayData,
 	calculateLessonPosition,
 } from "@/features/progress";
@@ -288,6 +289,10 @@ function CourseLearnPage() {
 	const { data: progressData, isLoading: isProgressLoading } =
 		useCourseProgress(course?.id ?? "");
 	const updateProgress = useUpdateProgress();
+	const logActivity = useLogActivity();
+
+	// Activity tracking state
+	const watchTimeRef = useRef(0); // Accumulated seconds watched since last log
 
 	const isLoading = isCourseLoading || isEnrollmentLoading || isProgressLoading;
 	const isEnrolled = !!enrollment;
@@ -459,10 +464,39 @@ function CourseLearnPage() {
 		}
 	}, [course, overlayType, pendingLesson, slug, navigate, progressData, updateProgress]);
 
+	// Log activity when leaving the page
+	useEffect(() => {
+		return () => {
+			// Flush any remaining watch time on unmount
+			if (course && watchTimeRef.current >= 60) {
+				const minutesWatched = Math.floor(watchTimeRef.current / 60);
+				if (minutesWatched > 0) {
+					logActivity.mutate({
+						courseId: course.id,
+						timeSpentMinutes: minutesWatched,
+					});
+				}
+			}
+		};
+	}, [course, logActivity]);
+
 	// Handle video progress - detect lesson boundaries and manual seeks
 	const handleProgress = useCallback(
 		(data: WistiaProgressData) => {
 			if (!course || !currentLesson) return;
+
+			// Track watch time (this fires every second)
+			watchTimeRef.current += 1;
+
+			// Log activity every 60 seconds of watch time
+			if (watchTimeRef.current >= 60) {
+				const minutesWatched = Math.floor(watchTimeRef.current / 60);
+				logActivity.mutate({
+					courseId: course.id,
+					timeSpentMinutes: minutesWatched,
+				});
+				watchTimeRef.current = watchTimeRef.current % 60;
+			}
 
 			// Get the end time for current lesson
 			const endTime = getLessonEndTime(course, currentLesson.sectionId, currentLesson.lessonIndex);
@@ -479,6 +513,12 @@ function CourseLearnPage() {
 					if (nextLesson) {
 						setPendingLesson(nextLesson);
 						setOverlayType('auto-next');
+
+						// Log lesson completion
+						logActivity.mutate({
+							courseId: course.id,
+							lessonsCompleted: 1,
+						});
 					}
 				} else {
 					// This is the last lesson - show a toast instead (only once)
@@ -486,6 +526,12 @@ function CourseLearnPage() {
 						hasShownCompletionToast.current = true;
 						toast.success("Selamat! Kamu telah menyelesaikan kursus ini.", {
 							duration: 5000,
+						});
+
+						// Log final lesson completion
+						logActivity.mutate({
+							courseId: course.id,
+							lessonsCompleted: 1,
 						});
 					}
 					// Don't pause or show overlay - let the video continue/end naturally
@@ -517,7 +563,7 @@ function CourseLearnPage() {
 				});
 			}
 		},
-		[course, currentLesson, overlayType, slug, navigate],
+		[course, currentLesson, overlayType, slug, navigate, logActivity],
 	);
 
 	// Calculate progress display data
