@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { z } from "zod";
 import {
 	ArrowLeft,
 	Menu,
 	X,
 	AlertCircle,
+	ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +15,8 @@ import {
 	CourseLearnSidebar,
 	VideoLessonNav,
 	type LessonNavInfo,
+	type WistiaPlayerHandle,
+	type WistiaProgressData,
 } from "@/components/course";
 import { useCourse } from "@/features/courses";
 import { useEnrollmentStatus } from "@/features/enrollments";
@@ -37,6 +40,7 @@ interface CurrentLesson {
 	lessonIndex: number;
 	title: string;
 	videoId: string;
+	startTime: number;
 }
 
 /**
@@ -60,6 +64,7 @@ function getLessonFromCourse(
 		lessonIndex,
 		title: lesson.title,
 		videoId: lesson.videoId || "",
+		startTime: lesson.startTime || 0,
 	};
 }
 
@@ -77,11 +82,82 @@ function getFirstLesson(course: Course): CurrentLesson | null {
 				lessonIndex: 0,
 				title: lesson.title,
 				videoId: lesson.videoId || "",
+				startTime: lesson.startTime || 0,
 			};
 		}
 	}
 
 	return null;
+}
+
+/**
+ * Get lesson at a specific time (for manual seek detection)
+ */
+function getLessonAtTime(course: Course, timeInSeconds: number): CurrentLesson | null {
+	const sections = course.content?.sections || [];
+
+	for (const section of sections) {
+		for (let i = 0; i < section.lessons.length; i++) {
+			const lesson = section.lessons[i];
+			const startTime = lesson.startTime || 0;
+
+			// Find the next lesson's startTime to determine endTime
+			let endTime = Number.POSITIVE_INFINITY;
+
+			// Check next lesson in same section
+			if (i + 1 < section.lessons.length) {
+				endTime = section.lessons[i + 1].startTime || endTime;
+			} else {
+				// Check first lesson of next section
+				const sectionIdx = sections.indexOf(section);
+				if (sectionIdx + 1 < sections.length) {
+					const nextSection = sections[sectionIdx + 1];
+					if (nextSection.lessons.length > 0) {
+						endTime = nextSection.lessons[0].startTime || endTime;
+					}
+				}
+			}
+
+			if (timeInSeconds >= startTime && timeInSeconds < endTime) {
+				return {
+					sectionId: section.id,
+					lessonIndex: i,
+					title: lesson.title,
+					videoId: lesson.videoId || "",
+					startTime: lesson.startTime || 0,
+				};
+			}
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Get end time for a lesson (next lesson's startTime or Infinity)
+ */
+function getLessonEndTime(course: Course, sectionId: string, lessonIndex: number): number {
+	const sections = course.content?.sections || [];
+	const sectionIdx = sections.findIndex((s) => s.id === sectionId);
+
+	if (sectionIdx < 0) return Number.POSITIVE_INFINITY;
+
+	const section = sections[sectionIdx];
+
+	// Check next lesson in same section
+	if (lessonIndex + 1 < section.lessons.length) {
+		return section.lessons[lessonIndex + 1].startTime || Number.POSITIVE_INFINITY;
+	}
+
+	// Check first lesson of next section
+	if (sectionIdx + 1 < sections.length) {
+		const nextSection = sections[sectionIdx + 1];
+		if (nextSection.lessons.length > 0) {
+			return nextSection.lessons[0].startTime || Number.POSITIVE_INFINITY;
+		}
+	}
+
+	return Number.POSITIVE_INFINITY;
 }
 
 /**
@@ -177,11 +253,14 @@ function CourseLearnPage() {
 	const { section: sectionParam, lesson: lessonParam } = Route.useSearch();
 	const navigate = useNavigate();
 
+	// Refs
+	const playerRef = useRef<WistiaPlayerHandle>(null);
+
 	// State
 	const [currentLesson, setCurrentLesson] = useState<CurrentLesson | null>(null);
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-	const [playerKey, setPlayerKey] = useState(0); // Force re-mount of player
+	const [showNextPrompt, setShowNextPrompt] = useState(false);
 
 	// Fetch course data
 	const {
@@ -218,7 +297,7 @@ function CourseLearnPage() {
 		}
 	}, [course, sectionParam, lessonParam]);
 
-	// Handle lesson selection
+	// Handle lesson selection - seek within video instead of remounting
 	const handleLessonSelect = useCallback(
 		(sectionId: string, lessonIndex: number) => {
 			if (!course) return;
@@ -227,8 +306,14 @@ function CourseLearnPage() {
 			if (!lesson) return;
 
 			setCurrentLesson(lesson);
-			setPlayerKey((prev) => prev + 1); // Force player re-mount
+			setShowNextPrompt(false); // Hide prompt if visible
 			setMobileSidebarOpen(false); // Close mobile sidebar
+
+			// Seek to lesson's start time
+			if (playerRef.current) {
+				playerRef.current.seekTo(lesson.startTime);
+				playerRef.current.play();
+			}
 
 			// Update URL without navigation
 			navigate({
@@ -247,6 +332,58 @@ function CourseLearnPage() {
 			handleLessonSelect(sectionId, lessonIndex);
 		},
 		[handleLessonSelect],
+	);
+
+	// Go to next lesson (called from prompt)
+	const goToNextLesson = useCallback(() => {
+		if (!course || !currentLesson) return;
+
+		const next = getNextLesson(course, currentLesson.sectionId, currentLesson.lessonIndex);
+		if (next) {
+			handleLessonSelect(next.sectionId, next.lessonIndex);
+		}
+	}, [course, currentLesson, handleLessonSelect]);
+
+	// Handle video progress - detect lesson boundaries and manual seeks
+	const handleProgress = useCallback(
+		(data: WistiaProgressData) => {
+			if (!course || !currentLesson) return;
+
+			// Get the end time for current lesson
+			const endTime = getLessonEndTime(course, currentLesson.sectionId, currentLesson.lessonIndex);
+
+			// Check if we've reached the lesson's end time (with 1 second buffer)
+			if (endTime !== Number.POSITIVE_INFINITY && data.currentTime >= endTime - 1 && !showNextPrompt) {
+				// Pause and show the next lesson prompt
+				playerRef.current?.pause();
+				setShowNextPrompt(true);
+				return;
+			}
+
+			// Detect if user manually seeked past lesson boundary
+			const lessonAtCurrentTime = getLessonAtTime(course, data.currentTime);
+			if (
+				lessonAtCurrentTime &&
+				(lessonAtCurrentTime.sectionId !== currentLesson.sectionId ||
+					lessonAtCurrentTime.lessonIndex !== currentLesson.lessonIndex)
+			) {
+				// Update current lesson to match where user seeked
+				setCurrentLesson(lessonAtCurrentTime);
+				setShowNextPrompt(false);
+
+				// Update URL silently
+				navigate({
+					to: "/courses/$slug/learn",
+					params: { slug },
+					search: {
+						section: lessonAtCurrentTime.sectionId,
+						lesson: lessonAtCurrentTime.lessonIndex,
+					},
+					replace: true,
+				});
+			}
+		},
+		[course, currentLesson, showNextPrompt, slug, navigate],
 	);
 
 	// Hardcoded progress for Phase A
@@ -457,11 +594,53 @@ function CourseLearnPage() {
 						{/* Video Player */}
 						<div className="relative rounded-xl overflow-hidden shadow-lg mb-6">
 							{currentLesson.videoId ? (
-								<WistiaPlayer
-									key={playerKey}
-									mediaId={currentLesson.videoId}
-									className="w-full"
-								/>
+								<>
+									<WistiaPlayer
+										ref={playerRef}
+										mediaId={currentLesson.videoId}
+										className="w-full"
+										initialTime={currentLesson.startTime}
+										onProgress={handleProgress}
+									/>
+									{/* Next Lesson Prompt Overlay */}
+									{showNextPrompt && nextLesson && (
+										<div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10">
+											<div className="text-center px-6">
+												<p className="text-white text-lg font-medium mb-2">
+													Pelajaran selesai!
+												</p>
+												<p className="text-white/70 text-sm mb-6">
+													Lanjut ke: {nextLesson.title}
+												</p>
+												<Button
+													onClick={goToNextLesson}
+													className="bg-brand-primary hover:bg-brand-primary/90"
+												>
+													Lanjut ke Pelajaran Berikutnya
+													<ChevronRight className="w-4 h-4 ml-2" />
+												</Button>
+											</div>
+										</div>
+									)}
+									{/* Course Completed Overlay */}
+									{showNextPrompt && !nextLesson && (
+										<div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10">
+											<div className="text-center px-6">
+												<p className="text-white text-lg font-medium mb-2">
+													Selamat! Kursus selesai!
+												</p>
+												<p className="text-white/70 text-sm mb-6">
+													Kamu telah menyelesaikan semua pelajaran.
+												</p>
+												<Button asChild variant="outline">
+													<Link to="/courses/$slug" params={{ slug }}>
+														Kembali ke Detail Kursus
+													</Link>
+												</Button>
+											</div>
+										</div>
+									)}
+								</>
 							) : (
 								<div className="aspect-video bg-muted flex items-center justify-center">
 									<div className="text-center">

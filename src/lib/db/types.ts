@@ -65,6 +65,8 @@ export interface CourseLesson {
 	duration?: string;
 	videoId?: string;
 	isFree?: boolean;
+	/** Start time in seconds for chapter-based navigation within a single video */
+	startTime?: number;
 }
 
 /**

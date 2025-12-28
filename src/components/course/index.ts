@@ -20,6 +20,10 @@ export {
 	CourseSidebarSkeleton,
 } from "./course-sidebar";
 export { WhatYouLearn, WhatYouLearnSkeleton } from "./what-you-learn";
-export { WistiaPlayer } from "./wistia-player";
+export {
+	WistiaPlayer,
+	type WistiaPlayerHandle,
+	type WistiaProgressData,
+} from "./wistia-player";
 export { CourseLearnSidebar } from "./course-learn-sidebar";
 export { VideoLessonNav, type LessonNavInfo } from "./video-lesson-nav";
