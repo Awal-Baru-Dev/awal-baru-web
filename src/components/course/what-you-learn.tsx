@@ -29,7 +29,7 @@ export function WhatYouLearn({ points, className }: WhatYouLearnProps) {
 						key={`learn-${index}`}
 						className="flex items-start gap-3 p-3 rounded-lg bg-muted/50"
 					>
-						<CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+						<CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0 mt-0.5" />
 						<span className="text-sm text-foreground">{point}</span>
 					</div>
 				))}

@@ -118,7 +118,7 @@ export function CourseCurriculum({
 										className={cn(
 											"w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium",
 											isCompleted
-												? "bg-green-500 text-white"
+												? "bg-brand-primary text-white"
 												: progress.completed > 0
 													? "bg-brand-primary/20 text-brand-primary"
 													: "bg-muted text-muted-foreground",
@@ -186,7 +186,7 @@ export function CourseCurriculum({
 												<div
 													className={cn(
 														"w-5 h-5 flex items-center justify-center",
-														isComplete && "text-green-500",
+														isComplete && "text-brand-primary",
 														isCurrent && "text-brand-primary",
 														!canAccess && "text-muted-foreground",
 													)}

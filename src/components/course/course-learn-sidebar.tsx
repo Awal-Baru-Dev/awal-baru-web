@@ -188,7 +188,7 @@ export function CourseLearnSidebar({
 										{/* Section completion indicator */}
 										<div className="flex-shrink-0">
 											{isSectionComplete ? (
-												<CheckCircle2 className="w-5 h-5 text-green-600" />
+												<CheckCircle2 className="w-5 h-5 text-brand-primary" />
 											) : (
 												<Circle className="w-5 h-5 text-muted-foreground" />
 											)}
@@ -242,7 +242,7 @@ export function CourseLearnSidebar({
 													<div className="flex items-center gap-3 flex-1 min-w-0">
 														{/* Lesson status icon */}
 														{isCompleted ? (
-															<CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+															<CheckCircle2 className="w-4 h-4 text-brand-primary flex-shrink-0" />
 														) : isCurrent ? (
 															<Play className="w-4 h-4 text-brand-primary fill-brand-primary flex-shrink-0" />
 														) : (

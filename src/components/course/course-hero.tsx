@@ -69,7 +69,7 @@ export function CourseHero({
 						</Button>
 						{/* Enrolled badge */}
 						{isEnrolled ? (
-							<Badge className="absolute top-4 left-4 bg-green-600 text-white">
+							<Badge className="absolute top-4 left-4 bg-brand-primary text-white">
 								<CheckCircle className="w-3 h-3 mr-1" />
 								Sudah Terdaftar
 							</Badge>
@@ -110,7 +110,7 @@ export function CourseHero({
 				{/* Badge overlay - when not showing preview */}
 				{!showPreview && (
 					isEnrolled ? (
-						<Badge className="absolute top-4 left-4 bg-green-600 text-white">
+						<Badge className="absolute top-4 left-4 bg-brand-primary text-white">
 							<CheckCircle className="w-3 h-3 mr-1" />
 							Sudah Terdaftar
 						</Badge>

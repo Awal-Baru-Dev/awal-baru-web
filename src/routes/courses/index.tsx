@@ -248,7 +248,7 @@ function CoursesPage() {
 								{isBundle ? (
 									<>
 										<li className="flex items-center gap-3">
-											<CheckCircle2 className="w-5 h-5 text-green-300 flex-shrink-0" />
+											<CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />
 											<span className="text-white/90">
 												Akses ke semua {courseCount} kursus
 											</span>
@@ -260,7 +260,7 @@ function CoursesPage() {
 													key={`feature-${index}`}
 													className="flex items-center gap-3"
 												>
-													<CheckCircle2 className="w-5 h-5 text-green-300 flex-shrink-0" />
+													<CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />
 													<span className="text-white/90">{feature}</span>
 												</li>
 											))}
@@ -273,7 +273,7 @@ function CoursesPage() {
 												key={`feature-${index}`}
 												className="flex items-center gap-3"
 											>
-												<CheckCircle2 className="w-5 h-5 text-green-300 flex-shrink-0" />
+												<CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />
 												<span className="text-white/90">{feature}</span>
 											</li>
 										))
@@ -304,10 +304,10 @@ function CoursesPage() {
 								<div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
 									{/* Show different CTA based on ownership */}
 									{isBundle && ownsAllCourses ? (
-										<Badge className="bg-green-600 text-white border-0 text-base px-6 py-2">
-											<Award className="w-5 h-5 mr-2" />
-											Semua Kursus Sudah Dimiliki
-										</Badge>
+										<div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white border border-white/30 rounded-lg px-5 py-2.5">
+											<Award className="w-5 h-5" />
+											<span className="font-medium">Semua Kursus Sudah Dimiliki</span>
+										</div>
 									) : isBundle ? (
 										<Button
 											size="lg"

@@ -69,7 +69,7 @@ export function CourseCard({
 				"group block rounded-xl border bg-card overflow-hidden transition-all duration-200",
 				"hover:shadow-lg hover:scale-[1.02]",
 				isOwned
-					? "border-2 border-green-500/40 hover:border-green-500/60"
+					? "border-2 border-brand-primary/40 hover:border-brand-primary/60 shadow-brand-primary/10 shadow-md"
 					: "border-border hover:border-brand-primary/30",
 				className,
 			)}
@@ -110,7 +110,7 @@ export function CourseCard({
 
 				{/* Owned badge */}
 				{isOwned && (
-					<Badge className="absolute top-3 right-3 bg-green-600 text-white border-0 shadow-md">
+					<Badge className="absolute top-3 right-3 bg-brand-primary text-white border-0 shadow-lg">
 						<CheckCircle2 className="w-3 h-3 mr-1" />
 						DIMILIKI
 					</Badge>

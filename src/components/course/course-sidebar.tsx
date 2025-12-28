@@ -93,8 +93,8 @@ export function CourseSidebar({
 				)}
 			>
 				<div className="text-center pb-4 border-b border-border">
-					<div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-						<Award className="w-6 h-6 text-green-500" />
+					<div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+						<Award className="w-6 h-6 text-brand-primary" />
 					</div>
 					<p className="font-medium text-foreground">Kamu sudah terdaftar!</p>
 					<p className="text-sm text-muted-foreground mt-1">
