@@ -5,7 +5,7 @@
  * These functions are called from React Query hooks.
  */
 
-import { createBrowserClient } from "@/lib/db/client";
+import { createBrowserClient } from "@/lib/db/supabase/client";
 import type { Course, ListResult, QueryResult } from "@/lib/db/types";
 
 // Debug helper - set to true only for local debugging

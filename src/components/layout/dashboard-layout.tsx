@@ -3,7 +3,6 @@ import {
   Home,
   BookOpen,
   User,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -48,8 +47,8 @@ const mainNavItems = [
 
 // Help navigation items (Bantuan section)
 const helpNavItems = [
-  { to: "/bantuan", label: "Pusat Bantuan", icon: HelpCircle },
-  { to: "/kontak", label: "Hubungi Kami", icon: MessageCircle },
+  { to: "/dashboard/bantuan", label: "Pusat Bantuan", icon: HelpCircle },
+  { to: "/dashboard/kontak", label: "Hubungi Kami", icon: MessageCircle },
 ];
 
 // Get time-based greeting
@@ -261,11 +260,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <ul className="space-y-1">
               {helpNavItems.map((item) => {
                 const Icon = item.icon;
+                const isActive = location.pathname === item.to;
 
                 return (
                   <li key={item.to}>
-                    <a
-                      href={item.to}
+                    <Link
+                      to={item.to}
                       onClick={() => setSidebarOpen(false)}
                       title={isCollapsed ? item.label : undefined}
                       className={cn(
@@ -273,14 +273,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         isCollapsed
                           ? "lg:justify-center lg:px-0 lg:py-2.5 px-3 py-2.5 gap-3"
                           : "gap-3 px-3 py-2.5",
-                        "text-sidebar-foreground hover:bg-sidebar-accent"
+                        isActive
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent"
                       )}
                     >
                       <Icon className="w-5 h-5 flex-shrink-0" />
                       <span className={cn(isCollapsed && "lg:hidden")}>
                         {item.label}
                       </span>
-                    </a>
+                      {isActive && !isCollapsed && (
+                        <ChevronRight className="w-4 h-4 ml-auto lg:block hidden" />
+                      )}
+                      {isActive && (
+                        <ChevronRight className="w-4 h-4 ml-auto lg:hidden" />
+                      )}
+                    </Link>
                   </li>
                 );
               })}
@@ -342,12 +350,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <User className="w-4 h-4" />
                   Profil
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a href="/dashboard/pengaturan" onClick={() => setSidebarOpen(false)}>
-                  <Settings className="w-4 h-4" />
-                  Pengaturan
-                </a>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={toggleTheme}>
                 {theme === "light" ? (

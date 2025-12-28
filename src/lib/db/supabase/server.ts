@@ -60,37 +60,3 @@ export async function getSupabaseServerClient() {
 
 // Export type for convenience
 export type SupabaseServerClient = ReturnType<typeof getSupabaseServerClient>;
-
-/**
- * Get a Supabase admin client for server-side usage that bypasses RLS.
- *
- * This should ONLY be used for server-to-server operations like webhook handlers
- * where there's no user context but we need to update the database.
- *
- * @example
- * ```ts
- * // In a webhook handler
- * const supabase = getSupabaseAdminClient()
- * await supabase.from('enrollments').update({ payment_status: 'paid' })
- * ```
- */
-export function getSupabaseAdminClient() {
-	// Use dynamic import for createClient to keep it simple
-	const { createClient } = require("@supabase/supabase-js");
-
-	const supabaseUrl = process.env.VITE_SUPABASE_URL;
-	const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-	if (!supabaseUrl || !supabaseServiceRoleKey) {
-		throw new Error(
-			"Missing Supabase environment variables. Please set VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
-		);
-	}
-
-	return createClient(supabaseUrl, supabaseServiceRoleKey, {
-		auth: {
-			autoRefreshToken: false,
-			persistSession: false,
-		},
-	});
-}

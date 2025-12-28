@@ -1,12 +1,17 @@
 /**
  * Supabase client exports
+ *
+ * This barrel ONLY exports browser-safe clients to prevent
+ * server code from being bundled into client builds.
+ *
+ * Import browser client: from "@/lib/db/supabase/client" or "@/lib/db/supabase"
+ * Import server client: from "@/lib/db/supabase/server"
+ * Import admin client: from "@/lib/db/supabase/admin"
  */
 
-export { createBrowserClient } from "./client";
-export type { SupabaseBrowserClient } from "./client";
+// Only re-export browser-safe client from barrel
+export { createBrowserClient, type SupabaseBrowserClient } from "./client";
 
-export { getSupabaseServerClient } from "./server";
+// Types are safe to export (type-only imports are tree-shaken)
 export type { SupabaseServerClient } from "./server";
-
-export { createAdminClient } from "./admin";
 export type { SupabaseAdminClient } from "./admin";

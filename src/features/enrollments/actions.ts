@@ -4,7 +4,7 @@
  * Server-side functions for enrollment operations.
  */
 
-import { createBrowserClient } from "@/lib/db/client";
+import { createBrowserClient } from "@/lib/db/supabase/client";
 import type {
 	Enrollment,
 	EnrollmentWithCourse,

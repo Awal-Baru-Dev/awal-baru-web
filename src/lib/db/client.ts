@@ -1,27 +1,22 @@
 /**
- * Database Client Factory
+ * Browser Database Client
  *
- * This module provides a database-agnostic client factory.
- * Currently uses Supabase, but can be swapped to a REST API or other backend.
+ * This module exports ONLY browser-safe database clients.
+ * For server-side usage, import from '@/lib/db/server' or '@/lib/db/supabase/server'.
  *
  * Usage:
  * - Browser: import { createBrowserClient } from '@/lib/db/client'
- * - Server: import { createServerClient } from '@/lib/db/client'
- * - Admin: import { createAdminClient } from '@/lib/db/client'
+ * - Server: import { getSupabaseServerClient } from '@/lib/db/server'
+ * - Admin: import { createAdminClient } from '@/lib/db/server'
  */
 
-// Re-export from Supabase implementation
-// To switch to a different backend, update these exports
+// Browser-safe exports only
 export {
 	createBrowserClient,
-	getSupabaseServerClient,
-	createAdminClient,
 	type SupabaseBrowserClient,
-	type SupabaseServerClient,
-	type SupabaseAdminClient,
-} from "./supabase";
+} from "./supabase/client";
 
-// Re-export types
+// Re-export types (safe for all contexts)
 export * from "./types";
 
 /**

@@ -45,9 +45,9 @@ export const NAV_LINKS = {
 	],
 	dashboard: [
 		{ href: "/courses", label: "Kursus", icon: "BookOpen" },
-		{ href: "/courses/my-courses", label: "Kursus Saya", icon: "GraduationCap" },
-		{ href: "/courses/community", label: "Komunitas", icon: "Users" },
-		{ href: "/courses/support", label: "Bantuan", icon: "HelpCircle" },
+		{ href: "/dashboard/kursus", label: "Kursus Saya", icon: "GraduationCap" },
+		{ href: "/dashboard/bantuan", label: "Bantuan", icon: "HelpCircle" },
+		{ href: "/dashboard/kontak", label: "Hubungi Kami", icon: "MessageCircle" },
 	],
 } as const;
 

@@ -5,14 +5,12 @@ import {
 	Link,
 	createRootRouteWithContext,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { TanStackDevtools } from "@tanstack/react-devtools";
 import { Home, ArrowLeft } from "lucide-react";
 
 import { ThemeProvider, themeScript } from "@/contexts/theme-context";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import TanStackQueryDevtools from "@/integrations/tanstack-query/devtools";
+import { DevTools } from "@/components/shared/dev-tools";
 import { fetchUser, type AuthUser } from "@/features/auth";
 
 import appCss from "@/styles.css?url";
@@ -95,20 +93,7 @@ function RootComponent() {
 				<ThemeProvider>
 					<Outlet />
 					<Toaster richColors closeButton position="top-right" />
-					{import.meta.env.DEV && (
-						<TanStackDevtools
-							config={{
-								position: "bottom-right",
-							}}
-							plugins={[
-								{
-									name: "TanStack Router",
-									render: <TanStackRouterDevtoolsPanel />,
-								},
-								TanStackQueryDevtools,
-							]}
-						/>
-					)}
+					<DevTools />
 				</ThemeProvider>
 				<Scripts />
 			</body>

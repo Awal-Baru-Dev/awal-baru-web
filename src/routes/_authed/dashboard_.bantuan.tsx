@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { LandingHeader, LandingFooter } from "@/components/layout";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ChevronDown, HelpCircle, MessageCircle, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/config/constants";
 
-export const Route = createFileRoute("/bantuan")({
+export const Route = createFileRoute("/_authed/dashboard_/bantuan")({
 	component: BantuanPage,
 });
 
@@ -85,85 +85,71 @@ const faqCategories = [
 
 function BantuanPage() {
 	return (
-		<div className="min-h-screen bg-background">
-			<LandingHeader />
-
-			<main className="pt-20">
-				{/* Hero Section */}
-				<section className="py-16 bg-hero-gradient text-white">
-					<div className="container mx-auto px-6 lg:px-16">
-						<div className="max-w-3xl mx-auto text-center">
-							<div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-								<HelpCircle className="w-8 h-8" />
-							</div>
-							<h1 className="text-4xl md:text-5xl font-bold mb-4">
-								Pusat Bantuan
-							</h1>
-							<p className="text-xl text-white/90">
-								Temukan jawaban untuk pertanyaan umum seputar {APP_NAME}
-							</p>
-						</div>
+		<DashboardLayout>
+			<div className="p-4 lg:p-8 space-y-8">
+				{/* Header */}
+				<div className="flex items-center gap-4">
+					<div className="w-12 h-12 bg-brand-primary/10 rounded-xl flex items-center justify-center">
+						<HelpCircle className="w-6 h-6 text-brand-primary" />
 					</div>
-				</section>
+					<div>
+						<h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+							Pusat Bantuan
+						</h1>
+						<p className="text-muted-foreground">
+							Temukan jawaban untuk pertanyaan umum seputar {APP_NAME}
+						</p>
+					</div>
+				</div>
 
 				{/* FAQ Section */}
-				<section className="py-16 bg-background">
-					<div className="container mx-auto px-6 lg:px-16">
-						<div className="max-w-3xl mx-auto">
-							<h2 className="text-2xl font-bold text-foreground mb-8">
-								Pertanyaan Umum
-							</h2>
+				<div className="space-y-8">
+					<h2 className="text-xl font-semibold text-foreground">
+						Pertanyaan Umum
+					</h2>
 
-							<div className="space-y-8">
-								{faqCategories.map((category) => (
-									<div key={category.category}>
-										<h3 className="text-lg font-semibold text-foreground mb-4">
-											{category.category}
-										</h3>
-										<div className="space-y-3">
-											{category.items.map((item, index) => (
-												<FAQItem
-													key={index}
-													question={item.question}
-													answer={item.answer}
-												/>
-											))}
-										</div>
-									</div>
-								))}
+					<div className="space-y-8">
+						{faqCategories.map((category) => (
+							<div key={category.category}>
+								<h3 className="text-lg font-semibold text-foreground mb-4">
+									{category.category}
+								</h3>
+								<div className="space-y-3">
+									{category.items.map((item, index) => (
+										<FAQItem
+											key={index}
+											question={item.question}
+											answer={item.answer}
+										/>
+									))}
+								</div>
 							</div>
-						</div>
+						))}
 					</div>
-				</section>
+				</div>
 
 				{/* Contact CTA Section */}
-				<section className="py-16 bg-muted">
-					<div className="container mx-auto px-6 lg:px-16">
-						<div className="max-w-2xl mx-auto text-center">
-							<div className="w-14 h-14 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-								<MessageCircle className="w-7 h-7 text-brand-primary" />
-							</div>
-							<h2 className="text-2xl font-bold text-foreground mb-4">
-								Masih butuh bantuan?
-							</h2>
-							<p className="text-muted-foreground mb-6">
-								Tim support kami siap membantu menjawab pertanyaan kamu.
-							</p>
-							<Link
-								to="/kontak"
-								className="inline-flex items-center gap-2 px-6 py-3 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-dark transition-colors font-medium"
-							>
-								Hubungi Kami
-								<ArrowRight className="w-4 h-4" />
-							</Link>
-						</div>
+				<div className="bg-card border border-border rounded-xl p-6 text-center">
+					<div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+						<MessageCircle className="w-6 h-6 text-brand-primary" />
 					</div>
-				</section>
-			</main>
-
-			<LandingFooter />
-		</div>
-	);
+					<h2 className="text-xl font-semibold text-foreground mb-2">
+						Masih butuh bantuan?
+					</h2>
+					<p className="text-muted-foreground mb-4">
+						Tim support kami siap membantu menjawab pertanyaan kamu.
+					</p>
+					<Link
+						to="/dashboard/kontak"
+						className="inline-flex items-center gap-2 px-6 py-3 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-dark transition-colors font-medium"
+					>
+						Hubungi Kami
+						<ArrowRight className="w-4 h-4" />
+					</Link>
+				</div>
+			</div>
+		</DashboardLayout>
+	)
 }
 
 /**
@@ -196,5 +182,5 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 				<div className="px-4 pb-4 text-muted-foreground">{answer}</div>
 			</div>
 		</div>
-	);
+	)
 }
