@@ -111,6 +111,7 @@ export interface Course {
 	category: string | null;
 	duration_minutes: number;
 	lessons_count: number;
+	video_id: string | null;
 	is_published: boolean;
 	is_featured: boolean;
 	display_order: number;
@@ -211,6 +212,7 @@ export interface CourseProgress {
 	/** Overall progress 0-100, derived from position */
 	progress_percent: number;
 	last_accessed_at: string;
+	last_watched_seconds?: number;
 	created_at: string;
 	updated_at: string;
 }

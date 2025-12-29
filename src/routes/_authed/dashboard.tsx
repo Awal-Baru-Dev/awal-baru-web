@@ -275,10 +275,10 @@ function FeaturedCourseCard({
 							<Clock className="w-4 h-4" />
 							{formatDuration(course.duration_minutes)}
 						</span>
-						<span className="flex items-center gap-1.5">
+						{/* <span className="flex items-center gap-1.5">
 							<BookOpen className="w-4 h-4" />
 							{course.lessons_count} pelajaran
-						</span>
+						</span> */}
 					</div>
 
 					{/* Progress Bar */}

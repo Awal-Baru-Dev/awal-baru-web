@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Clock, Star, CheckCircle2 } from "lucide-react";
+import { Clock, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -59,7 +59,7 @@ export function CourseCard({
 		course.original_price || 0,
 		course.price,
 	);
-	const rating = course.metadata?.stats?.rating || 0;
+	// const rating = course.metadata?.stats?.rating || 0;
 
 	return (
 		<Link
@@ -151,13 +151,14 @@ export function CourseCard({
 					</p>
 				)}
 
-				{/* Stats row */}
+				{/* Stats row - only duration shown for MVP */}
 				<div className="flex items-center gap-3 text-sm text-muted-foreground">
 					<div className="flex items-center gap-1">
 						<Clock className="w-4 h-4" />
 						<span>{formatDuration(course.duration_minutes)}</span>
 					</div>
-					{rating > 0 && (
+					{/* Rating and lesson count hidden for MVP */}
+					{/* {rating > 0 && (
 						<div className="flex items-center gap-1">
 							<Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
 							<span>{rating.toFixed(1)}</span>
@@ -165,7 +166,7 @@ export function CourseCard({
 					)}
 					{course.lessons_count > 0 && (
 						<span>{course.lessons_count} pelajaran</span>
-					)}
+					)} */}
 				</div>
 
 				{/* Price / CTA */}

@@ -118,46 +118,66 @@ export async function getAllCourseProgress(
  * Update user's progress for a course (upsert)
  */
 export async function updateCourseProgress(
-	userId: string,
-	courseId: string,
-	sectionId: string,
-	lessonIndex: number,
-	progressPercent: number,
+    userId: string,
+    courseId: string,
+    sectionId: string,
+    lessonIndex: number,
+    progressPercent: number,
+    lastWatchedSeconds: number = 0,
 ): Promise<QueryResult<CourseProgress>> {
-	try {
-		const supabase = createBrowserClient();
+    // 1. CEK APAKAH FUNGSI INI TERPANGGIL
+    console.log("🚀 updateCourseProgress DIPANGGIL!", {
+        userId,
+        courseId,
+        sectionId,
+        progressPercent,
+        lastWatchedSeconds // Pastikan ini bukan NaN atau undefined
+    });
 
-		const { data, error } = await supabase
-			.from("course_progress")
-			.upsert(
-				{
-					user_id: userId,
-					course_id: courseId,
-					current_section_id: sectionId,
-					current_lesson_index: lessonIndex,
-					progress_percent: progressPercent,
-					last_accessed_at: new Date().toISOString(),
-				},
-				{
-					onConflict: "user_id,course_id",
-				},
-			)
-			.select()
-			.single();
+    try {
+        const supabase = createBrowserClient();
 
-		if (error) {
-			console.error("Error updating course progress:", error);
-			return { data: null, error: error.message };
-		}
+        // 2. CEK DATA YANG AKAN DIKIRIM
+        const payload = {
+            user_id: userId,
+            course_id: courseId,
+            current_section_id: sectionId,
+            current_lesson_index: lessonIndex,
+            progress_percent: progressPercent,
+            last_watched_seconds: lastWatchedSeconds,
+            last_accessed_at: new Date().toISOString(),
+        };
+        
+        console.log("📦 Mengirim payload ke Supabase:", payload);
 
-		return { data: data as CourseProgress, error: null };
-	} catch (error) {
-		console.error("Error updating course progress:", error);
-		return {
-			data: null,
-			error: error instanceof Error ? error.message : "Unknown error",
-		};
-	}
+        const { data, error } = await supabase
+            .from("course_progress")
+            .upsert(
+                payload,
+                {
+                    // PENTING: Pastikan kamu sudah set Unique Constraint di DB
+                    // untuk pasangan (user_id, course_id)
+                    onConflict: "user_id,course_id", 
+                },
+            )
+            .select()
+            .single();
+
+        if (error) {
+            // 3. TANGKAP ERROR SUPABASE
+            console.error("❌ Error Supabase (updateCourseProgress):", error.message, error.details);
+            return { data: null, error: error.message };
+        }
+
+        console.log("✅ SUKSES update progress:", data);
+        return { data: data as CourseProgress, error: null };
+    } catch (error) {
+        console.error("❌ CRASH di updateCourseProgress:", error);
+        return {
+            data: null,
+            error: error instanceof Error ? error.message : "Unknown error",
+        };
+    }
 }
 
 // ============================================================================

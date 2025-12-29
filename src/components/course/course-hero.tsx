@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Play, Clock, BookOpen, Star, Users, CheckCircle, X } from "lucide-react";
+import { Play, Clock, CheckCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,8 +44,8 @@ export function CourseHero({
 	className,
 }: CourseHeroProps) {
 	const [showPreview, setShowPreview] = useState(false);
-	const rating = course.metadata?.stats?.rating || 0;
-	const students = course.metadata?.stats?.students || 0;
+	// const rating = course.metadata?.stats?.rating || 0;
+	// const students = course.metadata?.stats?.students || 0;
 	const tags = course.metadata?.tags || [];
 
 	// Get preview video ID (stored in preview_video_url field)
@@ -157,22 +157,22 @@ export function CourseHero({
 					<Clock className="w-4 h-4" />
 					<span>{formatDuration(course.duration_minutes)}</span>
 				</div>
-				<div className="flex items-center gap-1.5">
+				{/* <div className="flex items-center gap-1.5">
 					<BookOpen className="w-4 h-4" />
 					<span>{course.lessons_count} pelajaran</span>
-				</div>
-				{rating > 0 && (
+				</div> */}
+				{/* {rating > 0 && (
 					<div className="flex items-center gap-1.5">
 						<Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
 						<span>{rating.toFixed(1)}</span>
 					</div>
-				)}
-				{students > 0 && (
+				)} */}
+				{/* {students > 0 && (
 					<div className="flex items-center gap-1.5">
 						<Users className="w-4 h-4" />
 						<span>{students.toLocaleString("id-ID")} siswa</span>
 					</div>
-				)}
+				)} */}
 			</div>
 
 			{/* Instructor Card */}

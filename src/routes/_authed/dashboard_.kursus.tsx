@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Clock, Play, Calendar, BookMarked } from "lucide-react";
+import { BookOpen, Clock, Play, Calendar } from "lucide-react";
 import { useMemo } from "react";
 import { z } from "zod";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -326,10 +326,10 @@ function EnrolledCourseCardExpanded({
 						<Clock className="w-4 h-4" />
 						{formatCourseDuration(course.duration_minutes)}
 					</span>
-					<span className="flex items-center gap-1.5">
+					{/* <span className="flex items-center gap-1.5">
 						<BookMarked className="w-4 h-4" />
 						{course.lessons_count} pelajaran
-					</span>
+					</span> */}
 				</div>
 
 				{/* Enrollment info */}
