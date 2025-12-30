@@ -117,27 +117,44 @@ function DashboardPage() {
 		return Math.round(totalProgress / activeCourses);
 	}, [allProgress, activeCourses]);
 
-	// Get featured course (first enrolled) and remaining courses
-	const featuredCourse = enrollments?.[0]?.course;
-	const featuredCourseProgress = useMemo(() => {
-		if (!featuredCourse || !allProgress) return 0;
-		const progress = allProgress.find((p) => p.course_id === featuredCourse.id);
-		return progress?.progress_percent ?? 0;
-	}, [featuredCourse, allProgress]);
+	const featuredCourseData = useMemo(() => {
+    if (!enrollments || !allProgress) return null;
 
-	const otherCoursesWithProgress = useMemo(() => {
-    return (
-      enrollments?.slice(1).map((e) => {
-        const progressData = allProgress?.find(
+    const mergedData = enrollments.map((e) => {
+      const prog = allProgress.find((p) => p.course_id === e.course?.id);
+      return {
+        course: e.course,
+        progress_percent: prog?.progress_percent ?? 0,
+        last_accessed_at: prog?.last_accessed_at ? new Date(prog.last_accessed_at).getTime() : 0,
+      };
+    });
+
+    const ongoingCourses = mergedData.filter(item => item.progress_percent < 100);
+
+    ongoingCourses.sort((a, b) => b.last_accessed_at - a.last_accessed_at);
+
+    return ongoingCourses.length > 0 ? ongoingCourses[0] : (mergedData.length > 0 ? mergedData[0] : null); 
+  }, [enrollments, allProgress]);
+
+	// Featured course and its progress
+	const featuredCourse = featuredCourseData?.course;
+  const featuredCourseProgress = featuredCourseData?.progress_percent ?? 0;
+
+  const otherCoursesWithProgress = useMemo(() => {
+    if (!enrollments || !allProgress) return [];
+
+    return enrollments
+      .filter((e) => e.course?.id !== featuredCourse?.id) // Exclude featured
+      .map((e) => {
+        const progressData = allProgress.find(
           (p) => p.course_id === e.course?.id
         );
         return {
           ...e.course,
           progress: progressData?.progress_percent ?? 0,
         };
-      }) ?? []
-    );
-  }, [enrollments, allProgress]);
+      });
+  }, [enrollments, allProgress, featuredCourse]);
 
 	return (
     <DashboardLayout>
