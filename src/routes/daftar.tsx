@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { APP_NAME } from "@/lib/config/constants";
 import { PasswordInput, PasswordStrength, FormField } from "@/components/auth";
-import { signupFn, resendConfirmationFn } from "@/features/auth";
+import { signupFn, loginWithGoogleFn, resendConfirmationFn } from "@/features/auth/server";
 import { registerSchema, registerFieldSchemas, type RegisterFormData } from "@/lib/validations/auth";
 import { cn } from "@/lib/utils";
 
@@ -110,6 +110,23 @@ function DaftarPage() {
 			validateField(field, value);
 		}
 	};
+
+	// Handle Google login
+	const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const result = await loginWithGoogleFn();
+      if (result.error) {
+        toast.error("Gagal Login Google", { description: result.message });
+      } else if (result.url) {
+        window.location.href = result.url;
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan sistem");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 	// Handle form submit
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -420,7 +437,7 @@ function DaftarPage() {
 						</div>
 
 						{/* Social Login */}
-						<Button variant="outline" className="w-full h-12" disabled>
+						<Button variant="outline" className="w-full h-12" onClick={handleGoogleLogin} disabled={isLoading}>
 							<svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
 								<path
 									fill="currentColor"
@@ -439,20 +456,12 @@ function DaftarPage() {
 									d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
 								/>
 							</svg>
-							Google (Coming Soon)
+							Google
 						</Button>
 
 						{/* Note */}
 						<p className="mt-6 text-center text-xs text-muted-foreground">
-							Dengan mendaftar, kamu menyetujui{" "}
-							<Link to="#" className="text-brand-primary hover:underline">
-								Syarat & Ketentuan
-							</Link>{" "}
-							dan{" "}
-							<Link to="#" className="text-brand-primary hover:underline">
-								Kebijakan Privasi
-							</Link>{" "}
-							kami.
+							Dengan mendaftar, kamu menyetujui Syarat & Ketentuan serta Kebijakan Privasi kami.
 						</p>
 					</div>
 				</div>

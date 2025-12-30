@@ -10,6 +10,7 @@ import { useUser } from "@/contexts/user-context";
 import {
 	getCourseProgress,
 	updateCourseProgress,
+	logActivity,
 } from "@/features/progress/actions";
 import { getSignedVideoUrl } from "@/lib/services/video/bunny";
 
@@ -56,6 +57,7 @@ function CourseLearnPage() {
 		user,
 		course,
 	});
+	const lastSyncTimeRef = useRef<number>(Date.now());
 
 	useEffect(() => {
 		stateRef.current = { user, course };
@@ -84,6 +86,27 @@ function CourseLearnPage() {
 			percent,
 			Math.floor(seconds),
 		);
+
+		const currentTime = Date.now();
+    const timeDiffInMs = currentTime - lastSyncTimeRef.current;
+
+    if (timeDiffInMs > 7200000) {
+      lastSyncTimeRef.current = currentTime;
+      return;
+    }
+
+    if (timeDiffInMs >= 30000 || isEnding) {
+      const minutesToAdd = Math.ceil(timeDiffInMs / 60000);
+
+      await logActivity(
+        currentUser.id,
+        currentCourse.id,
+        isEnding ? 1 : 0,
+        minutesToAdd
+      );
+
+      lastSyncTimeRef.current = currentTime;
+    }
 	};
 
 	const syncProgressToBackend = (seconds: number, totalDuration: number) => {

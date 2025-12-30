@@ -16,6 +16,7 @@ import {
 	logActivity,
 	getWeeklyActivity,
 	getActivityStreak,
+	getTotalLearningTime,
 } from "./actions";
 
 /**
@@ -248,6 +249,25 @@ export function useActivityStreak() {
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 }
+
+/**
+ * Hook to get user's total cumulative learning time
+ */
+export function useTotalLearningTime() {
+	const { user } = useUser();
+
+	return useQuery({
+		queryKey: ["total-learning-time", user?.id],
+		queryFn: async () => {
+			if (!user?.id) return 0;
+			const result = await getTotalLearningTime(user.id);
+			return result.data ?? 0;
+		},
+		enabled: !!user?.id,
+		staleTime: 1000 * 60 * 5, // 5 minutes
+	});
+}
+
 
 /**
  * Aggregated weekly data for dashboard charts

@@ -3,7 +3,6 @@ import { Play, Clock, CheckCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { WistiaPlayer } from "./wistia-player";
 import { cn } from "@/lib/utils";
 import type { Course } from "@/lib/db/types";
 
@@ -50,161 +49,171 @@ export function CourseHero({
 
 	// Get preview video ID (stored in preview_video_url field)
 	const previewVideoId = course.preview_video_url;
+	// const BUNNY_LIBRARY_ID = import.meta.env.VITE_BUNNY_LIBRARY_ID;
+	const BUNNY_PULL_ZONE = import.meta.env.VITE_BUNNY_PULL_ZONE_URL;
 
 	return (
-		<div className={cn("space-y-6", className)}>
-			{/* Video Preview / Thumbnail - always shows preview video regardless of enrollment */}
-			<div className="relative aspect-video rounded-xl overflow-hidden bg-muted group">
-				{showPreview && previewVideoId ? (
-					<>
-						<WistiaPlayer mediaId={previewVideoId} className="w-full h-full" />
-						{/* Close preview button */}
-						<Button
-							size="icon"
-							variant="secondary"
-							className="absolute top-4 right-4 rounded-full bg-black/50 hover:bg-black/70 text-white"
-							onClick={() => setShowPreview(false)}
-						>
-							<X className="w-4 h-4" />
-						</Button>
-						{/* Enrolled badge */}
-						{isEnrolled ? (
-							<Badge className="absolute top-4 left-4 bg-brand-primary text-white">
-								<CheckCircle className="w-3 h-3 mr-1" />
-								Sudah Terdaftar
-							</Badge>
-						) : (
-							<Badge className="absolute top-4 left-4 bg-brand-primary/90 text-white">
-								<Play className="w-3 h-3 mr-1" />
-								Preview Gratis
-							</Badge>
-						)}
-					</>
-				) : course.thumbnail_url ? (
-					<img
-						src={course.thumbnail_url}
-						alt={course.title}
-						className="w-full h-full object-cover"
-					/>
-				) : (
-					<div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-brand-primary/5 flex items-center justify-center">
-						<span className="text-6xl text-brand-primary/40">
-							{course.title.charAt(0)}
-						</span>
-					</div>
-				)}
+    <div className={cn("space-y-6", className)}>
+      {/* Video Preview / Thumbnail - always shows preview video regardless of enrollment */}
+      <div className="relative aspect-video rounded-xl overflow-hidden bg-muted group">
+        {showPreview && previewVideoId ? (
+          <>
+            <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
+              <video
+                src={`https://${BUNNY_PULL_ZONE}/${previewVideoId}/play_720p.mp4`}
+                controls
+                autoPlay
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+            {/* Close preview button */}
+            <Button
+              size="icon"
+              variant="secondary"
+              className="absolute top-4 right-4 rounded-full bg-black/50 hover:bg-black/70 text-white"
+              onClick={() => setShowPreview(false)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            {/* Enrolled badge */}
+            {isEnrolled ? (
+              <Badge className="absolute top-4 left-4 bg-brand-primary text-white">
+                <CheckCircle className="w-3 h-3 mr-1" />
+                Sudah Terdaftar
+              </Badge>
+            ) : (
+              <Badge className="absolute top-4 left-4 bg-brand-primary/90 text-white">
+                <Play className="w-3 h-3 mr-1" />
+                Preview Gratis
+              </Badge>
+            )}
+          </>
+        ) : course.thumbnail_url ? (
+          <img
+            src={course.thumbnail_url}
+            alt={course.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-brand-primary/5 flex items-center justify-center">
+            <span className="text-6xl text-brand-primary/40">
+              {course.title.charAt(0)}
+            </span>
+          </div>
+        )}
 
-				{/* Play button overlay - show for anyone with preview video (when not showing preview) */}
-				{previewVideoId && !showPreview && (
-					<div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-						<Button
-							size="lg"
-							className="rounded-full w-16 h-16"
-							onClick={() => setShowPreview(true)}
-						>
-							<Play className="w-8 h-8 fill-current" />
-						</Button>
-					</div>
-				)}
+        {/* Play button overlay - show for anyone with preview video (when not showing preview) */}
+        {previewVideoId && !showPreview && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              size="lg"
+              className="rounded-full w-16 h-16"
+              onClick={() => setShowPreview(true)}
+            >
+              <Play className="w-8 h-8 fill-current" />
+            </Button>
+          </div>
+        )}
 
-				{/* Badge overlay - when not showing preview */}
-				{!showPreview && (
-					isEnrolled ? (
-						<Badge className="absolute top-4 left-4 bg-brand-primary text-white">
-							<CheckCircle className="w-3 h-3 mr-1" />
-							Sudah Terdaftar
-						</Badge>
-					) : previewVideoId ? (
-						<Badge className="absolute bottom-4 left-4 bg-brand-primary/90 text-white">
-							<Play className="w-3 h-3 mr-1" />
-							Preview Gratis
-						</Badge>
-					) : null
-				)}
-			</div>
+        {/* Badge overlay - when not showing preview */}
+        {!showPreview &&
+          (isEnrolled ? (
+            <Badge className="absolute top-4 left-4 bg-brand-primary text-white">
+              <CheckCircle className="w-3 h-3 mr-1" />
+              Sudah Terdaftar
+            </Badge>
+          ) : previewVideoId ? (
+            <Badge className="absolute bottom-4 left-4 bg-brand-primary/90 text-white">
+              <Play className="w-3 h-3 mr-1" />
+              Preview Gratis
+            </Badge>
+          ) : null)}
+      </div>
 
-			{/* Title */}
-			<h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
-				{course.title}
-			</h1>
+      {/* Title */}
+      <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
+        {course.title}
+      </h1>
 
-			{/* Tags */}
-			{tags.length > 0 && (
-				<div className="flex flex-wrap gap-2">
-					{tags.map((tag, index) => (
-						<Badge key={`tag-${index}`} variant="secondary">
-							{tag}
-						</Badge>
-					))}
-					{course.level && (
-						<Badge variant="outline" className="capitalize">
-							{course.level}
-						</Badge>
-					)}
-				</div>
-			)}
+      {/* Tags */}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag, index) => (
+            <Badge key={`tag-${index}`} variant="secondary">
+              {tag}
+            </Badge>
+          ))}
+          {course.level && (
+            <Badge variant="outline" className="capitalize">
+              {course.level}
+            </Badge>
+          )}
+        </div>
+      )}
 
-			{/* Description */}
-			{course.short_description && (
-				<p className="text-lg text-muted-foreground leading-relaxed">
-					{course.short_description}
-				</p>
-			)}
+      {/* Description */}
+      {course.short_description && (
+        <p className="text-lg text-muted-foreground leading-relaxed">
+          {course.short_description}
+        </p>
+      )}
 
-			{/* Stats */}
-			<div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-				<div className="flex items-center gap-1.5">
-					<Clock className="w-4 h-4" />
-					<span>{formatDuration(course.duration_minutes)}</span>
-				</div>
-				{/* <div className="flex items-center gap-1.5">
+      {/* Stats */}
+      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <Clock className="w-4 h-4" />
+          <span>{formatDuration(course.duration_minutes)}</span>
+        </div>
+        {/* <div className="flex items-center gap-1.5">
 					<BookOpen className="w-4 h-4" />
 					<span>{course.lessons_count} pelajaran</span>
 				</div> */}
-				{/* {rating > 0 && (
+        {/* {rating > 0 && (
 					<div className="flex items-center gap-1.5">
 						<Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
 						<span>{rating.toFixed(1)}</span>
 					</div>
 				)} */}
-				{/* {students > 0 && (
+        {/* {students > 0 && (
 					<div className="flex items-center gap-1.5">
 						<Users className="w-4 h-4" />
 						<span>{students.toLocaleString("id-ID")} siswa</span>
 					</div>
 				)} */}
-			</div>
+      </div>
 
-			{/* Instructor Card */}
-			{course.instructor_name && (
-				<div className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 border border-border">
-					<div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center overflow-hidden">
-						{course.instructor_avatar ? (
-							<img
-								src={course.instructor_avatar}
-								alt={course.instructor_name}
-								className="w-full h-full object-cover"
-							/>
-						) : (
-							<span className="text-lg font-semibold text-brand-primary">
-								{course.instructor_name.charAt(0)}
-							</span>
-						)}
-					</div>
-					<div>
-						<p className="font-medium text-foreground">
-							{course.instructor_name}
-						</p>
-						{course.instructor_title && (
-							<p className="text-sm text-muted-foreground">
-								{course.instructor_title}
-							</p>
-						)}
-					</div>
-				</div>
-			)}
-		</div>
-	);
+      {/* Instructor Card */}
+      {course.instructor_name && (
+        <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 border border-border">
+          <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center overflow-hidden">
+            {course.instructor_avatar ? (
+              <img
+                src={course.instructor_avatar}
+                alt={course.instructor_name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-lg font-semibold text-brand-primary">
+                {course.instructor_name.charAt(0)}
+              </span>
+            )}
+          </div>
+          <div>
+            <p className="font-medium text-foreground">
+              {course.instructor_name}
+            </p>
+            {course.instructor_title && (
+              <p className="text-sm text-muted-foreground">
+                {course.instructor_title}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 /**

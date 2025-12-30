@@ -125,19 +125,9 @@ export async function updateCourseProgress(
     progressPercent: number,
     lastWatchedSeconds: number = 0,
 ): Promise<QueryResult<CourseProgress>> {
-    // 1. CEK APAKAH FUNGSI INI TERPANGGIL
-    console.log("🚀 updateCourseProgress DIPANGGIL!", {
-        userId,
-        courseId,
-        sectionId,
-        progressPercent,
-        lastWatchedSeconds // Pastikan ini bukan NaN atau undefined
-    });
-
     try {
         const supabase = createBrowserClient();
 
-        // 2. CEK DATA YANG AKAN DIKIRIM
         const payload = {
             user_id: userId,
             course_id: courseId,
@@ -147,16 +137,12 @@ export async function updateCourseProgress(
             last_watched_seconds: lastWatchedSeconds,
             last_accessed_at: new Date().toISOString(),
         };
-        
-        console.log("📦 Mengirim payload ke Supabase:", payload);
 
         const { data, error } = await supabase
             .from("course_progress")
             .upsert(
                 payload,
                 {
-                    // PENTING: Pastikan kamu sudah set Unique Constraint di DB
-                    // untuk pasangan (user_id, course_id)
                     onConflict: "user_id,course_id", 
                 },
             )
@@ -164,15 +150,10 @@ export async function updateCourseProgress(
             .single();
 
         if (error) {
-            // 3. TANGKAP ERROR SUPABASE
-            console.error("❌ Error Supabase (updateCourseProgress):", error.message, error.details);
             return { data: null, error: error.message };
         }
-
-        console.log("✅ SUKSES update progress:", data);
         return { data: data as CourseProgress, error: null };
     } catch (error) {
-        console.error("❌ CRASH di updateCourseProgress:", error);
         return {
             data: null,
             error: error instanceof Error ? error.message : "Unknown error",
@@ -249,6 +230,32 @@ export async function logActivity(
 			error: error instanceof Error ? error.message : "Unknown error",
 		};
 	}
+}
+
+/**
+ * Get user's total cumulative learning time
+ */
+export async function getTotalLearningTime(userId: string): Promise<QueryResult<number>> {
+    try {
+      const supabase = createBrowserClient();
+      const { data, error } = await supabase
+        .from("activity_log")
+        .select("time_spent_minutes")
+        .eq("user_id", userId);
+
+      if (error) return { data: null, error: error.message };
+
+      // Sum all minutes from every log entry
+      const totalMinutes = data.reduce(
+        (sum: number, log: { time_spent_minutes: number | null }) => {
+          return sum + (log.time_spent_minutes || 0);
+        },
+        0
+      );
+      return { data: totalMinutes, error: null };
+    } catch (error) {
+        return { data: null, error: "Failed to fetch total time" };
+    }
 }
 
 /**

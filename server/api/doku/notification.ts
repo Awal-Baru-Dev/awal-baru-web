@@ -68,10 +68,10 @@ export default defineEventHandler(async (event) => {
 
 		const { order, transaction, channel } = payload || {};
 
-		if (!order?.invoice_number || !transaction?.status) {
-			console.error("Missing required fields in DOKU notification");
-			return { status: "error", error: "Missing required fields" };
-		}
+		if (!order?.invoice_number || !transaction?.status || !channel?.id) {
+      console.error("Missing required fields in DOKU notification");
+      return { status: "error", error: "Missing required fields" };
+    }
 
 		// Create admin Supabase client
 		const supabaseUrl = process.env.VITE_SUPABASE_URL;
