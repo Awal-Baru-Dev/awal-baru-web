@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogContent,
@@ -11,8 +11,9 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import { z } from "zod";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCourse } from "@/features/courses";
 import { useEnrollmentStatus } from "@/features/enrollments";
@@ -23,6 +24,7 @@ import {
 	logActivity,
 } from "@/features/progress/actions";
 import { getSignedVideoUrl } from "@/lib/services/video/bunny";
+import { CourseLearnSidebar } from "@/components/course";
 
 // Search params schema for lesson navigation
 const learnSearchSchema = z.object({
@@ -36,9 +38,18 @@ export const Route = createFileRoute("/_authed/courses/$slug/learn")({
 });
 
 /**
- * Course Learn Page (Masterclass Style)
- * Single long-form video player with progress tracking
+ * Format duration helper
  */
+function formatDuration(minutes: number): string {
+	if (!minutes) return "-";
+	if (minutes < 60) return `${minutes} menit`;
+	const hours = Math.floor(minutes / 60);
+	const remainingMinutes = minutes % 60;
+	return remainingMinutes === 0
+		? `${hours} jam`
+		: `${hours} jam ${remainingMinutes} menit`;
+}
+
 function CourseLearnPage() {
 	const { slug } = Route.useParams();
 	const { user } = useUser();
@@ -255,49 +266,89 @@ function CourseLearnPage() {
 
 	// Main render
 	return (
-    <div className="min-h-screen bg-background">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 border-b">
-        <div className="flex items-center h-14 px-4">
-          <Button variant="ghost" size="sm" onClick={handleBackToDashboard}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Kembali
-          </Button>
-          <h1 className="ml-4 text-sm font-medium">{course?.title}</h1>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header Updated: Button di kiri, Title di tengah */}
+      <header className="sticky top-0 left-0 right-0 z-50 bg-background/95 border-b backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container relative mx-auto max-w-7xl flex items-center justify-center h-16 px-4 lg:px-8">
+          {/* Button Kembali (Absolute Left) */}
+          <div className="absolute left-4 lg:left-8">
+            <Button variant="ghost" size="sm" onClick={handleBackToDashboard}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Kembali</span>
+            </Button>
+          </div>
+
+          {/* Title (Centered) */}
+          <h1 className="text-sm font-semibold truncate max-w-[60%] mx-auto text-center">
+            {course?.title}
+          </h1>
         </div>
       </header>
 
-      <div className="pt-16 max-w-5xl mx-auto p-4">
-        <div className="aspect-video bg-black rounded-xl overflow-hidden mb-4">
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            controls
-            playsInline
-            className="w-full h-full"
-            onLoadedMetadata={handleLoadedMetadata}
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={handleEnded}
-            onPause={() => performSync(currentTime, duration)}
-          />
-        </div>
+      {/* Content Area */}
+      <main className="flex-1 py-8 px-4 lg:px-8">
+        <div className="container mx-auto max-w-7xl">
+          {/* GRID LAYOUT */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Video Player */}
+              <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-border/50 ring-1 ring-border/10">
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  controls
+                  playsInline
+                  className="w-full h-full"
+                  onLoadedMetadata={handleLoadedMetadata}
+                  onTimeUpdate={handleTimeUpdate}
+                  onEnded={handleEnded}
+                  onPause={() => performSync(currentTime, duration)}
+                />
+              </div>
 
-        {/* Progress bar */}
-        <div>
-          <div className="h-2 w-full bg-muted rounded-full">
-            <div
-              className="h-2 bg-brand-primary rounded-full"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+              {/* Judul & Deskripsi */}
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-bold text-foreground leading-tight">
+                  {course?.title}
+                </h1>
 
-          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-            <span>
-              {new Date(currentTime * 1000).toISOString().slice(14, 19)}
-            </span>
-            <span>{new Date(duration * 1000).toISOString().slice(14, 19)}</span>
+                <div className="flex flex-wrap items-center gap-3 mt-4 text-sm text-muted-foreground">
+                  <Badge variant="secondary" className="font-semibold">
+                    Video Course
+                  </Badge>
+                  <span>•</span>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4" />
+                    <span>{formatDuration(course?.duration_minutes || 0)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-border" />
+
+              <div className="prose prose-sm lg:prose-base dark:prose-invert max-w-none text-muted-foreground">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Tentang Materi Ini
+                </h3>
+                {course?.short_description ? (
+                  <p>{course.short_description}</p>
+                ) : (
+                  <p>
+                    {course?.short_description ||
+                      "Tonton video materi ini sampai selesai untuk mendapatkan pemahaman penuh."}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="lg:col-span-1">
+              <div className="lg:sticky lg:top-24">
+                <CourseLearnSidebar course={course} progress={progress} />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <AlertDialog
         open={showCompleteDialog}
@@ -305,7 +356,7 @@ function CourseLearnPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Selamat! 🎉</AlertDialogTitle>
+            <AlertDialogTitle>Selamat!</AlertDialogTitle>
             <AlertDialogDescription>
               Kamu telah menyelesaikan materi <b>{course?.title}</b>. Progress
               kamu telah disimpan.
