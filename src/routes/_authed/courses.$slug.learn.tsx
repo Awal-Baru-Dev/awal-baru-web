@@ -1,4 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import { z } from "zod";
 import { AlertCircle, ArrowLeft } from "lucide-react";
@@ -44,6 +54,10 @@ function CourseLearnPage() {
 	const [progress, setProgress] = useState(0);
 	const [lastWatchedTime, setLastWatchedTime] = useState<number | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+
+	const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
 
 	// Fetch course data
 	const { data: course, isLoading: isCourseLoading } = useCourse(slug);
@@ -119,6 +133,27 @@ function CourseLearnPage() {
 		}, 30000); // throttle to 30 seconds
 	};
 
+	// Handle back to dashboard (update progress first)
+	const handleBackToDashboard = async () => {
+    setIsLoading(true);
+
+    try {
+      let exactTime = currentTime;
+      if (videoRef.current) {
+        videoRef.current.pause();
+        exactTime = videoRef.current.currentTime;
+      }
+
+      await performSync(exactTime, duration);
+      await queryClient.invalidateQueries();
+
+      navigate({ to: "/dashboard" });
+    } catch (error) {
+      console.error("Gagal sinkronisasi saat kembali:", error);
+      setIsLoading(false);
+    }
+  };
+
 	// Fetch last watched time from database
 	useEffect(() => {
 		const fetchResume = async () => {
@@ -185,6 +220,7 @@ function CourseLearnPage() {
 	const handleEnded = () => {
 		if (!videoRef.current) return;
 		performSync(videoRef.current.duration, videoRef.current.duration, true);
+		setShowCompleteDialog(true);
 	};
 
 	// Not enrolled - redirect to course detail page
@@ -219,51 +255,69 @@ function CourseLearnPage() {
 
 	// Main render
 	return (
-		<div className="min-h-screen bg-background">
-			<header className="fixed top-0 left-0 right-0 z-50 bg-background/95 border-b">
-				<div className="flex items-center h-14 px-4">
-					<Button variant="ghost" size="sm" asChild>
-						<Link to="/dashboard">
-							<ArrowLeft className="w-4 h-4 mr-2" />
-							Kembali
-						</Link>
-					</Button>
-					<h1 className="ml-4 text-sm font-medium">{course?.title}</h1>
-				</div>
-			</header>
+    <div className="min-h-screen bg-background">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 border-b">
+        <div className="flex items-center h-14 px-4">
+          <Button variant="ghost" size="sm" onClick={handleBackToDashboard}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Kembali
+          </Button>
+          <h1 className="ml-4 text-sm font-medium">{course?.title}</h1>
+        </div>
+      </header>
 
-			<div className="pt-16 max-w-5xl mx-auto p-4">
-				<div className="aspect-video bg-black rounded-xl overflow-hidden mb-4">
-					<video
-						ref={videoRef}
-						src={videoUrl}
-						controls
-						playsInline
-						className="w-full h-full"
-						onLoadedMetadata={handleLoadedMetadata}
-						onTimeUpdate={handleTimeUpdate}
-						onEnded={handleEnded}
-						onPause={() => performSync(currentTime, duration)}
-					/>
-				</div>
+      <div className="pt-16 max-w-5xl mx-auto p-4">
+        <div className="aspect-video bg-black rounded-xl overflow-hidden mb-4">
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            controls
+            playsInline
+            className="w-full h-full"
+            onLoadedMetadata={handleLoadedMetadata}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={handleEnded}
+            onPause={() => performSync(currentTime, duration)}
+          />
+        </div>
 
-				{/* Progress bar */}
-				<div>
-					<div className="h-2 w-full bg-muted rounded-full">
-						<div
-							className="h-2 bg-brand-primary rounded-full"
-							style={{ width: `${progress}%` }}
-						/>
-					</div>
+        {/* Progress bar */}
+        <div>
+          <div className="h-2 w-full bg-muted rounded-full">
+            <div
+              className="h-2 bg-brand-primary rounded-full"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
 
-					<div className="flex justify-between text-xs text-muted-foreground mt-1">
-						<span>
-							{new Date(currentTime * 1000).toISOString().slice(14, 19)}
-						</span>
-						<span>{new Date(duration * 1000).toISOString().slice(14, 19)}</span>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+            <span>
+              {new Date(currentTime * 1000).toISOString().slice(14, 19)}
+            </span>
+            <span>{new Date(duration * 1000).toISOString().slice(14, 19)}</span>
+          </div>
+        </div>
+      </div>
+
+      <AlertDialog
+        open={showCompleteDialog}
+        onOpenChange={setShowCompleteDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Selamat! 🎉</AlertDialogTitle>
+            <AlertDialogDescription>
+              Kamu telah menyelesaikan materi <b>{course?.title}</b>. Progress
+              kamu telah disimpan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleBackToDashboard}>
+              Kembali ke Dashboard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
 }

@@ -17,6 +17,7 @@ import {
 	MessageCircle,
 	Settings,
 	Play,
+	CheckCircle,
 } from "lucide-react";
 import { useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -321,7 +322,7 @@ function FeaturedCourseCard({
 }
 
 /**
- * Stats Sidebar - Vertical stack showing all stats at once
+ * Stats Sidebar
  */
 function StatsSidebar({
 	activeCourses,
@@ -336,41 +337,55 @@ function StatsSidebar({
 }) {
 	return (
 		<div className="bg-card border border-border rounded-2xl p-5 h-full flex flex-col">
-			<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+			<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
 				Statistik
 			</h3>
 
-			<div className="flex-1 flex flex-col justify-between space-y-6">
-				{/* Progress Visualization - Radial Bar Chart */}
-				<div className="flex flex-col items-center">
-					<ProgressVisualization percentage={overallProgress} />
-				</div>
+			{/* Progress Chart */}
+			<div className="flex-1 flex flex-col items-center justify-center min-h-[180px]">
+				<ProgressVisualization percentage={overallProgress} />
+			</div>
 
-				{/* Course Status - Active and Completed Courses */}
-				<div className="space-y-4">
-					<h4 className="text-sm font-medium text-foreground text-center">Status Kursus</h4>
-					<div className="grid grid-cols-2 gap-4">
-						<div className="bg-muted/30 rounded-xl p-3 text-center">
-							<p className="text-2xl font-bold text-foreground">{activeCourses}</p>
-							<p className="text-xs text-muted-foreground">Kursus Aktif</p>
+			{/* Detail Stats */}
+			<div className="flex flex-col gap-3 mt-4">
+				
+				<div className="grid grid-cols-2 gap-3">
+					{/* Kursus Aktif */}
+					<div className="bg-secondary/20 border border-border/40 p-3 rounded-xl flex flex-col items-center justify-center text-center py-4">
+						<span className="text-2xl font-bold text-foreground mb-1">
+							{activeCourses}
+						</span>
+						<div className="flex items-center gap-1.5 text-muted-foreground">
+							<BookOpen className="w-3.5 h-3.5" />
+							<span className="text-[11px] uppercase tracking-wider font-medium">Kursus Aktif</span>
 						</div>
-						<div className="bg-muted/30 rounded-xl p-3 text-center">
-							<p className="text-2xl font-bold text-foreground">{completedCourses}</p>
-							<p className="text-xs text-muted-foreground">Kursus Selesai</p>
+					</div>
+
+					{/* Kursus Selesai */}
+					<div className="bg-secondary/20 border border-border/40 p-3 rounded-xl flex flex-col items-center justify-center text-center py-4">
+						<span className="text-2xl font-bold text-foreground mb-1">
+							{completedCourses}
+						</span>
+						<div className="flex items-center gap-1.5 text-muted-foreground">
+							<CheckCircle className="w-3.5 h-3.5" />
+							<span className="text-[11px] uppercase tracking-wider font-medium">Kursus Selesai</span>
 						</div>
 					</div>
 				</div>
 
-				{/* Total Learning Time */}
-				<div className="space-y-4">
-					<h4 className="text-sm font-medium text-foreground text-center">Waktu Belajar</h4>
-					<div className="bg-muted/30 rounded-xl p-4 text-center">
-						<p className="text-2xl font-bold text-foreground">
-							{formatDuration(totalLearningTime)}
-						</p>
-						<p className="text-xs text-muted-foreground">waktu belajar total</p>
+				{/* Total Waktu */}
+				<div className="bg-secondary/20 border border-border/40 p-4 rounded-xl flex items-center justify-between">
+					<div className="flex items-center gap-2.5 text-muted-foreground">
+						<div className="p-1.5 bg-background rounded-md border border-border/50">
+							<Clock className="w-4 h-4" />
+						</div>
+						<span className="text-xs uppercase tracking-wider font-medium">Total Waktu</span>
 					</div>
+					<span className="text-xl font-bold text-foreground">
+						{formatDuration(totalLearningTime)}
+					</span>
 				</div>
+
 			</div>
 		</div>
 	);
@@ -395,61 +410,59 @@ function ProgressVisualization({ percentage }: { percentage: number }) {
 	];
 
 	return (
-		<div className="flex flex-col items-center">
-			<div className="relative w-40 h-40">
-				{/* Background circle */}
-				<ResponsiveContainer width="100%" height="100%">
-					<RadialBarChart
-						cx="50%"
-						cy="50%"
-						innerRadius="70%"
-						outerRadius="100%"
-						barSize={14}
-						data={[{ value: 100 }]}
-						startAngle={90}
-						endAngle={-270}
-					>
-						<RadialBar
-							dataKey="value"
-							fill="#E5E7EB" // Use a muted gray instead of BRAND_PRIMARY_LIGHT
-							cornerRadius={10}
-						/>
-					</RadialBarChart>
-				</ResponsiveContainer>
-				{/* Foreground progress arc */}
-				<div className="absolute inset-0">
-					<ResponsiveContainer width="100%" height="100%">
-						<RadialBarChart
-							cx="50%"
-							cy="50%"
-							innerRadius="70%"
-							outerRadius="100%"
-							barSize={14}
-							data={data}
-							startAngle={90}
-							endAngle={endAngle}
-						>
-							<RadialBar
-								dataKey="value"
-								fill={BRAND_PRIMARY}
-								cornerRadius={10}
-								animationBegin={0}
-								animationDuration={1000}
-								animationEasing="ease-out"
-							/>
-						</RadialBarChart>
-					</ResponsiveContainer>
-				</div>
-				<div className="absolute inset-0 flex flex-col items-center justify-center">
-					<span className="text-3xl font-bold text-foreground">{percentage}%</span>
-					<span className="text-xs text-muted-foreground">selesai</span>
-				</div>
-			</div>
-			<p className="text-sm text-muted-foreground mt-3 text-center">
-				Progress keseluruhan dari semua kursus
-			</p>
-		</div>
-	);
+    <div className="flex flex-col items-center">
+      <div className="relative w-40 h-40">
+        <RadialBarChart
+          width={160}
+          height={160}
+          cx="50%"
+          cy="50%"
+          innerRadius="70%"
+          outerRadius="100%"
+          barSize={14}
+          data={[{ value: 100 }]}
+          startAngle={90}
+          endAngle={-270}
+        >
+          <RadialBar dataKey="value" fill="#E5E7EB" cornerRadius={10} />
+        </RadialBarChart>
+
+        {/* Foreground chart */}
+        <div className="absolute inset-0">
+          <RadialBarChart
+            width={160}
+            height={160}
+            cx="50%"
+            cy="50%"
+            innerRadius="70%"
+            outerRadius="100%"
+            barSize={14}
+            data={data}
+            startAngle={90}
+            endAngle={endAngle}
+          >
+            <RadialBar
+              dataKey="value"
+              fill={BRAND_PRIMARY}
+              cornerRadius={10}
+              animationBegin={0}
+              animationDuration={1000}
+              animationEasing="ease-out"
+            />
+          </RadialBarChart>
+        </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-3xl font-bold text-foreground">
+            {percentage}%
+          </span>
+          <span className="text-xs text-muted-foreground">selesai</span>
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground mt-3 text-center">
+        Progress keseluruhan dari semua kursus
+      </p>
+    </div>
+  );
 }
 
 /**
