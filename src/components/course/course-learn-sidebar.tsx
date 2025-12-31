@@ -1,4 +1,4 @@
-import { BarChart, Award, Clock, CheckCircle2, User } from "lucide-react";
+import { CheckCircle2, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Course } from "@/lib/db/types";

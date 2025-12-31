@@ -11,20 +11,22 @@ import {
 	getFeaturedCourses,
 	getCourseById,
 	searchCourses,
+	getAdminCourses,
 } from "./actions";
 
 /**
  * Query keys for course-related queries
  */
 export const courseKeys = {
-	all: ["courses"] as const,
-	lists: () => [...courseKeys.all, "list"] as const,
-	list: () => [...courseKeys.lists()] as const,
-	featured: () => [...courseKeys.all, "featured"] as const,
-	details: () => [...courseKeys.all, "detail"] as const,
-	detail: (slug: string) => [...courseKeys.details(), slug] as const,
-	byId: (id: string) => [...courseKeys.all, "id", id] as const,
-	search: (query: string) => [...courseKeys.all, "search", query] as const,
+  all: ["courses"] as const,
+  lists: () => [...courseKeys.all, "list"] as const,
+  list: () => [...courseKeys.lists()] as const,
+  featured: () => [...courseKeys.all, "featured"] as const,
+  details: () => [...courseKeys.all, "detail"] as const,
+  detail: (slug: string) => [...courseKeys.details(), slug] as const,
+  byId: (id: string) => [...courseKeys.all, "id", id] as const,
+  search: (query: string) => [...courseKeys.all, "search", query] as const,
+  adminAll: () => [...courseKeys.all, "admin-list"] as const,
 };
 
 /**
@@ -43,6 +45,22 @@ export function useCourses(options?: { enabled?: boolean }) {
 		staleTime: 5 * 60 * 1000, // 5 minutes
 		enabled: options?.enabled ?? true,
 	});
+}
+
+/**
+ * Hook to fetch all courses for admin
+ */
+export function useAdminCourses() {
+  return useQuery({
+    queryKey: courseKeys.adminAll(),
+    queryFn: async () => {
+      const result = await getAdminCourses();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+  });
 }
 
 /**

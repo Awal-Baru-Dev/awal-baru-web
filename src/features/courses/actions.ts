@@ -51,6 +51,33 @@ export async function getCourses(): Promise<ListResult<Course>> {
 }
 
 /**
+ * Get all courses for admin (including unpublished)
+ */
+export async function getAdminCourses(): Promise<ListResult<Course>> {
+  try {
+    const supabase = createBrowserClient();
+
+    const { data, error } = await supabase
+      .from("courses")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching admin courses:", error);
+      return { data: [], error: error.message };
+    }
+
+    return { data: data as Course[], error: null };
+  } catch (error) {
+    console.error("Error fetching admin courses:", error);
+    return {
+      data: [],
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
  * Get a single course by slug
  */
 export async function getCourseBySlug(
@@ -199,4 +226,67 @@ export async function searchCourses(query: string): Promise<ListResult<Course>> 
 			error: error instanceof Error ? error.message : "Unknown error",
 		};
 	}
+}
+
+/**
+ * Upload to Supabase Storage
+ */
+export async function uploadCourseAsset(
+	file: File,
+	bucket: "course-assets" | "avatars",
+	path: string
+): Promise<string | null> {
+	try {
+		const supabase = createBrowserClient();
+		
+		const { data, error } = await supabase.storage
+			.from(bucket)
+			.upload(path, file, {
+				cacheControl: "3600",
+				upsert: true,
+			});
+
+		if (error) {
+			throw error;
+		}
+
+		const { data: publicUrlData } = supabase.storage
+			.from(bucket)
+			.getPublicUrl(data.path);
+
+		return publicUrlData.publicUrl;
+	} catch (error) {
+		console.error(`Error uploading to ${bucket}:`, error);
+		return null;
+	}
+}
+
+/**
+ * Create new course
+ */
+export async function createCourse(
+  courseData: Partial<Course>
+) {
+  try {
+    const supabase = createBrowserClient();
+
+    const { data, error } = await supabase
+      .from("courses")
+      .insert(courseData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase Error:", error);
+      return { data: null, error: error.message };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error("Create Course Exception:", error);
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }
