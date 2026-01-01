@@ -49,6 +49,10 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface AdminProfile extends Profile {
+  email: string;
+}
+
 /**
  * Course content section
  */
