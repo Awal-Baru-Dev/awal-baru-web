@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Plus,
   Search,
@@ -134,6 +134,7 @@ function AdminCoursesPage() {
 }
 
 function CourseRow({ course }: { course: Course }) {
+  const navigate = useNavigate();
   return (
     <TableRow className="hover:bg-muted/30 transition-colors">
       <TableCell className="pl-4">
@@ -195,27 +196,33 @@ function CourseRow({ course }: { course: Course }) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
 
-            <DropdownMenuItem asChild>
-              <Link
-                to="/courses/$slug"
-                params={{ slug: course.slug }}
-                target="_blank"
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                Lihat Halaman
-              </Link>
+            <DropdownMenuItem
+              onClick={() =>
+                navigate({
+                  to: "/admin/courses/$slug",
+                  params: { slug: course.slug },
+                })
+              }
+              className="cursor-pointer"
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Lihat Halaman
             </DropdownMenuItem>
 
-            <DropdownMenuItem asChild>
-              <Link
-                to="/admin/courses/$slug/edit"
-                params={{ slug: course.slug }}
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit Detail
-              </Link>
+            <DropdownMenuItem
+              onClick={() =>
+                navigate({
+                  to: "/admin/courses/$slug/edit",
+                  params: { slug: course.slug },
+                })
+              }
+              className="cursor-pointer"
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Detail
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive focus:text-destructive">
+
+            <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
               <Trash2 className="mr-2 h-4 w-4" />
               Hapus
             </DropdownMenuItem>
