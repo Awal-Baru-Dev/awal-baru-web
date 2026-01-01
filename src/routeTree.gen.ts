@@ -23,9 +23,9 @@ import { Route as CoursesIndexRouteImport } from './routes/courses/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as CoursesSlugRouteImport } from './routes/courses/$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
-import { Route as AdminTransactionsRouteImport } from './routes/admin/transactions'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AdminTransactionsIndexRouteImport } from './routes/admin/transactions/index'
 import { Route as AdminCoursesIndexRouteImport } from './routes/admin/courses/index'
 import { Route as AdminCoursesNewRouteImport } from './routes/admin/courses/new'
 import { Route as AdminCoursesSlugRouteImport } from './routes/admin/courses/$slug'
@@ -105,11 +105,6 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminTransactionsRoute = AdminTransactionsRouteImport.update({
-  id: '/transactions',
-  path: '/transactions',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -118,6 +113,11 @@ const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTransactionsIndexRoute = AdminTransactionsIndexRouteImport.update({
+  id: '/transactions/',
+  path: '/transactions/',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCoursesIndexRoute = AdminCoursesIndexRouteImport.update({
@@ -177,7 +177,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/tentang': typeof TentangRoute
   '/dashboard': typeof AuthedDashboardRoute
-  '/admin/transactions': typeof AdminTransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -189,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/admin/courses/$slug': typeof AdminCoursesSlugRouteWithChildren
   '/admin/courses/new': typeof AdminCoursesNewRoute
   '/admin/courses': typeof AdminCoursesIndexRoute
+  '/admin/transactions': typeof AdminTransactionsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
   '/admin/courses/$slug/edit': typeof AdminCoursesSlugEditRoute
@@ -203,7 +203,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/tentang': typeof TentangRoute
   '/dashboard': typeof AuthedDashboardRoute
-  '/admin/transactions': typeof AdminTransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/admin': typeof AdminIndexRoute
@@ -215,6 +214,7 @@ export interface FileRoutesByTo {
   '/admin/courses/$slug': typeof AdminCoursesSlugRouteWithChildren
   '/admin/courses/new': typeof AdminCoursesNewRoute
   '/admin/courses': typeof AdminCoursesIndexRoute
+  '/admin/transactions': typeof AdminTransactionsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
   '/admin/courses/$slug/edit': typeof AdminCoursesSlugEditRoute
@@ -232,7 +232,6 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/tentang': typeof TentangRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
-  '/admin/transactions': typeof AdminTransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -244,6 +243,7 @@ export interface FileRoutesById {
   '/admin/courses/$slug': typeof AdminCoursesSlugRouteWithChildren
   '/admin/courses/new': typeof AdminCoursesNewRoute
   '/admin/courses/': typeof AdminCoursesIndexRoute
+  '/admin/transactions/': typeof AdminTransactionsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/_authed/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
   '/admin/courses/$slug/edit': typeof AdminCoursesSlugEditRoute
@@ -261,7 +261,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/tentang'
     | '/dashboard'
-    | '/admin/transactions'
     | '/auth/callback'
     | '/courses/$slug'
     | '/admin/'
@@ -273,6 +272,7 @@ export interface FileRouteTypes {
     | '/admin/courses/$slug'
     | '/admin/courses/new'
     | '/admin/courses'
+    | '/admin/transactions'
     | '/admin/users'
     | '/courses/$slug/learn'
     | '/admin/courses/$slug/edit'
@@ -287,7 +287,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/tentang'
     | '/dashboard'
-    | '/admin/transactions'
     | '/auth/callback'
     | '/courses/$slug'
     | '/admin'
@@ -299,6 +298,7 @@ export interface FileRouteTypes {
     | '/admin/courses/$slug'
     | '/admin/courses/new'
     | '/admin/courses'
+    | '/admin/transactions'
     | '/admin/users'
     | '/courses/$slug/learn'
     | '/admin/courses/$slug/edit'
@@ -315,7 +315,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/tentang'
     | '/_authed/dashboard'
-    | '/admin/transactions'
     | '/auth/callback'
     | '/courses/$slug'
     | '/admin/'
@@ -327,6 +326,7 @@ export interface FileRouteTypes {
     | '/admin/courses/$slug'
     | '/admin/courses/new'
     | '/admin/courses/'
+    | '/admin/transactions/'
     | '/admin/users/'
     | '/_authed/courses/$slug/learn'
     | '/admin/courses/$slug/edit'
@@ -448,13 +448,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/transactions': {
-      id: '/admin/transactions'
-      path: '/transactions'
-      fullPath: '/admin/transactions'
-      preLoaderRoute: typeof AdminTransactionsRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/_authed/dashboard': {
       id: '/_authed/dashboard'
       path: '/dashboard'
@@ -467,6 +460,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/transactions/': {
+      id: '/admin/transactions/'
+      path: '/transactions'
+      fullPath: '/admin/transactions'
+      preLoaderRoute: typeof AdminTransactionsIndexRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/courses/': {
@@ -568,20 +568,20 @@ const AdminCoursesSlugRouteWithChildren =
   AdminCoursesSlugRoute._addFileChildren(AdminCoursesSlugRouteChildren)
 
 interface AdminRouteChildren {
-  AdminTransactionsRoute: typeof AdminTransactionsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCoursesSlugRoute: typeof AdminCoursesSlugRouteWithChildren
   AdminCoursesNewRoute: typeof AdminCoursesNewRoute
   AdminCoursesIndexRoute: typeof AdminCoursesIndexRoute
+  AdminTransactionsIndexRoute: typeof AdminTransactionsIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
-  AdminTransactionsRoute: AdminTransactionsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminCoursesSlugRoute: AdminCoursesSlugRouteWithChildren,
   AdminCoursesNewRoute: AdminCoursesNewRoute,
   AdminCoursesIndexRoute: AdminCoursesIndexRoute,
+  AdminTransactionsIndexRoute: AdminTransactionsIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
 }
 

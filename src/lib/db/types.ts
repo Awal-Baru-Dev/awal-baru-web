@@ -126,6 +126,11 @@ export interface Course {
 	updated_at: string;
 }
 
+export interface AdminCourseListItem extends Course {
+  student_count: number;
+  total_revenue: number;
+}
+
 /**
  * Payment status enum
  */
@@ -264,3 +269,21 @@ export interface Database {
 }
 
 export type TableName = keyof Database;
+
+/*
+ * Admin transaction data structure
+ */
+export interface AdminTransaction {
+  id: string;
+  created_at: string;
+  payment_status: "pending" | "paid" | "failed" | "expired" | "refunded";
+  amount_paid: number;
+  payment_method: string | null;
+  payment_channel: string | null;
+  payment_reference: string | null;
+  user_name: string | null;
+  user_email: string | null;
+  user_avatar: string | null;
+  course_title: string | null;
+  course_thumbnail: string | null;
+}

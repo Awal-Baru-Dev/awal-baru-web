@@ -27,7 +27,6 @@ const adminNavItems = [
   { to: "/admin/courses", label: "Manajemen Kursus", icon: BookOpen },
   { to: "/admin/users", label: "Pengguna", icon: Users },
   { to: "/admin/transactions", label: "Transaksi", icon: CreditCard },
-  { to: "/admin/settings", label: "Pengaturan", icon: Settings },
 ];
 
 export function AdminSidebar({

@@ -6,7 +6,7 @@
  */
 
 import { createBrowserClient } from "@/lib/db/supabase/client";
-import type { Course, ListResult, QueryResult } from "@/lib/db/types";
+import type { Course, ListResult, QueryResult, AdminCourseListItem } from "@/lib/db/types";
 
 // Debug helper - set to true only for local debugging
 const DEBUG = false;
@@ -53,12 +53,13 @@ export async function getCourses(): Promise<ListResult<Course>> {
 /**
  * Get all courses for admin (including unpublished)
  */
-export async function getAdminCourses(): Promise<ListResult<Course>> {
+export async function getAdminCourses(): Promise<ListResult<AdminCourseListItem>> {
   try {
     const supabase = createBrowserClient();
 
+
     const { data, error } = await supabase
-      .from("courses")
+      .from("admin_course_list_view") 
       .select("*")
       .order("created_at", { ascending: false });
 
@@ -67,13 +68,10 @@ export async function getAdminCourses(): Promise<ListResult<Course>> {
       return { data: [], error: error.message };
     }
 
-    return { data: data as Course[], error: null };
+    // Casting data ke tipe yang benar
+    return { data: data as AdminCourseListItem[], error: null };
   } catch (error) {
-    console.error("Error fetching admin courses:", error);
-    return {
-      data: [],
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    return { data: [], error: error instanceof Error ? error.message : "Unknown" };
   }
 }
 

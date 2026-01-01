@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/table";
 
 import { useAdminCourses } from "@/features/courses/hooks";
-import type { Course } from "@/lib/db/types";
+import type { AdminCourseListItem } from "@/lib/db/types";
 
 export const Route = createFileRoute("/admin/courses/")({
   component: AdminCoursesPage,
@@ -79,18 +79,18 @@ function AdminCoursesPage() {
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50 hover:bg-muted/50">
-              <TableHead className="w-[100px] pl-4">Cover</TableHead>
+            <TableRow>
+              <TableHead className="w-[80px] pl-4">Cover</TableHead>
               <TableHead>Info Kursus</TableHead>
               <TableHead>Harga</TableHead>
+              <TableHead className="text-center w-[100px]">Siswa</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[100px] text-right pr-12">Aksi</TableHead>
+              <TableHead className="text-right pr-12">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              // Loading Skeleton Rows
-              (Array.from({ length: 5 }).map((_, i) => (
+              Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell className="pl-4">
                     <Skeleton className="h-16 w-16 rounded-md" />
@@ -104,6 +104,12 @@ function AdminCoursesPage() {
                   <TableCell>
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex flex-col items-center gap-1">
+                      <Skeleton className="h-6 w-8" />
+                      <Skeleton className="h-3 w-10" />
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Skeleton className="h-6 w-16 rounded-full" />
                   </TableCell>
@@ -111,11 +117,11 @@ function AdminCoursesPage() {
                     <Skeleton className="h-8 w-8 rounded-md ml-auto" />
                   </TableCell>
                 </TableRow>
-              )))
+              ))
             ) : filteredCourses?.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Tidak ada kursus ditemukan.
@@ -123,17 +129,20 @@ function AdminCoursesPage() {
               </TableRow>
             ) : (
               filteredCourses?.map((course) => (
-                <CourseRow key={course.id} course={course} />
+                <CourseRow
+                  key={course.id}
+                  course={course as AdminCourseListItem}
+                />
               ))
             )}
           </TableBody>
         </Table>
       </div>
     </div>
-  )
+  );
 }
 
-function CourseRow({ course }: { course: Course }) {
+function CourseRow({ course }: { course: AdminCourseListItem }) {
   const navigate = useNavigate();
   return (
     <TableRow className="hover:bg-muted/30 transition-colors">
@@ -171,6 +180,14 @@ function CourseRow({ course }: { course: Course }) {
           {course.price === 0
             ? "Gratis"
             : `Rp ${course.price.toLocaleString(`id-ID`)}`}
+        </div>
+      </TableCell>
+      <TableCell className="text-center">
+        <div className="flex flex-col items-center justify-center">
+          <span className="font-bold text-lg">{course.student_count ?? 0}</span>
+          <span className="text-[10px] text-muted-foreground uppercase">
+            Enrolled
+          </span>
         </div>
       </TableCell>
       <TableCell>
