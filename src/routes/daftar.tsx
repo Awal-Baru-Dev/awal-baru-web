@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useState, useCallback, useEffect } from "react";
+import { createFileRoute, Link, useRouter, useNavigate } from "@tanstack/react-router";
 import { Loader2, Mail, ArrowLeft, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { LandingHeader, LandingFooter } from "@/components/layout";
@@ -9,6 +9,7 @@ import { APP_NAME } from "@/lib/config/constants";
 import { PasswordInput, PasswordStrength, FormField } from "@/components/auth";
 import { signupFn, loginWithGoogleFn, resendConfirmationFn } from "@/features/auth/server";
 import { registerSchema, registerFieldSchemas, type RegisterFormData } from "@/lib/validations/auth";
+import { useUser } from "@/contexts/user-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/daftar")({
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/daftar")({
 type FormErrors = Partial<Record<keyof RegisterFormData, string>>;
 
 function DaftarPage() {
+	const { user, isLoading: isAuthLoading } = useUser();
+	const navigate = useNavigate();
 	const router = useRouter();
 
 	const [formData, setFormData] = useState<RegisterFormData>({
@@ -31,6 +34,15 @@ function DaftarPage() {
 	const [showVerification, setShowVerification] = useState(false);
 	const [registeredEmail, setRegisteredEmail] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
+
+	useEffect(() => {
+    if (!isAuthLoading && user) {
+      navigate({ to: "/" });
+    }
+  }, [user, isAuthLoading, navigate]);
+
+  // Prevent Render
+  if (!isAuthLoading && user) return null;
 
 	// Validate a single field using safeParse
 	const validateField = useCallback((field: keyof RegisterFormData, value: string) => {

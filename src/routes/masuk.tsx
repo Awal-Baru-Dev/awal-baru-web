@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { createFileRoute, Link, useSearch, useRouter } from "@tanstack/react-router";
+import { useState, useCallback, useEffect } from "react";
+import { createFileRoute, Link, useSearch, useRouter, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { LandingHeader, LandingFooter } from "@/components/layout";
@@ -9,6 +9,7 @@ import { APP_NAME } from "@/lib/config/constants";
 import { PasswordInput, FormField } from "@/components/auth";
 import { loginFn, loginWithGoogleFn, resendConfirmationFn } from "@/features/auth/server";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
+import { useUser } from "@/contexts/user-context";
 import { cn } from "@/lib/utils";
 
 // Define search params for redirect
@@ -28,6 +29,8 @@ export const Route = createFileRoute("/masuk")({
 type FormErrors = Partial<Record<keyof LoginFormData, string>>;
 
 function MasukPage() {
+  const { user, isLoading: isAuthLoading } = useUser();
+  const navigate = useNavigate();
 	const router = useRouter();
 	const search = useSearch({ from: "/masuk" });
 	const redirectTo = search.redirect || "/dashboard";
@@ -39,6 +42,15 @@ function MasukPage() {
 	const [errors, setErrors] = useState<FormErrors>({});
 	const [touched, setTouched] = useState<Record<string, boolean>>({});
 	const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      navigate({ to: "/" });
+    }
+  }, [user, isAuthLoading, navigate]);
+
+  // Prevent Render
+  if (!isAuthLoading && user) return null;
 
 	// Validate a single field
 	const validateField = useCallback((field: keyof LoginFormData, value: string) => {

@@ -32,6 +32,7 @@ import { Route as AuthedDashboardProfilRouteImport } from './routes/_authed/dash
 import { Route as AuthedDashboardKursusRouteImport } from './routes/_authed/dashboard_.kursus'
 import { Route as AuthedDashboardKontakRouteImport } from './routes/_authed/dashboard_.kontak'
 import { Route as AuthedDashboardBantuanRouteImport } from './routes/_authed/dashboard_.bantuan'
+import { Route as AdminCoursesSlugEditRouteImport } from './routes/admin/courses/$slug.edit'
 import { Route as AuthedCoursesSlugLearnRouteImport } from './routes/_authed/courses.$slug.learn'
 
 const TentangRoute = TentangRouteImport.update({
@@ -148,6 +149,11 @@ const AuthedDashboardBantuanRoute = AuthedDashboardBantuanRouteImport.update({
   path: '/dashboard/bantuan',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AdminCoursesSlugEditRoute = AdminCoursesSlugEditRouteImport.update({
+  id: '/courses/$slug/edit',
+  path: '/courses/$slug/edit',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AuthedCoursesSlugLearnRoute = AuthedCoursesSlugLearnRouteImport.update({
   id: '/courses/$slug/learn',
   path: '/courses/$slug/learn',
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/admin/courses/new': typeof AdminCoursesNewRoute
   '/admin/courses': typeof AdminCoursesIndexRoute
   '/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
+  '/admin/courses/$slug/edit': typeof AdminCoursesSlugEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -202,6 +209,7 @@ export interface FileRoutesByTo {
   '/admin/courses/new': typeof AdminCoursesNewRoute
   '/admin/courses': typeof AdminCoursesIndexRoute
   '/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
+  '/admin/courses/$slug/edit': typeof AdminCoursesSlugEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/admin/courses/new': typeof AdminCoursesNewRoute
   '/admin/courses/': typeof AdminCoursesIndexRoute
   '/_authed/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
+  '/admin/courses/$slug/edit': typeof AdminCoursesSlugEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -256,6 +265,7 @@ export interface FileRouteTypes {
     | '/admin/courses/new'
     | '/admin/courses'
     | '/courses/$slug/learn'
+    | '/admin/courses/$slug/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/admin/courses/new'
     | '/admin/courses'
     | '/courses/$slug/learn'
+    | '/admin/courses/$slug/edit'
   id:
     | '__root__'
     | '/'
@@ -306,6 +317,7 @@ export interface FileRouteTypes {
     | '/admin/courses/new'
     | '/admin/courses/'
     | '/_authed/courses/$slug/learn'
+    | '/admin/courses/$slug/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -487,6 +499,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedDashboardBantuanRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/admin/courses/$slug/edit': {
+      id: '/admin/courses/$slug/edit'
+      path: '/courses/$slug/edit'
+      fullPath: '/admin/courses/$slug/edit'
+      preLoaderRoute: typeof AdminCoursesSlugEditRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_authed/courses/$slug/learn': {
       id: '/_authed/courses/$slug/learn'
       path: '/courses/$slug/learn'
@@ -524,6 +543,7 @@ interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCoursesNewRoute: typeof AdminCoursesNewRoute
   AdminCoursesIndexRoute: typeof AdminCoursesIndexRoute
+  AdminCoursesSlugEditRoute: typeof AdminCoursesSlugEditRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -532,6 +552,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminCoursesNewRoute: AdminCoursesNewRoute,
   AdminCoursesIndexRoute: AdminCoursesIndexRoute,
+  AdminCoursesSlugEditRoute: AdminCoursesSlugEditRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

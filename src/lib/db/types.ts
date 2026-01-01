@@ -40,12 +40,13 @@ export interface ListResult<T> {
  * Profile data structure
  */
 export interface Profile {
-	id: string;
-	full_name: string | null;
-	avatar_url: string | null;
-	phone: string | null;
-	created_at: string;
-	updated_at: string;
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  role: "admin" | "user" | string;
+  created_at: string;
+  updated_at: string;
 }
 
 /**

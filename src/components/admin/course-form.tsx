@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2, Plus, Trash2, UploadCloud } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   title: z.string().min(5, "Judul minimal 5 karakter"),
@@ -51,6 +52,7 @@ const formSchema = z.object({
   video_id: z.string().optional(),
 
   what_you_will_learn: z.array(z.object({ value: z.string() })).optional(),
+  is_published: z.boolean().default(false),
 
   thumbnailFile: z.any().optional(),
   avatarFile: z.any().optional(),
@@ -65,51 +67,91 @@ interface CourseFormProps {
 }
 
 export function CourseForm({
-	initialData,
-	onSubmit,
-	isLoading,
+  initialData,
+  onSubmit,
+  isLoading,
 }: CourseFormProps) {
-	const form = useForm<CourseFormValues>({
+  const defaultValues = initialData
+    ? {
+        title: initialData.title,
+        slug: initialData.slug,
+        price: initialData.price,
+        original_price: initialData.original_price || 0,
+        duration_minutes: initialData.duration_minutes || 0,
+        category: initialData.category || "General",
+        level: initialData.level || "Pemula",
+        short_description: initialData.short_description || "",
+        instructor_name: initialData.instructor_name || "",
+        instructor_title: initialData.instructor_title || "",
+        preview_video_url: initialData.preview_video_url || "",
+        is_published: initialData.is_published,
+        video_id:
+          initialData.content?.sections?.[0]?.lessons?.[0]?.videoId || "",
+        what_you_will_learn: initialData.metadata?.whatYouWillLearn?.map(
+          (val: string) => ({ value: val })
+        ) || [{ value: "" }, { value: "" }],
+      }
+    : {
+        title: "",
+        slug: "",
+        price: 0,
+        original_price: 0,
+        duration_minutes: 0,
+        category: "",
+        level: "Pemula",
+        short_description: "",
+        instructor_name: "",
+        instructor_title: "",
+        preview_video_url: "",
+        video_id: "",
+        what_you_will_learn: [{ value: "" }, { value: "" }],
+      };
+
+  const form = useForm<CourseFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(formSchema) as any,
-    defaultValues: initialData || {
-      title: "",
-      slug: "",
-      price: 0,
-      original_price: 0,
-      duration_minutes: 0,
-      category: "",
-      level: "Pemula",
-      short_description: "",
-      instructor_name: "",
-      instructor_title: "",
-      preview_video_url: "",
-      video_id: "",
-      what_you_will_learn: [{ value: "" }, { value: "" }],
-    },
+    defaultValues,
   });
 
-    const {
-      fields: learnFields,
-      append: appendLearn,
-      remove: removeLearn,
-    } = useFieldArray({
-      control: form.control,
-      name: "what_you_will_learn" as any,
-    });
+  // Reset form jika initialData berubah (penting saat data di-fetch async)
+  useEffect(() => {
+    if (initialData) {
+      form.reset(defaultValues);
+      setThumbPreview(initialData.thumbnail_url);
+      setAvatarPreview(initialData.instructor_avatar);
+    }
+  }, [initialData, form]);
 
-    const [thumbPreview, setThumbPreview] = useState<string | null>(initialData?.thumbnail_url || null);
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(initialData?.instructor_avatar || null);
+  const {
+    fields: learnFields,
+    append: appendLearn,
+    remove: removeLearn,
+  } = useFieldArray({
+    control: form.control,
+    name: "what_you_will_learn" as any,
+  });
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "thumbnailFile" | "avatarFile", setPreview: (url: string) => void) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        form.setValue(fieldName, file);
-        const objectUrl = URL.createObjectURL(file);
-        setPreview(objectUrl);
-      }
-    };
+  const [thumbPreview, setThumbPreview] = useState<string | null>(
+    initialData?.thumbnail_url || null
+  );
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(
+    initialData?.instructor_avatar || null
+  );
 
-	return (
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fieldName: "thumbnailFile" | "avatarFile",
+    setPreview: (url: string) => void
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      form.setValue(fieldName, file);
+      const objectUrl = URL.createObjectURL(file);
+      setPreview(objectUrl);
+    }
+  };
+
+  return (
     <div className="space-y-6 pb-12">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
@@ -135,6 +177,31 @@ export function CourseForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <h3 className="text-lg font-semibold">Informasi Dasar</h3>
+
+              <FormField
+                control={form.control}
+                name="is_published"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-muted/20">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Status Publikasi
+                      </FormLabel>
+                      <FormDescription>
+                        {field.value
+                          ? "Kursus Tayang (Public)"
+                          : "Kursus Disembunyikan (Draft)"}
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
@@ -183,15 +250,38 @@ export function CourseForm({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Pilih..." />
+                            <SelectValue placeholder="Pilih Kategori" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="Visa & Travel">
                             Visa & Travel
                           </SelectItem>
-                          <SelectItem value="Education">Education</SelectItem>
-                          <SelectItem value="Work">Work</SelectItem>
+                          <SelectItem value="Work & Cultural Exchange">
+                            Work & Cultural Exchange
+                          </SelectItem>
+                          <SelectItem value="Beasiswa & Pendidikan">
+                            Beasiswa & Pendidikan
+                          </SelectItem>
+                          <SelectItem value="Fellowship & Community Development">
+                            Fellowship & Community
+                          </SelectItem>
+                          <SelectItem value="Pendidikan & Student Life">
+                            Pendidikan & Student Life
+                          </SelectItem>
+                          <SelectItem value="Career & Hospitality">
+                            Career & Hospitality
+                          </SelectItem>
+                          <SelectItem value="Career & Finance">
+                            Career & Finance
+                          </SelectItem>
+                          <SelectItem value="Riset & Akademik">
+                            Riset & Akademik
+                          </SelectItem>
+                          <SelectItem value="Imigrasi & Visa">
+                            Imigrasi & Visa
+                          </SelectItem>
+                          <SelectItem value="Bundle">Bundle (Paket)</SelectItem>
                           <SelectItem value="General">General</SelectItem>
                         </SelectContent>
                       </Select>
@@ -218,6 +308,9 @@ export function CourseForm({
                           <SelectItem value="Pemula">Pemula</SelectItem>
                           <SelectItem value="Menengah">Menengah</SelectItem>
                           <SelectItem value="Lanjut">Lanjut</SelectItem>
+                          <SelectItem value="Semua Level">
+                            Semua Level
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -304,7 +397,6 @@ export function CourseForm({
                 />
               </div>
 
-              {/* --- 2. TAMBAHKAN INPUT MANUAL DURASI DI SINI --- */}
               <FormField
                 control={form.control}
                 name="duration_minutes"
@@ -414,7 +506,7 @@ export function CourseForm({
                       />
                     </FormControl>
                     <FormDescription>
-                      Masukkan ID video dari Bunny Stream.
+                      Kosongkan jika ini Paket Bundle atau Coming Soon.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -464,7 +556,7 @@ export function CourseForm({
             className="w-full md:w-auto bg-brand-primary"
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Simpan & Publish Kursus
+            {initialData ? "Simpan Perubahan" : "Simpan & Publish Kursus"}
           </Button>
         </form>
       </Form>

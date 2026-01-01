@@ -109,6 +109,36 @@ export async function getCourseBySlug(
 }
 
 /**
+ * Get course by slug for ADMIN (bypasses is_published check)
+ */
+export async function getAdminCourseBySlug(
+	slug: string,
+): Promise<QueryResult<Course>> {
+	try {
+		const supabase = createBrowserClient();
+
+		const { data, error } = await supabase
+			.from("courses")
+			.select("*")
+			.eq("slug", slug)
+			.single();
+
+		if (error) {
+			console.error("Error fetching admin course:", error);
+			return { data: null, error: error.message };
+		}
+
+		return { data: data as Course, error: null };
+	} catch (error) {
+		console.error("Error fetching admin course:", error);
+		return {
+			data: null,
+			error: error instanceof Error ? error.message : "Unknown error",
+		};
+	}
+}
+
+/**
  * Get featured courses for homepage
  */
 export async function getFeaturedCourses(): Promise<ListResult<Course>> {
@@ -262,6 +292,39 @@ export async function uploadCourseAsset(
 }
 
 /**
+ * Delete file from Supabase Storage using its Public URL
+ */
+export async function deleteStorageFile(
+    publicUrl: string | null, 
+    bucket: "course-assets" | "avatars"
+) {
+    if (!publicUrl) return;
+
+    try {
+        const supabase = createBrowserClient();
+        
+        const urlObj = new URL(publicUrl);
+        const pathParts = urlObj.pathname.split(`/public/${bucket}/`);
+        
+        if (pathParts.length < 2) return;
+        
+        const filePath = pathParts[1];
+
+        const { error } = await supabase.storage
+            .from(bucket)
+            .remove([decodeURIComponent(filePath)]);
+
+        if (error) {
+            console.error("Error deleting file:", error);
+        } else {
+            console.log("Deleted old file:", filePath);
+        }
+    } catch (error) {
+        console.error("Error parsing URL for deletion:", error);
+    }
+}
+
+/**
  * Create new course
  */
 export async function createCourse(
@@ -289,4 +352,36 @@ export async function createCourse(
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
+}
+
+/**
+ * Update existing course
+ */
+export async function updateCourse(
+	slug: string,
+	courseData: Partial<Course>
+) {
+	try {
+		const supabase = createBrowserClient();
+
+		const { data, error } = await supabase
+			.from("courses")
+			.update(courseData)
+			.eq("slug", slug)
+			.select()
+			.single();
+
+		if (error) {
+			console.error("Supabase Error:", error);
+			return { data: null, error: error.message };
+		}
+
+		return { data, error: null };
+	} catch (error) {
+		console.error("Update Course Exception:", error);
+		return {
+			data: null,
+			error: error instanceof Error ? error.message : "Unknown error",
+		};
+	}
 }

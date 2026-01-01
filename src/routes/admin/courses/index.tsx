@@ -206,9 +206,14 @@ function CourseRow({ course }: { course: Course }) {
               </Link>
             </DropdownMenuItem>
 
-            <DropdownMenuItem>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit Detail
+            <DropdownMenuItem asChild>
+              <Link
+                to="/admin/courses/$slug/edit"
+                params={{ slug: course.slug }}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Detail
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem className="text-destructive focus:text-destructive">
               <Trash2 className="mr-2 h-4 w-4" />

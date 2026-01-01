@@ -12,6 +12,7 @@ import {
 	getCourseById,
 	searchCourses,
 	getAdminCourses,
+	getAdminCourseBySlug,
 } from "./actions";
 
 /**
@@ -27,6 +28,7 @@ export const courseKeys = {
   byId: (id: string) => [...courseKeys.all, "id", id] as const,
   search: (query: string) => [...courseKeys.all, "search", query] as const,
   adminAll: () => [...courseKeys.all, "admin-list"] as const,
+	adminDetail: (slug: string) => [...courseKeys.all, "admin-detail", slug] as const,
 };
 
 /**
@@ -78,6 +80,24 @@ export function useCourse(slug: string) {
 		},
 		enabled: !!slug,
 		staleTime: 5 * 60 * 1000, // 5 minutes
+	});
+}
+
+/**
+ * Hook to fetch a single course for ADMIN (includes unpublished)
+ */
+export function useAdminCourse(slug: string) {
+	return useQuery({
+		queryKey: courseKeys.adminDetail(slug),
+		queryFn: async () => {
+			const result = await getAdminCourseBySlug(slug);
+			if (result.error) {
+				throw new Error(result.error);
+			}
+			return result.data;
+		},
+		enabled: !!slug,
+		staleTime: 0,
 	});
 }
 

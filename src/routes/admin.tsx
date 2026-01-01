@@ -11,7 +11,6 @@ import {
   Menu,
   Bell,
   LogOut,
-  User,
   ChevronsUpDown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -34,7 +33,7 @@ export const Route = createFileRoute("/admin")({
 function AdminLayout() {
   const { user, profile, isLoading } = useUser();
   const navigate = useNavigate();
-  const isAdmin = true; // hardcode
+  const isAdmin = profile?.role === "admin";
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -50,6 +49,18 @@ function AdminLayout() {
   useEffect(() => {
     localStorage.setItem("admin-sidebar-collapsed", String(isCollapsed));
   }, [isCollapsed]);
+
+  useEffect(() => {
+
+    if (!isLoading) {
+      if (!user) {
+        navigate({ to: "/masuk" });
+      }
+      else if (!isAdmin) {
+        navigate({ to: "/" });
+      }
+    }
+  }, [isLoading, user, isAdmin, navigate]);
 
   if (isLoading) {
     return (
