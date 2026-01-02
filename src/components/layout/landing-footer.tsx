@@ -99,14 +99,6 @@ export function LandingFooter() {
 					<p className="text-sm text-muted-foreground">
 						© {currentYear} {APP_NAME}. All rights reserved.
 					</p>
-					<div className="flex items-center gap-6 text-sm text-muted-foreground">
-						<Link to="#" className="hover:text-brand-primary transition-colors">
-							Kebijakan Privasi
-						</Link>
-						<Link to="#" className="hover:text-brand-primary transition-colors">
-							Syarat & Ketentuan
-						</Link>
-					</div>
 				</div>
 			</div>
 		</footer>

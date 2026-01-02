@@ -4,7 +4,8 @@
  * TanStack Query hooks for fetching and caching course data.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
 	getCourses,
 	getCourseBySlug,
@@ -13,6 +14,7 @@ import {
 	searchCourses,
 	getAdminCourses,
 	getAdminCourseBySlug,
+	deleteAdminCourse
 } from "./actions";
 
 /**
@@ -153,4 +155,22 @@ export function useSearchCourses(query: string) {
 		enabled: query.trim().length > 0,
 		staleTime: 5 * 60 * 1000, // 5 minutes
 	});
+}
+
+/**
+ * Hook to delete a course
+ */
+export function useDeleteCourse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteAdminCourse(id),
+    onSuccess: () => {
+      toast.success("Kursus berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: courseKeys.all });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal menghapus kursus");
+    },
+  });
 }

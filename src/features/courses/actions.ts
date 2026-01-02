@@ -383,3 +383,27 @@ export async function updateCourse(
 		};
 	}
 }
+
+/*
+ * Delete course
+ */
+export async function deleteAdminCourse(id: string) {
+  try {
+    const supabase = createBrowserClient();
+
+    const { error } = await supabase.from("courses").delete().eq("id", id);
+
+    if (error) {
+      if (error.code === "23503") {
+        throw new Error(
+          "Tidak bisa menghapus kursus yang sudah memiliki siswa/transaksi."
+        );
+      }
+      throw new Error(error.message);
+    }
+
+    return true;
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Unknown error");
+  }
+}

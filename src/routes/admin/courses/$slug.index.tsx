@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminCourse } from "@/features/courses/hooks";
 import { CourseDetail } from "@/components/admin/course-detail";
 
-export const Route = createFileRoute("/admin/courses/$slug")({
+export const Route = createFileRoute("/admin/courses/$slug/")({
   component: CourseDetailPage,
 });
 

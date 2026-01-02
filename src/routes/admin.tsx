@@ -9,7 +9,6 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import {
   Loader2,
   Menu,
-  Bell,
   LogOut,
   ChevronsUpDown,
 } from "lucide-react";
@@ -97,9 +96,13 @@ function AdminLayout() {
           </span>
         </Link>
 
-        <Button variant="ghost" size="icon">
-          <Bell className="h-5 w-5" />
-        </Button>
+        <Link to="/" aria-label="Kembali ke Dashboard User">
+          <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
+            <span className="text-brand-primary font-semibold text-xs">
+              {displayName ? displayName[0].toUpperCase() : "A"}
+            </span>
+          </div>
+        </Link>
       </header>
 
       {/* Mobile Sidebar Overlay */}
@@ -132,10 +135,6 @@ function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-            </Button>
-
             {/* User Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

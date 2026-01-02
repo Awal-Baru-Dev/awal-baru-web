@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Course } from "@/lib/db/types";
+import { formatPrice, formatDate } from "@/lib/utils";
 
 interface CourseDetailProps {
   course: Course;
@@ -24,24 +25,6 @@ interface CourseDetailProps {
 
 export function CourseDetail({ course }: CourseDetailProps) {
   const navigate = useNavigate();
-
-  const formatRupiah = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
 
   const mainVideoId = (course.content as any)?.sections?.[0]?.lessons?.[0]
     ?.videoId;
@@ -129,7 +112,7 @@ export function CourseDetail({ course }: CourseDetailProps) {
                   Harga
                 </span>
                 <p className="font-bold text-lg text-brand-primary">
-                  {course.price === 0 ? "Gratis" : formatRupiah(course.price)}
+                  {course.price === 0 ? "Gratis" : formatPrice(course.price)}
                 </p>
               </div>
               <div>

@@ -24,12 +24,12 @@ import {
 
 import { useAdminTransactions } from "@/features/transactions/hooks";
 import type { AdminTransaction } from "@/lib/db/types";
+import { formatPrice } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/transactions/")({
   component: AdminTransactionsPage,
 });
 
-// Interface untuk data yang sudah di-grouping
 interface GroupedTransaction extends AdminTransaction {
   item_count: number;
   all_titles: string[];
@@ -40,14 +40,12 @@ function AdminTransactionsPage() {
   const { data: transactions, isLoading } = useAdminTransactions();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // LOGIC GROUPING
   const groupedTransactions = useMemo(() => {
     if (!transactions) return [];
 
     const groups: Record<string, GroupedTransaction> = {};
 
     transactions.forEach((trx) => {
-      // Key unik: Payment Ref ATAU User+Waktu (presisi detik)
       const uniqueKey =
         trx.payment_reference ||
         `${trx.user_email}-${new Date(trx.created_at).getTime()}`;
@@ -62,8 +60,6 @@ function AdminTransactionsPage() {
       } else {
         groups[uniqueKey].item_count += 1;
         groups[uniqueKey].all_titles.push(trx.course_title || "Kursus");
-        // Jika harga paket dicatat per item, kita jumlahkan. 
-        // Jika dicatat di salah satu item saja, ini juga aman.
         groups[uniqueKey].total_amount += trx.amount_paid;
       }
     });
@@ -73,10 +69,8 @@ function AdminTransactionsPage() {
     );
   }, [transactions]);
 
-  // FILTERING
   const filteredData = groupedTransactions.filter((item) => {
     const query = searchQuery.toLowerCase();
-    // Cari user ATAU cari "Paket Semua Kursus" ATAU judul satuan
     return (
       (item.user_name || "").toLowerCase().includes(query) ||
       (item.user_email || "").toLowerCase().includes(query) ||
@@ -84,14 +78,6 @@ function AdminTransactionsPage() {
       item.all_titles.some((title) => title.toLowerCase().includes(query))
     );
   });
-
-  const formatRupiah = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -161,7 +147,6 @@ function AdminTransactionsPage() {
             ) : (
               filteredData?.map((trx) => (
                 <TableRow key={trx.id} className="hover:bg-muted/30 transition-colors">
-                  {/* User Info */}
                   <TableCell className="pl-4 py-3 align-top">
                     <div className="flex items-center gap-3">
                       <div className="h-9 w-9 rounded-full bg-muted overflow-hidden flex items-center justify-center border shrink-0">
@@ -180,10 +165,8 @@ function AdminTransactionsPage() {
                     </div>
                   </TableCell>
 
-                  {/* Produk / Kursus */}
-                  <TableCell className="py-3 align-top">
+                  <TableCell className="py-3">
                     {trx.item_count > 1 ? (
-                      // TAMPILAN PAKET (Single Line)
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -192,9 +175,6 @@ function AdminTransactionsPage() {
                                 <PackageCheck className="w-4 h-4" />
                                 <span>Paket Semua Kursus</span>
                               </div>
-                              <span className="text-xs text-muted-foreground mt-0.5">
-                                Bundle {trx.item_count} Materi
-                              </span>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent className="max-w-[300px] bg-foreground text-background">
@@ -208,7 +188,6 @@ function AdminTransactionsPage() {
                         </Tooltip>
                       </TooltipProvider>
                     ) : (
-                      // TAMPILAN SATUAN
                       <div className="flex items-start gap-2">
                         <span className="font-medium text-sm leading-relaxed text-foreground">
                            {trx.course_title || "Unknown Course"}
@@ -220,7 +199,7 @@ function AdminTransactionsPage() {
                   {/* Total Amount */}
                   <TableCell className="py-3 align-top">
                     <span className="font-bold text-sm text-foreground">
-                      {formatRupiah(trx.total_amount)}
+                      {formatPrice(trx.total_amount)}
                     </span>
                   </TableCell>
 
