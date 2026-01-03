@@ -7,23 +7,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { APP_NAME } from "@/lib/config/constants";
 import { PasswordInput, FormField } from "@/components/auth";
-import { loginFn, loginWithGoogleFn, resendConfirmationFn } from "@/features/auth/server";
+import { loginFn, resendConfirmationFn } from "@/features/auth/server";
+import { createBrowserClient } from "@/lib/db/supabase/client";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
 import { useUser } from "@/contexts/user-context";
 import { cn } from "@/lib/utils";
 
 // Define search params for redirect
 type SearchParams = {
-	redirect?: string;
+  redirect?: string;
+  error?: string;
 };
 
 export const Route = createFileRoute("/masuk")({
-	component: MasukPage,
-	validateSearch: (search: Record<string, unknown>): SearchParams => {
-		return {
-			redirect: typeof search.redirect === "string" ? search.redirect : undefined,
-		};
-	},
+  component: MasukPage,
+  validateSearch: (search: Record<string, unknown>): SearchParams => {
+    return {
+      redirect:
+        typeof search.redirect === "string" ? search.redirect : undefined,
+      error: typeof search.error === "string" ? search.error : undefined,
+    };
+  },
 });
 
 type FormErrors = Partial<Record<keyof LoginFormData, string>>;
@@ -110,15 +114,23 @@ function MasukPage() {
 	const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const result = await loginWithGoogleFn();
-      if (result.error) {
-        toast.error("Gagal Login Google", { description: result.message });
-      } else if (result.url) {
-        window.location.href = result.url;
-      }
-    } catch (err) {
-      toast.error("Terjadi kesalahan sistem");
-    } finally {
+      const supabase = createBrowserClient();
+      const origin = window.location.origin;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${origin}/auth/callback`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+
+      if (error) throw error;
+    } catch (err: any) {
+      toast.error("Gagal Login Google", { description: err.message });
       setIsLoading(false);
     }
   };
