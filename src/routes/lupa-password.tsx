@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useCallback, useEffect } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { LandingHeader, LandingFooter } from "@/components/layout";
@@ -9,12 +9,15 @@ import { FormField } from "@/components/auth";
 import { requestPasswordResetFn } from "@/features/auth";
 import { forgotPasswordSchema, type ForgotPasswordFormData } from "@/lib/validations/auth";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/contexts/user-context";
 
 export const Route = createFileRoute("/lupa-password")({
 	component: LupaPasswordPage,
 });
 
 function LupaPasswordPage() {
+	const { user, isLoading: isAuthLoading } = useUser();
+  const navigate = useNavigate();
 	const [formData, setFormData] = useState<ForgotPasswordFormData>({
 		email: "",
 	});
@@ -22,6 +25,15 @@ function LupaPasswordPage() {
 	const [touched, setTouched] = useState<Record<string, boolean>>({});
 	const [emailSent, setEmailSent] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+
+	useEffect(() => {
+    if (!isAuthLoading && user) {
+      navigate({ to: "/" });
+    }
+  }, [user, isAuthLoading, navigate]);
+
+  // Prevent Render
+  if (!isAuthLoading && user) return null;
 
 	// Validate email field
 	const validateField = useCallback((value: string) => {

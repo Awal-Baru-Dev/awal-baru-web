@@ -60,10 +60,12 @@ export function CourseSidebar({
 	// Default features if none provided
 	const displayFeatures =
 		features.length > 0
-			? features
+			? features.filter(feature =>
+				!feature.includes("video pelajaran") &&
+				!feature.toLowerCase().includes("template")
+			)
 			: [
 					"Akses 12 bulan",
-					`${course.lessons_count} video pelajaran`,
 					"Update materi gratis",
 					"Akses komunitas eksklusif",
 				];

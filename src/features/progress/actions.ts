@@ -118,46 +118,47 @@ export async function getAllCourseProgress(
  * Update user's progress for a course (upsert)
  */
 export async function updateCourseProgress(
-	userId: string,
-	courseId: string,
-	sectionId: string,
-	lessonIndex: number,
-	progressPercent: number,
+    userId: string,
+    courseId: string,
+    sectionId: string,
+    lessonIndex: number,
+    progressPercent: number,
+    lastWatchedSeconds: number = 0,
 ): Promise<QueryResult<CourseProgress>> {
-	try {
-		const supabase = createBrowserClient();
+    try {
+        const supabase = createBrowserClient();
 
-		const { data, error } = await supabase
-			.from("course_progress")
-			.upsert(
-				{
-					user_id: userId,
-					course_id: courseId,
-					current_section_id: sectionId,
-					current_lesson_index: lessonIndex,
-					progress_percent: progressPercent,
-					last_accessed_at: new Date().toISOString(),
-				},
-				{
-					onConflict: "user_id,course_id",
-				},
-			)
-			.select()
-			.single();
+        const payload = {
+            user_id: userId,
+            course_id: courseId,
+            current_section_id: sectionId,
+            current_lesson_index: lessonIndex,
+            progress_percent: progressPercent,
+            last_watched_seconds: lastWatchedSeconds,
+            last_accessed_at: new Date().toISOString(),
+        };
 
-		if (error) {
-			console.error("Error updating course progress:", error);
-			return { data: null, error: error.message };
-		}
+        const { data, error } = await supabase
+            .from("course_progress")
+            .upsert(
+                payload,
+                {
+                    onConflict: "user_id,course_id", 
+                },
+            )
+            .select()
+            .single();
 
-		return { data: data as CourseProgress, error: null };
-	} catch (error) {
-		console.error("Error updating course progress:", error);
-		return {
-			data: null,
-			error: error instanceof Error ? error.message : "Unknown error",
-		};
-	}
+        if (error) {
+            return { data: null, error: error.message };
+        }
+        return { data: data as CourseProgress, error: null };
+    } catch (error) {
+        return {
+            data: null,
+            error: error instanceof Error ? error.message : "Unknown error",
+        };
+    }
 }
 
 // ============================================================================
@@ -229,6 +230,32 @@ export async function logActivity(
 			error: error instanceof Error ? error.message : "Unknown error",
 		};
 	}
+}
+
+/**
+ * Get user's total cumulative learning time
+ */
+export async function getTotalLearningTime(userId: string): Promise<QueryResult<number>> {
+    try {
+      const supabase = createBrowserClient();
+      const { data, error } = await supabase
+        .from("activity_log")
+        .select("time_spent_minutes")
+        .eq("user_id", userId);
+
+      if (error) return { data: null, error: error.message };
+
+      // Sum all minutes from every log entry
+      const totalMinutes = data.reduce(
+        (sum: number, log: { time_spent_minutes: number | null }) => {
+          return sum + (log.time_spent_minutes || 0);
+        },
+        0
+      );
+      return { data: totalMinutes, error: null };
+    } catch (error) {
+        return { data: null, error: "Failed to fetch total time" };
+    }
 }
 
 /**

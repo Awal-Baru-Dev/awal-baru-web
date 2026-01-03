@@ -17,22 +17,18 @@ import {
 	MessageCircle,
 	Settings,
 	Play,
-	TrendingUp,
-	ChevronDown,
-	Activity,
+	CheckCircle,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { CourseCarousel } from "@/components/course";
 import { useUserEnrollments } from "@/features/enrollments";
 import {
-	useAllCourseProgress,
-	useWeeklyActivity,
-	useActivityStreak,
-	formatWeeklyChartData,
-} from "@/features/progress";
+  useAllCourseProgress,
+  useTotalLearningTime,
+} from "@/features/progress/hooks";
 import type { Course } from "@/lib/db/types";
 import {
 	RadialBarChart,
@@ -40,9 +36,6 @@ import {
 	PieChart,
 	Pie,
 	Cell,
-	BarChart,
-	Bar,
-	XAxis,
 	ResponsiveContainer,
 	Tooltip,
 } from "recharts";
@@ -97,15 +90,8 @@ function DashboardPage() {
 	// Fetch progress for all enrolled courses
 	const { data: allProgress, isLoading: progressLoading } = useAllCourseProgress(courseIds);
 
-	// Fetch weekly activity data for charts
-	const { data: weeklyActivityRaw } = useWeeklyActivity();
-	const { data: activityStreak } = useActivityStreak();
-
-	// Format weekly activity for charts
-	const weeklyChartData = useMemo(
-		() => formatWeeklyChartData(weeklyActivityRaw ?? []),
-		[weeklyActivityRaw]
-	);
+	// Fetch total learning time
+	const { data: totalLearningTime = 0 } = useTotalLearningTime();
 
 	const isLoading = enrollmentsLoading || progressLoading;
 
@@ -132,86 +118,124 @@ function DashboardPage() {
 		return Math.round(totalProgress / activeCourses);
 	}, [allProgress, activeCourses]);
 
-	// Get featured course (first enrolled) and remaining courses
-	const featuredCourse = enrollments?.[0]?.course;
-	const featuredCourseProgress = useMemo(() => {
-		if (!featuredCourse || !allProgress) return 0;
-		const progress = allProgress.find((p) => p.course_id === featuredCourse.id);
-		return progress?.progress_percent ?? 0;
-	}, [featuredCourse, allProgress]);
+	const featuredCourseData = useMemo(() => {
+    if (!enrollments || !allProgress) return null;
 
-	const otherCourses = enrollments?.slice(1).map((e) => e.course) ?? [];
+    const mergedData = enrollments.map((e) => {
+      const prog = allProgress.find((p) => p.course_id === e.course?.id);
+      return {
+        course: e.course,
+        progress_percent: prog?.progress_percent ?? 0,
+        last_accessed_at: prog?.last_accessed_at ? new Date(prog.last_accessed_at).getTime() : 0,
+      };
+    });
+
+    const ongoingCourses = mergedData.filter(item => item.progress_percent < 100);
+
+    ongoingCourses.sort((a, b) => b.last_accessed_at - a.last_accessed_at);
+
+    return ongoingCourses.length > 0 ? ongoingCourses[0] : (mergedData.length > 0 ? mergedData[0] : null); 
+  }, [enrollments, allProgress]);
+
+	// Featured course and its progress
+	const featuredCourse = featuredCourseData?.course;
+  const featuredCourseProgress = featuredCourseData?.progress_percent ?? 0;
+
+  const otherCoursesWithProgress = useMemo(() => {
+    if (!enrollments || !allProgress) return [];
+
+    return enrollments
+      .filter((e) => e.course?.id !== featuredCourse?.id) // Exclude featured
+      .map((e) => {
+        const progressData = allProgress.find(
+          (p) => p.course_id === e.course?.id
+        );
+        return {
+          ...e.course,
+          progress: progressData?.progress_percent ?? 0,
+        };
+      });
+  }, [enrollments, allProgress, featuredCourse]);
 
 	return (
-		<DashboardLayout>
-			<div className="p-4 lg:p-8 space-y-8">
-				{/* Welcome header */}
-				<div>
-					<h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-						Selamat datang, {firstName}!
-					</h1>
-					<p className="text-muted-foreground mt-1">
-						Lanjutkan perjalanan belajarmu menuju American Dream.
-					</p>
-				</div>
+    <DashboardLayout>
+      <div className="p-4 lg:p-8 space-y-8">
+        {/* Welcome header */}
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+            Selamat datang, {firstName}!
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Lanjutkan perjalanan belajarmu menuju American Dream.
+          </p>
+        </div>
 
-				{/* Main content: Featured Course + Stats Sidebar */}
-				{isLoading ? (
-					<LoadingSkeleton />
-				) : enrollments && enrollments.length > 0 ? (
-					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-						{/* Featured Course Card - 2/3 width */}
-						<div className="lg:col-span-2">
-							<FeaturedCourseCard course={featuredCourse!} progress={featuredCourseProgress} />
-						</div>
+        {/* Main content: Featured Course + Stats Sidebar */}
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : enrollments && enrollments.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Featured Course Card - 2/3 width */}
+            <div className="lg:col-span-2">
+              <FeaturedCourseCard
+                course={featuredCourse!}
+                progress={featuredCourseProgress}
+              />
+            </div>
 
-						{/* Stats Sidebar - 1/3 width */}
-						<div className="lg:col-span-1">
-							<StatsSidebar
-								activeCourses={activeCourses}
-								completedCourses={completedCourses}
-								overallProgress={overallProgress}
-								weeklyChartData={weeklyChartData}
-								streak={activityStreak ?? 0}
-							/>
-						</div>
-					</div>
-				) : (
-					<EmptyState />
-				)}
+            {/* Stats Sidebar - 1/3 width */}
+            <div className="lg:col-span-1">
+              <StatsSidebar
+                activeCourses={activeCourses}
+                completedCourses={completedCourses}
+                overallProgress={overallProgress}
+                totalLearningTime={totalLearningTime}
+              />
+            </div>
+          </div>
+        ) : (
+          <EmptyState />
+        )}
 
-				{/* Other Courses Carousel */}
-				{!isLoading && otherCourses.length > 0 && (
-					<CourseCarousel courses={otherCourses} title="Kursus Lainnya" />
-				)}
+        {/* Other Courses Carousel */}
+        {!isLoading && otherCoursesWithProgress.length > 0 && (
+          <CourseCarousel
+            courses={otherCoursesWithProgress as any}
+            title="Kursus Lainnya"
+          />
+        )}
 
-				{/* Quick links */}
-				<section>
-					<h2 className="text-lg font-semibold text-foreground mb-4">
-						Akses Cepat
-					</h2>
-					<div className="flex flex-wrap gap-3">
-						<QuickLinkButton href="/courses" icon={Library} label="Jelajahi Semua Kursus" />
-						<QuickLinkButton
-							href="/dashboard/bantuan"
-							icon={HelpCircle}
-							label="FAQ & Panduan"
-						/>
-						<QuickLinkButton
-							href="/dashboard/kontak"
-							icon={MessageCircle}
-							label="Chat dengan Kami"
-						/>
-						<QuickLinkButton
-							href="/dashboard/profil"
-							icon={Settings}
-							label="Edit Profil"
-						/>
-					</div>
-				</section>
-			</div>
-		</DashboardLayout>
-	);
+        {/* Quick links */}
+        <section>
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Akses Cepat
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            <QuickLinkButton
+              href="/courses"
+              icon={Library}
+              label="Jelajahi Semua Kursus"
+            />
+            <QuickLinkButton
+              href="/dashboard/bantuan"
+              icon={HelpCircle}
+              label="FAQ & Panduan"
+            />
+            <QuickLinkButton
+              href="/dashboard/kontak"
+              icon={MessageCircle}
+              label="Chat dengan Kami"
+            />
+            <QuickLinkButton
+              href="/dashboard/profil"
+              icon={Settings}
+              label="Edit Profil"
+            />
+          </div>
+        </section>
+      </div>
+    </DashboardLayout>
+  );
 }
 
 /**
@@ -275,10 +299,10 @@ function FeaturedCourseCard({
 							<Clock className="w-4 h-4" />
 							{formatDuration(course.duration_minutes)}
 						</span>
-						<span className="flex items-center gap-1.5">
+						{/* <span className="flex items-center gap-1.5">
 							<BookOpen className="w-4 h-4" />
 							{course.lessons_count} pelajaran
-						</span>
+						</span> */}
 					</div>
 
 					{/* Progress Bar */}
@@ -298,99 +322,70 @@ function FeaturedCourseCard({
 }
 
 /**
- * Stats Sidebar - Graph/Figure based with dropdown selector
+ * Stats Sidebar
  */
-type StatType = "progress" | "courses" | "time" | "activity";
-
-const STAT_OPTIONS: { value: StatType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-	{ value: "progress", label: "Progress", icon: TrendingUp },
-	{ value: "courses", label: "Kursus", icon: BookOpen },
-	{ value: "time", label: "Waktu Belajar", icon: Clock },
-	{ value: "activity", label: "Aktivitas", icon: Activity },
-];
-
-interface WeeklyChartDataItem {
-	day: string;
-	dayFull: string;
-	menit: number;
-	pelajaran: number;
-}
-
 function StatsSidebar({
 	activeCourses,
 	completedCourses,
 	overallProgress,
-	weeklyChartData,
-	streak,
+	totalLearningTime,
 }: {
 	activeCourses: number;
 	completedCourses: number;
 	overallProgress: number;
-	weeklyChartData: WeeklyChartDataItem[];
-	streak: number;
+	totalLearningTime: number;
 }) {
-	const [selectedStat, setSelectedStat] = useState<StatType>("progress");
-	const [dropdownOpen, setDropdownOpen] = useState(false);
-
-	const currentOption = STAT_OPTIONS.find((opt) => opt.value === selectedStat)!;
-
 	return (
 		<div className="bg-card border border-border rounded-2xl p-5 h-full flex flex-col">
-			{/* Header with dropdown */}
-			<div className="flex items-center justify-between mb-4">
-				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-					Statistik
-				</h3>
+			<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
+				Statistik
+			</h3>
 
-				{/* Dropdown selector */}
-				<div className="relative">
-					<button
-						type="button"
-						onClick={() => setDropdownOpen(!dropdownOpen)}
-						className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 hover:bg-muted rounded-lg text-sm font-medium text-foreground transition-colors whitespace-nowrap"
-					>
-						<currentOption.icon className="w-4 h-4 text-brand-primary flex-shrink-0" />
-						{currentOption.label}
-						<ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${dropdownOpen ? "rotate-180" : ""}`} />
-					</button>
-
-					{dropdownOpen && (
-						<div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
-							{STAT_OPTIONS.map((option) => (
-								<button
-									key={option.value}
-									type="button"
-									onClick={() => {
-										setSelectedStat(option.value);
-										setDropdownOpen(false);
-									}}
-									className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors whitespace-nowrap ${
-										selectedStat === option.value ? "text-brand-primary bg-brand-primary/5" : "text-foreground"
-									}`}
-								>
-									<option.icon className="w-4 h-4 flex-shrink-0" />
-									{option.label}
-								</button>
-							))}
-						</div>
-					)}
-				</div>
+			{/* Progress Chart */}
+			<div className="flex-1 flex flex-col items-center justify-center min-h-[180px]">
+				<ProgressVisualization percentage={overallProgress} />
 			</div>
 
-			{/* Visualization area */}
-			<div className="flex-1 flex flex-col items-center justify-center">
-				{selectedStat === "progress" && (
-					<ProgressVisualization percentage={overallProgress} />
-				)}
-				{selectedStat === "courses" && (
-					<CoursesVisualization total={activeCourses} completed={completedCourses} />
-				)}
-				{selectedStat === "time" && (
-					<TimeVisualization weeklyData={weeklyChartData} />
-				)}
-				{selectedStat === "activity" && (
-					<ActivityVisualization weeklyData={weeklyChartData} streak={streak} />
-				)}
+			{/* Detail Stats */}
+			<div className="flex flex-col gap-3 mt-4">
+				
+				<div className="grid grid-cols-2 gap-3">
+					{/* Kursus Aktif */}
+					<div className="bg-secondary/20 border border-border/40 p-3 rounded-xl flex flex-col items-center justify-center text-center py-4">
+						<span className="text-2xl font-bold text-foreground mb-1">
+							{activeCourses}
+						</span>
+						<div className="flex items-center gap-1.5 text-muted-foreground">
+							<BookOpen className="w-3.5 h-3.5" />
+							<span className="text-[11px] uppercase tracking-wider font-medium">Kursus Aktif</span>
+						</div>
+					</div>
+
+					{/* Kursus Selesai */}
+					<div className="bg-secondary/20 border border-border/40 p-3 rounded-xl flex flex-col items-center justify-center text-center py-4">
+						<span className="text-2xl font-bold text-foreground mb-1">
+							{completedCourses}
+						</span>
+						<div className="flex items-center gap-1.5 text-muted-foreground">
+							<CheckCircle className="w-3.5 h-3.5" />
+							<span className="text-[11px] uppercase tracking-wider font-medium">Kursus Selesai</span>
+						</div>
+					</div>
+				</div>
+
+				{/* Total Waktu */}
+				<div className="bg-secondary/20 border border-border/40 p-4 rounded-xl flex items-center justify-between">
+					<div className="flex items-center gap-2.5 text-muted-foreground">
+						<div className="p-1.5 bg-background rounded-md border border-border/50">
+							<Clock className="w-4 h-4" />
+						</div>
+						<span className="text-xs uppercase tracking-wider font-medium">Total Waktu</span>
+					</div>
+					<span className="text-xl font-bold text-foreground">
+						{formatDuration(totalLearningTime)}
+					</span>
+				</div>
+
 			</div>
 		</div>
 	);
@@ -400,7 +395,6 @@ function StatsSidebar({
  * Brand color for charts (matches --color-brand-primary)
  */
 const BRAND_PRIMARY = "#1c9af1";
-const BRAND_PRIMARY_LIGHT = "#1c9af133";
 
 /**
  * Progress visualization - Radial bar chart with animation
@@ -416,60 +410,59 @@ function ProgressVisualization({ percentage }: { percentage: number }) {
 	];
 
 	return (
-		<div className="flex flex-col items-center">
-			<div className="relative w-40 h-40">
-				{/* Background circle */}
-				<ResponsiveContainer width="100%" height="100%">
-					<RadialBarChart
-						cx="50%"
-						cy="50%"
-						innerRadius="70%"
-						outerRadius="100%"
-						barSize={14}
-						data={[{ value: 100 }]}
-						startAngle={90}
-						endAngle={-270}
-					>
-						<RadialBar
-							dataKey="value"
-							fill={BRAND_PRIMARY_LIGHT}
-							cornerRadius={10}
-						/>
-					</RadialBarChart>
-				</ResponsiveContainer>
-				{/* Foreground progress arc */}
-				<div className="absolute inset-0">
-					<ResponsiveContainer width="100%" height="100%">
-						<RadialBarChart
-							cx="50%"
-							cy="50%"
-							innerRadius="70%"
-							outerRadius="100%"
-							barSize={14}
-							data={data}
-							startAngle={90}
-							endAngle={endAngle}
-						>
-							<RadialBar
-								dataKey="value"
-								cornerRadius={10}
-								animationBegin={0}
-								animationDuration={1000}
-								animationEasing="ease-out"
-							/>
-						</RadialBarChart>
-					</ResponsiveContainer>
-				</div>
-				<div className="absolute inset-0 flex flex-col items-center justify-center">
-					<span className="text-3xl font-bold text-foreground">{percentage}%</span>
-					<span className="text-xs text-muted-foreground">selesai</span>
-				</div>
-			</div>
-			<p className="text-sm text-muted-foreground mt-3 text-center">
-				Progress keseluruhan dari semua kursus
-			</p>
-		</div>
-	);
+    <div className="flex flex-col items-center">
+      <div className="relative w-40 h-40">
+        <RadialBarChart
+          width={160}
+          height={160}
+          cx="50%"
+          cy="50%"
+          innerRadius="70%"
+          outerRadius="100%"
+          barSize={14}
+          data={[{ value: 100 }]}
+          startAngle={90}
+          endAngle={-270}
+        >
+          <RadialBar dataKey="value" fill="#E5E7EB" cornerRadius={10} />
+        </RadialBarChart>
+
+        {/* Foreground chart */}
+        <div className="absolute inset-0">
+          <RadialBarChart
+            width={160}
+            height={160}
+            cx="50%"
+            cy="50%"
+            innerRadius="70%"
+            outerRadius="100%"
+            barSize={14}
+            data={data}
+            startAngle={90}
+            endAngle={endAngle}
+          >
+            <RadialBar
+              dataKey="value"
+              fill={BRAND_PRIMARY}
+              cornerRadius={10}
+              animationBegin={0}
+              animationDuration={1000}
+              animationEasing="ease-out"
+            />
+          </RadialBarChart>
+        </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-3xl font-bold text-foreground">
+            {percentage}%
+          </span>
+          <span className="text-xs text-muted-foreground">selesai</span>
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground mt-3 text-center">
+        Progress keseluruhan dari semua kursus
+      </p>
+    </div>
+  );
 }
 
 /**
@@ -483,7 +476,7 @@ function CoursesVisualization({ total, completed }: { total: number; completed: 
 
 	const data = [
 		{ name: "Selesai", value: completed, fill: BRAND_PRIMARY },
-		{ name: "Aktif", value: inProgress, fill: BRAND_PRIMARY_LIGHT },
+		{ name: "Aktif", value: inProgress, fill: BRAND_PRIMARY },
 	];
 
 	// If no courses, show empty state
@@ -533,7 +526,7 @@ function CoursesVisualization({ total, completed }: { total: number; completed: 
 			{/* Legend */}
 			<div className="flex items-center gap-4 mt-3">
 				<div className="flex items-center gap-2">
-					<div className="w-3 h-3 rounded-full" style={{ backgroundColor: BRAND_PRIMARY_LIGHT }} />
+					<div className="w-3 h-3 rounded-full" style={{ backgroundColor: BRAND_PRIMARY }} />
 					<span className="text-sm text-muted-foreground">{inProgress} aktif</span>
 				</div>
 				<div className="flex items-center gap-2">
@@ -545,134 +538,6 @@ function CoursesVisualization({ total, completed }: { total: number; completed: 
 	);
 }
 
-/**
- * Time visualization - Large number with animated bar chart
- * Shows actual time spent from activity logs (weekly total)
- */
-function TimeVisualization({
-	weeklyData,
-}: {
-	weeklyData: WeeklyChartDataItem[];
-}) {
-	// Calculate total minutes from weekly activity data
-	const totalMinutes = weeklyData.reduce((sum, d) => sum + d.menit, 0);
-	const hours = Math.floor(totalMinutes / 60);
-	const mins = totalMinutes % 60;
-
-	return (
-		<div className="flex flex-col items-center w-full">
-			{/* Large time display */}
-			<div className="text-center mb-4">
-				<div className="flex items-baseline justify-center gap-1">
-					<span className="text-4xl font-bold text-foreground">{hours}</span>
-					<span className="text-lg text-muted-foreground">jam</span>
-					<span className="text-4xl font-bold text-foreground ml-2">{mins}</span>
-					<span className="text-lg text-muted-foreground">menit</span>
-				</div>
-				<p className="text-sm text-muted-foreground mt-1">waktu belajar minggu ini</p>
-			</div>
-
-			{/* Weekly bar chart */}
-			<div className="w-full h-28">
-				<ResponsiveContainer width="100%" height="100%">
-					<BarChart data={weeklyData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-						<XAxis
-							dataKey="day"
-							axisLine={false}
-							tickLine={false}
-							tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-						/>
-						<Tooltip
-							formatter={(value) => [`${value} menit`, "Waktu"]}
-							contentStyle={{
-								backgroundColor: "hsl(var(--card))",
-								border: "1px solid hsl(var(--border))",
-								borderRadius: "8px",
-								fontSize: "12px",
-							}}
-							cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
-						/>
-						<Bar
-							dataKey="menit"
-							fill={BRAND_PRIMARY}
-							radius={[4, 4, 0, 0]}
-							animationBegin={0}
-							animationDuration={800}
-							animationEasing="ease-out"
-						/>
-					</BarChart>
-				</ResponsiveContainer>
-			</div>
-		</div>
-	);
-}
-
-/**
- * Activity visualization - Weekly activity with animated bars
- */
-function ActivityVisualization({
-	weeklyData,
-	streak,
-}: {
-	weeklyData: WeeklyChartDataItem[];
-	streak: number;
-}) {
-	// Calculate total lessons from real data
-	const totalLessons = weeklyData.reduce((sum, d) => sum + d.pelajaran, 0);
-
-	return (
-		<div className="flex flex-col items-center w-full">
-			{/* Summary */}
-			<div className="text-center mb-4">
-				<span className="text-4xl font-bold text-foreground">{totalLessons}</span>
-				<p className="text-sm text-muted-foreground mt-1">pelajaran minggu ini</p>
-			</div>
-
-			{/* Activity bars */}
-			<div className="w-full h-28">
-				<ResponsiveContainer width="100%" height="100%">
-					<BarChart data={weeklyData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-						<XAxis
-							dataKey="day"
-							axisLine={false}
-							tickLine={false}
-							tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-						/>
-						<Tooltip
-							formatter={(value) => [`${value} pelajaran`, "Selesai"]}
-							contentStyle={{
-								backgroundColor: "hsl(var(--card))",
-								border: "1px solid hsl(var(--border))",
-								borderRadius: "8px",
-								fontSize: "12px",
-							}}
-							cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
-						/>
-						<Bar
-							dataKey="pelajaran"
-							fill={BRAND_PRIMARY}
-							radius={[4, 4, 0, 0]}
-							animationBegin={0}
-							animationDuration={800}
-							animationEasing="ease-out"
-						/>
-					</BarChart>
-				</ResponsiveContainer>
-			</div>
-
-			{/* Streak indicator */}
-			{streak > 0 ? (
-				<p className="text-sm text-brand-primary font-medium mt-2">
-					{streak} hari berturut-turut aktif
-				</p>
-			) : (
-				<p className="text-sm text-muted-foreground mt-2">
-					Mulai belajar untuk membangun streak!
-				</p>
-			)}
-		</div>
-	);
-}
 
 /**
  * Loading skeleton for main content

@@ -15,8 +15,8 @@ import {
   ChevronsUpDown,
   HelpCircle,
   MessageCircle,
-  Bell,
-  Handshake,
+  ChevronDown,
+  ShieldCheck
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -51,15 +51,6 @@ const helpNavItems = [
   { to: "/dashboard/kontak", label: "Hubungi Kami", icon: MessageCircle },
 ];
 
-// Get time-based greeting
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Selamat pagi";
-  if (hour < 15) return "Selamat siang";
-  if (hour < 18) return "Selamat sore";
-  return "Selamat malam";
-}
-
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -73,6 +64,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, profile } = useUser();
   const { theme, toggleTheme } = useTheme();
   const displayName = getUserDisplayName(user, profile);
+  const isAdmin = profile?.role === "admin";
 
   // Persist collapsed state to localStorage
   useEffect(() => {
@@ -102,11 +94,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </span>
         </Link>
 
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {/* Notification badge - uncomment when needed */}
-          {/* <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" /> */}
-        </Button>
+        <Link to="/dashboard/profil" onClick={() => setSidebarOpen(false)}>
+          <div className="w-9 h-9 bg-brand-primary/10 rounded-full flex items-center justify-center">
+            <span className="text-brand-primary font-semibold text-sm">
+              {displayName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        </Link>
       </header>
 
       {/* Mobile sidebar overlay */}
@@ -183,18 +177,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <nav className="p-2 flex-1 flex flex-col">
           {/* Belajar Section */}
           <div>
-            {/* Section Label */}
-            <div
-              className={cn(
-                "px-3 py-2",
-                isCollapsed && "lg:hidden"
-              )}
-            >
+            <div className={cn("px-3 py-2", isCollapsed && "lg:hidden")}>
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Belajar
               </span>
             </div>
-            {/* Section Items */}
             <ul className="space-y-1">
               {mainNavItems.map((item) => {
                 const Icon = item.icon;
@@ -234,7 +221,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 );
               })}
             </ul>
-            {/* Divider at end of section */}
             <div
               className={cn(
                 "my-3 mx-3 h-px bg-border",
@@ -245,18 +231,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Bantuan Section */}
           <div>
-            {/* Section Label */}
-            <div
-              className={cn(
-                "px-3 py-2",
-                isCollapsed && "lg:hidden"
-              )}
-            >
+            <div className={cn("px-3 py-2", isCollapsed && "lg:hidden")}>
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Bantuan
               </span>
             </div>
-            {/* Section Items */}
             <ul className="space-y-1">
               {helpNavItems.map((item) => {
                 const Icon = item.icon;
@@ -295,58 +274,66 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </ul>
           </div>
 
-          {/* Flexible space */}
           <div className="flex-1" />
         </nav>
 
-        {/* User profile at bottom */}
-        <div className="p-2 border-t border-sidebar-border">
+        <div className="p-2 border-t border-sidebar-border lg:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className={cn(
-                  "w-full flex items-center gap-3 p-2 rounded-lg hover:bg-sidebar-accent transition-colors",
-                  isCollapsed && "lg:justify-center lg:p-2"
-                )}
-                title={isCollapsed ? displayName : undefined}
+                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-sidebar-accent transition-colors"
               >
-                <div className="w-9 h-9 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-brand-primary font-semibold text-sm">
-                    {displayName.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div
-                  className={cn(
-                    "flex-1 min-w-0 text-left",
-                    isCollapsed && "lg:hidden"
-                  )}
-                >
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={displayName}
+                    className="w-9 h-9 rounded-full object-cover flex-shrink-0 border border-sidebar-border"
+                  />
+                ) : (
+                  <div className="w-9 h-9 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-brand-primary font-semibold text-sm">
+                      {displayName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0 text-left">
                   <p className="font-medium text-sidebar-foreground truncate text-sm">
                     {displayName}
                   </p>
                 </div>
-                <ChevronsUpDown
-                  className={cn(
-                    "w-4 h-4 text-muted-foreground flex-shrink-0",
-                    isCollapsed && "lg:hidden"
-                  )}
-                />
+                <ChevronsUpDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              side="top"
-              align="start"
-              className="w-56"
-            >
+            <DropdownMenuContent side="top" align="start" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <p className="text-sm text-muted-foreground truncate">
                   {user?.email}
                 </p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {isAdmin && (
+                <>
+                  <DropdownMenuItem
+                    asChild
+                    className="bg-primary/10 text-primary focus:bg-primary/20 font-medium cursor-pointer"
+                  >
+                    <Link
+                      to="/admin"
+                      className="cursor-pointer w-full flex items-center"
+                    >
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      Admin Panel
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem asChild>
-                <Link to="/dashboard/profil" onClick={() => setSidebarOpen(false)}>
+                <Link
+                  to="/dashboard/profil"
+                  onClick={() => setSidebarOpen(false)}
+                >
                   <User className="w-4 h-4" />
                   Profil
                 </Link>
@@ -381,7 +368,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           isCollapsed ? "lg:pl-16" : "lg:pl-64"
         )}
       >
-        {/* Top bar - desktop only */}
         <header
           className={cn(
             "hidden lg:flex h-16 items-center justify-between px-6 border-b border-border bg-background sticky top-0 z-40"
@@ -390,29 +376,101 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Search bar */}
           <CourseSearchDropdown />
 
-          {/* Right side: notifications + greeting */}
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              {/* Notification badge - uncomment when needed */}
-              {/* <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" /> */}
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              aria-label={
+                theme === "light"
+                  ? "Beralih ke mode gelap"
+                  : "Beralih ke mode terang"
+              }
+            >
+              {theme === "light" ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Sun className="h-5 w-5" />
+              )}
             </Button>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {getGreeting()},{" "}
-                <span className="font-medium text-foreground">
-                  {displayName.split(" ")[0]}
-                </span>
-              </span>
-              <Handshake className="w-5 h-5 text-red-500" />
-            </div>
+
+            {/* User Dropdown Profile */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 px-2 hover:bg-accent"
+                >
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={displayName}
+                      className="w-8 h-8 rounded-full object-cover border border-border"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
+                      <span className="text-brand-primary font-semibold text-sm">
+                        {displayName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <span className="font-medium max-w-[120px] truncate">
+                    {displayName}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="font-medium leading-none">{displayName}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {isAdmin && (
+                  <>
+                    <DropdownMenuItem
+                      asChild
+                      className="bg-primary/10 text-primary focus:bg-primary/20 font-medium cursor-pointer"
+                    >
+                      <Link
+                        to="/admin"
+                        className="cursor-pointer w-full flex items-center"
+                      >
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard/profil" className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Profil
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                  onClick={() => navigate({ to: "/logout" })}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Keluar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="pt-16 lg:pt-0">
-          {children}
-        </main>
+        <main className="pt-16 lg:pt-0">{children}</main>
       </div>
     </div>
   );

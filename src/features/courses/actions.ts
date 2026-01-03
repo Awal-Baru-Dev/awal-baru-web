@@ -6,7 +6,7 @@
  */
 
 import { createBrowserClient } from "@/lib/db/supabase/client";
-import type { Course, ListResult, QueryResult } from "@/lib/db/types";
+import type { Course, ListResult, QueryResult, AdminCourseListItem } from "@/lib/db/types";
 
 // Debug helper - set to true only for local debugging
 const DEBUG = false;
@@ -51,6 +51,31 @@ export async function getCourses(): Promise<ListResult<Course>> {
 }
 
 /**
+ * Get all courses for admin (including unpublished)
+ */
+export async function getAdminCourses(): Promise<ListResult<AdminCourseListItem>> {
+  try {
+    const supabase = createBrowserClient();
+
+
+    const { data, error } = await supabase
+      .from("admin_course_list_view") 
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching admin courses:", error);
+      return { data: [], error: error.message };
+    }
+
+    // Casting data ke tipe yang benar
+    return { data: data as AdminCourseListItem[], error: null };
+  } catch (error) {
+    return { data: [], error: error instanceof Error ? error.message : "Unknown" };
+  }
+}
+
+/**
  * Get a single course by slug
  */
 export async function getCourseBySlug(
@@ -74,6 +99,36 @@ export async function getCourseBySlug(
 		return { data: data as Course, error: null };
 	} catch (error) {
 		console.error("Error fetching course:", error);
+		return {
+			data: null,
+			error: error instanceof Error ? error.message : "Unknown error",
+		};
+	}
+}
+
+/**
+ * Get course by slug for ADMIN (bypasses is_published check)
+ */
+export async function getAdminCourseBySlug(
+	slug: string,
+): Promise<QueryResult<Course>> {
+	try {
+		const supabase = createBrowserClient();
+
+		const { data, error } = await supabase
+			.from("courses")
+			.select("*")
+			.eq("slug", slug)
+			.single();
+
+		if (error) {
+			console.error("Error fetching admin course:", error);
+			return { data: null, error: error.message };
+		}
+
+		return { data: data as Course, error: null };
+	} catch (error) {
+		console.error("Error fetching admin course:", error);
 		return {
 			data: null,
 			error: error instanceof Error ? error.message : "Unknown error",
@@ -199,4 +254,156 @@ export async function searchCourses(query: string): Promise<ListResult<Course>> 
 			error: error instanceof Error ? error.message : "Unknown error",
 		};
 	}
+}
+
+/**
+ * Upload to Supabase Storage
+ */
+export async function uploadCourseAsset(
+	file: File,
+	bucket: "course-assets" | "avatars",
+	path: string
+): Promise<string | null> {
+	try {
+		const supabase = createBrowserClient();
+		
+		const { data, error } = await supabase.storage
+			.from(bucket)
+			.upload(path, file, {
+				cacheControl: "3600",
+				upsert: true,
+			});
+
+		if (error) {
+			throw error;
+		}
+
+		const { data: publicUrlData } = supabase.storage
+			.from(bucket)
+			.getPublicUrl(data.path);
+
+		return publicUrlData.publicUrl;
+	} catch (error) {
+		console.error(`Error uploading to ${bucket}:`, error);
+		return null;
+	}
+}
+
+/**
+ * Delete file from Supabase Storage using its Public URL
+ */
+export async function deleteStorageFile(
+    publicUrl: string | null, 
+    bucket: "course-assets" | "avatars"
+) {
+    if (!publicUrl) return;
+
+    try {
+        const supabase = createBrowserClient();
+        
+        const urlObj = new URL(publicUrl);
+        const pathParts = urlObj.pathname.split(`/public/${bucket}/`);
+        
+        if (pathParts.length < 2) return;
+        
+        const filePath = pathParts[1];
+
+        const { error } = await supabase.storage
+            .from(bucket)
+            .remove([decodeURIComponent(filePath)]);
+
+        if (error) {
+            console.error("Error deleting file:", error);
+        } else {
+            console.log("Deleted old file:", filePath);
+        }
+    } catch (error) {
+        console.error("Error parsing URL for deletion:", error);
+    }
+}
+
+/**
+ * Create new course
+ */
+export async function createCourse(
+  courseData: Partial<Course>
+) {
+  try {
+    const supabase = createBrowserClient();
+
+    const { data, error } = await supabase
+      .from("courses")
+      .insert(courseData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase Error:", error);
+      return { data: null, error: error.message };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error("Create Course Exception:", error);
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Update existing course
+ */
+export async function updateCourse(
+	slug: string,
+	courseData: Partial<Course>
+) {
+	try {
+		const supabase = createBrowserClient();
+
+		const { data, error } = await supabase
+			.from("courses")
+			.update(courseData)
+			.eq("slug", slug)
+			.select()
+			.single();
+
+		if (error) {
+			console.error("Supabase Error:", error);
+			return { data: null, error: error.message };
+		}
+
+		return { data, error: null };
+	} catch (error) {
+		console.error("Update Course Exception:", error);
+		return {
+			data: null,
+			error: error instanceof Error ? error.message : "Unknown error",
+		};
+	}
+}
+
+/*
+ * Delete course
+ */
+export async function deleteAdminCourse(id: string) {
+  try {
+    const supabase = createBrowserClient();
+
+    const { error } = await supabase.from("courses").delete().eq("id", id);
+
+    if (error) {
+      if (error.code === "23503") {
+        throw new Error(
+          "Tidak bisa menghapus kursus yang sudah memiliki siswa/transaksi."
+        );
+      }
+      throw new Error(error.message);
+    }
+
+    return true;
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Unknown error");
+  }
 }

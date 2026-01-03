@@ -123,6 +123,7 @@ export function LandingHeader() {
 							<UserMenu
 								displayName={displayName}
 								email={user?.email}
+								avatarUrl={profile?.avatar_url}
 							/>
 						) : (
 							<>
@@ -234,9 +235,11 @@ export function LandingHeader() {
 function UserMenu({
 	displayName,
 	email,
+	avatarUrl,
 }: {
 	displayName: string;
 	email?: string;
+	avatarUrl?: string | null;
 }) {
 	return (
 		<DropdownMenu>
@@ -246,9 +249,19 @@ function UserMenu({
 					className="flex items-center gap-2 px-2"
 				>
 					<div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
-						<span className="text-brand-primary font-semibold text-sm">
-							{displayName.charAt(0).toUpperCase()}
-						</span>
+						{avatarUrl ? (
+								<img 
+										src={avatarUrl} 
+										alt={displayName} 
+										className="w-8 h-8 rounded-full object-cover border border-border"
+								/>
+						) : (
+								<div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
+										<span className="text-brand-primary font-semibold text-sm">
+												{displayName.charAt(0).toUpperCase()}
+										</span>
+								</div>
+						)}
 					</div>
 					<span className="hidden lg:inline-block font-medium max-w-[120px] truncate">
 						{displayName}

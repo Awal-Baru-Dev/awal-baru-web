@@ -4,27 +4,33 @@
  * TanStack Query hooks for fetching and caching course data.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
 	getCourses,
 	getCourseBySlug,
 	getFeaturedCourses,
 	getCourseById,
 	searchCourses,
+	getAdminCourses,
+	getAdminCourseBySlug,
+	deleteAdminCourse
 } from "./actions";
 
 /**
  * Query keys for course-related queries
  */
 export const courseKeys = {
-	all: ["courses"] as const,
-	lists: () => [...courseKeys.all, "list"] as const,
-	list: () => [...courseKeys.lists()] as const,
-	featured: () => [...courseKeys.all, "featured"] as const,
-	details: () => [...courseKeys.all, "detail"] as const,
-	detail: (slug: string) => [...courseKeys.details(), slug] as const,
-	byId: (id: string) => [...courseKeys.all, "id", id] as const,
-	search: (query: string) => [...courseKeys.all, "search", query] as const,
+  all: ["courses"] as const,
+  lists: () => [...courseKeys.all, "list"] as const,
+  list: () => [...courseKeys.lists()] as const,
+  featured: () => [...courseKeys.all, "featured"] as const,
+  details: () => [...courseKeys.all, "detail"] as const,
+  detail: (slug: string) => [...courseKeys.details(), slug] as const,
+  byId: (id: string) => [...courseKeys.all, "id", id] as const,
+  search: (query: string) => [...courseKeys.all, "search", query] as const,
+  adminAll: () => [...courseKeys.all, "admin-list"] as const,
+	adminDetail: (slug: string) => [...courseKeys.all, "admin-detail", slug] as const,
 };
 
 /**
@@ -46,6 +52,22 @@ export function useCourses(options?: { enabled?: boolean }) {
 }
 
 /**
+ * Hook to fetch all courses for admin
+ */
+export function useAdminCourses() {
+  return useQuery({
+    queryKey: courseKeys.adminAll(),
+    queryFn: async () => {
+      const result = await getAdminCourses();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+  });
+}
+
+/**
  * Hook to fetch a single course by slug
  */
 export function useCourse(slug: string) {
@@ -60,6 +82,24 @@ export function useCourse(slug: string) {
 		},
 		enabled: !!slug,
 		staleTime: 5 * 60 * 1000, // 5 minutes
+	});
+}
+
+/**
+ * Hook to fetch a single course for ADMIN (includes unpublished)
+ */
+export function useAdminCourse(slug: string) {
+	return useQuery({
+		queryKey: courseKeys.adminDetail(slug),
+		queryFn: async () => {
+			const result = await getAdminCourseBySlug(slug);
+			if (result.error) {
+				throw new Error(result.error);
+			}
+			return result.data;
+		},
+		enabled: !!slug,
+		staleTime: 0,
 	});
 }
 
@@ -115,4 +155,22 @@ export function useSearchCourses(query: string) {
 		enabled: query.trim().length > 0,
 		staleTime: 5 * 60 * 1000, // 5 minutes
 	});
+}
+
+/**
+ * Hook to delete a course
+ */
+export function useDeleteCourse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteAdminCourse(id),
+    onSuccess: () => {
+      toast.success("Kursus berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: courseKeys.all });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal menghapus kursus");
+    },
+  });
 }

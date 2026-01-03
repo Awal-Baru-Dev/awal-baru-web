@@ -16,16 +16,24 @@ import { Route as LupaPasswordRouteImport } from './routes/lupa-password'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as HargaRouteImport } from './routes/harga'
 import { Route as DaftarRouteImport } from './routes/daftar'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoursesIndexRouteImport } from './routes/courses/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as CoursesSlugRouteImport } from './routes/courses/$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
+import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AdminTransactionsIndexRouteImport } from './routes/admin/transactions/index'
+import { Route as AdminCoursesIndexRouteImport } from './routes/admin/courses/index'
+import { Route as AdminCoursesNewRouteImport } from './routes/admin/courses/new'
 import { Route as AuthedDashboardProfilRouteImport } from './routes/_authed/dashboard_.profil'
 import { Route as AuthedDashboardKursusRouteImport } from './routes/_authed/dashboard_.kursus'
 import { Route as AuthedDashboardKontakRouteImport } from './routes/_authed/dashboard_.kontak'
 import { Route as AuthedDashboardBantuanRouteImport } from './routes/_authed/dashboard_.bantuan'
+import { Route as AdminCoursesSlugIndexRouteImport } from './routes/admin/courses/$slug.index'
+import { Route as AdminCoursesSlugEditRouteImport } from './routes/admin/courses/$slug.edit'
 import { Route as AuthedCoursesSlugLearnRouteImport } from './routes/_authed/courses.$slug.learn'
 
 const TentangRoute = TentangRouteImport.update({
@@ -63,6 +71,11 @@ const DaftarRoute = DaftarRouteImport.update({
   path: '/daftar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
   getParentRoute: () => rootRouteImport,
@@ -76,6 +89,11 @@ const CoursesIndexRoute = CoursesIndexRouteImport.update({
   id: '/courses/',
   path: '/courses/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const CoursesSlugRoute = CoursesSlugRouteImport.update({
   id: '/courses/$slug',
@@ -91,6 +109,26 @@ const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthedRoute,
+} as any)
+const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTransactionsIndexRoute = AdminTransactionsIndexRouteImport.update({
+  id: '/transactions/',
+  path: '/transactions/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCoursesIndexRoute = AdminCoursesIndexRouteImport.update({
+  id: '/courses/',
+  path: '/courses/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCoursesNewRoute = AdminCoursesNewRouteImport.update({
+  id: '/courses/new',
+  path: '/courses/new',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AuthedDashboardProfilRoute = AuthedDashboardProfilRouteImport.update({
   id: '/dashboard_/profil',
@@ -112,6 +150,16 @@ const AuthedDashboardBantuanRoute = AuthedDashboardBantuanRouteImport.update({
   path: '/dashboard/bantuan',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AdminCoursesSlugIndexRoute = AdminCoursesSlugIndexRouteImport.update({
+  id: '/courses/$slug/',
+  path: '/courses/$slug/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCoursesSlugEditRoute = AdminCoursesSlugEditRouteImport.update({
+  id: '/courses/$slug/edit',
+  path: '/courses/$slug/edit',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AuthedCoursesSlugLearnRoute = AuthedCoursesSlugLearnRouteImport.update({
   id: '/courses/$slug/learn',
   path: '/courses/$slug/learn',
@@ -120,6 +168,7 @@ const AuthedCoursesSlugLearnRoute = AuthedCoursesSlugLearnRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/daftar': typeof DaftarRoute
   '/harga': typeof HargaRoute
   '/logout': typeof LogoutRoute
@@ -130,12 +179,19 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthedDashboardRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/courses/$slug': typeof CoursesSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/courses': typeof CoursesIndexRoute
   '/dashboard/bantuan': typeof AuthedDashboardBantuanRoute
   '/dashboard/kontak': typeof AuthedDashboardKontakRoute
   '/dashboard/kursus': typeof AuthedDashboardKursusRoute
   '/dashboard/profil': typeof AuthedDashboardProfilRoute
+  '/admin/courses/new': typeof AdminCoursesNewRoute
+  '/admin/courses': typeof AdminCoursesIndexRoute
+  '/admin/transactions': typeof AdminTransactionsIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
   '/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
+  '/admin/courses/$slug/edit': typeof AdminCoursesSlugEditRoute
+  '/admin/courses/$slug': typeof AdminCoursesSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -149,17 +205,25 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthedDashboardRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/courses/$slug': typeof CoursesSlugRoute
+  '/admin': typeof AdminIndexRoute
   '/courses': typeof CoursesIndexRoute
   '/dashboard/bantuan': typeof AuthedDashboardBantuanRoute
   '/dashboard/kontak': typeof AuthedDashboardKontakRoute
   '/dashboard/kursus': typeof AuthedDashboardKursusRoute
   '/dashboard/profil': typeof AuthedDashboardProfilRoute
+  '/admin/courses/new': typeof AdminCoursesNewRoute
+  '/admin/courses': typeof AdminCoursesIndexRoute
+  '/admin/transactions': typeof AdminTransactionsIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
   '/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
+  '/admin/courses/$slug/edit': typeof AdminCoursesSlugEditRoute
+  '/admin/courses/$slug': typeof AdminCoursesSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authed': typeof AuthedRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
   '/daftar': typeof DaftarRoute
   '/harga': typeof HargaRoute
   '/logout': typeof LogoutRoute
@@ -170,17 +234,25 @@ export interface FileRoutesById {
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/courses/$slug': typeof CoursesSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/courses/': typeof CoursesIndexRoute
   '/_authed/dashboard_/bantuan': typeof AuthedDashboardBantuanRoute
   '/_authed/dashboard_/kontak': typeof AuthedDashboardKontakRoute
   '/_authed/dashboard_/kursus': typeof AuthedDashboardKursusRoute
   '/_authed/dashboard_/profil': typeof AuthedDashboardProfilRoute
+  '/admin/courses/new': typeof AdminCoursesNewRoute
+  '/admin/courses/': typeof AdminCoursesIndexRoute
+  '/admin/transactions/': typeof AdminTransactionsIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
   '/_authed/courses/$slug/learn': typeof AuthedCoursesSlugLearnRoute
+  '/admin/courses/$slug/edit': typeof AdminCoursesSlugEditRoute
+  '/admin/courses/$slug/': typeof AdminCoursesSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/daftar'
     | '/harga'
     | '/logout'
@@ -191,12 +263,19 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/auth/callback'
     | '/courses/$slug'
+    | '/admin/'
     | '/courses'
     | '/dashboard/bantuan'
     | '/dashboard/kontak'
     | '/dashboard/kursus'
     | '/dashboard/profil'
+    | '/admin/courses/new'
+    | '/admin/courses'
+    | '/admin/transactions'
+    | '/admin/users'
     | '/courses/$slug/learn'
+    | '/admin/courses/$slug/edit'
+    | '/admin/courses/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,16 +289,24 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/auth/callback'
     | '/courses/$slug'
+    | '/admin'
     | '/courses'
     | '/dashboard/bantuan'
     | '/dashboard/kontak'
     | '/dashboard/kursus'
     | '/dashboard/profil'
+    | '/admin/courses/new'
+    | '/admin/courses'
+    | '/admin/transactions'
+    | '/admin/users'
     | '/courses/$slug/learn'
+    | '/admin/courses/$slug/edit'
+    | '/admin/courses/$slug'
   id:
     | '__root__'
     | '/'
     | '/_authed'
+    | '/admin'
     | '/daftar'
     | '/harga'
     | '/logout'
@@ -230,17 +317,25 @@ export interface FileRouteTypes {
     | '/_authed/dashboard'
     | '/auth/callback'
     | '/courses/$slug'
+    | '/admin/'
     | '/courses/'
     | '/_authed/dashboard_/bantuan'
     | '/_authed/dashboard_/kontak'
     | '/_authed/dashboard_/kursus'
     | '/_authed/dashboard_/profil'
+    | '/admin/courses/new'
+    | '/admin/courses/'
+    | '/admin/transactions/'
+    | '/admin/users/'
     | '/_authed/courses/$slug/learn'
+    | '/admin/courses/$slug/edit'
+    | '/admin/courses/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthedRoute: typeof AuthedRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
   DaftarRoute: typeof DaftarRoute
   HargaRoute: typeof HargaRoute
   LogoutRoute: typeof LogoutRoute
@@ -304,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DaftarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authed': {
       id: '/_authed'
       path: ''
@@ -325,6 +427,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/courses/$slug': {
       id: '/courses/$slug'
       path: '/courses/$slug'
@@ -345,6 +454,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthedDashboardRouteImport
       parentRoute: typeof AuthedRoute
+    }
+    '/admin/users/': {
+      id: '/admin/users/'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/transactions/': {
+      id: '/admin/transactions/'
+      path: '/transactions'
+      fullPath: '/admin/transactions'
+      preLoaderRoute: typeof AdminTransactionsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/courses/': {
+      id: '/admin/courses/'
+      path: '/courses'
+      fullPath: '/admin/courses'
+      preLoaderRoute: typeof AdminCoursesIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/courses/new': {
+      id: '/admin/courses/new'
+      path: '/courses/new'
+      fullPath: '/admin/courses/new'
+      preLoaderRoute: typeof AdminCoursesNewRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_authed/dashboard_/profil': {
       id: '/_authed/dashboard_/profil'
@@ -373,6 +510,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/bantuan'
       preLoaderRoute: typeof AuthedDashboardBantuanRouteImport
       parentRoute: typeof AuthedRoute
+    }
+    '/admin/courses/$slug/': {
+      id: '/admin/courses/$slug/'
+      path: '/courses/$slug'
+      fullPath: '/admin/courses/$slug'
+      preLoaderRoute: typeof AdminCoursesSlugIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/courses/$slug/edit': {
+      id: '/admin/courses/$slug/edit'
+      path: '/courses/$slug/edit'
+      fullPath: '/admin/courses/$slug/edit'
+      preLoaderRoute: typeof AdminCoursesSlugEditRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_authed/courses/$slug/learn': {
       id: '/_authed/courses/$slug/learn'
@@ -405,9 +556,32 @@ const AuthedRouteChildren: AuthedRouteChildren = {
 const AuthedRouteWithChildren =
   AuthedRoute._addFileChildren(AuthedRouteChildren)
 
+interface AdminRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminCoursesNewRoute: typeof AdminCoursesNewRoute
+  AdminCoursesIndexRoute: typeof AdminCoursesIndexRoute
+  AdminTransactionsIndexRoute: typeof AdminTransactionsIndexRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
+  AdminCoursesSlugEditRoute: typeof AdminCoursesSlugEditRoute
+  AdminCoursesSlugIndexRoute: typeof AdminCoursesSlugIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+  AdminCoursesNewRoute: AdminCoursesNewRoute,
+  AdminCoursesIndexRoute: AdminCoursesIndexRoute,
+  AdminTransactionsIndexRoute: AdminTransactionsIndexRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
+  AdminCoursesSlugEditRoute: AdminCoursesSlugEditRoute,
+  AdminCoursesSlugIndexRoute: AdminCoursesSlugIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
   DaftarRoute: DaftarRoute,
   HargaRoute: HargaRoute,
   LogoutRoute: LogoutRoute,

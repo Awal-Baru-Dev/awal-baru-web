@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import {
 	CourseHero,
 	CourseHeroSkeleton,
-	CourseCurriculum,
-	CourseCurriculumSkeleton,
+	// CourseCurriculum,
+	// CourseCurriculumSkeleton,
 	CourseSidebar,
 	CourseSidebarSkeleton,
 	CourseMobilePurchaseBar,
@@ -220,7 +220,7 @@ function CourseDetailPage() {
 						<div className="lg:col-span-2 space-y-8">
 							<CourseHeroSkeleton />
 							<WhatYouLearnSkeleton />
-							<CourseCurriculumSkeleton />
+							{/* <CourseCurriculumSkeleton /> */}
 						</div>
 
 						{/* Sidebar */}
@@ -265,6 +265,7 @@ function CourseDetailPage() {
 							<WhatYouLearn points={whatYouWillLearn} />
 						)}
 
+						{/*
 						<CourseCurriculum
 							course={course}
 							isEnrolled={isEnrolled}
@@ -279,6 +280,7 @@ function CourseDetailPage() {
 								}
 							}}
 						/>
+						*/}
 					</div>
 
 					{/* Sidebar - Desktop */}

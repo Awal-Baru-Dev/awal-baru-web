@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter, useNavigate } from "@tanstack/react-router";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { Loader2, KeyRound, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PasswordInput, PasswordStrength, FormField } from "@/components/auth";
 import { resetPasswordFn } from "@/features/auth";
 import { resetPasswordSchema, type ResetPasswordFormData } from "@/lib/validations/auth";
+import { useUser } from "@/contexts/user-context";
 import { createBrowserClient } from "@/lib/db/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/reset-password")({
 type FormErrors = Partial<Record<keyof ResetPasswordFormData, string>>;
 
 function ResetPasswordPage() {
+	const { user, isLoading: isAuthLoading } = useUser();
+	const navigate = useNavigate();
 	const router = useRouter();
 
 	const [formData, setFormData] = useState<ResetPasswordFormData>({
@@ -29,6 +32,15 @@ function ResetPasswordPage() {
 	const [isValidSession, setIsValidSession] = useState<boolean | null>(null);
 	const [resetSuccess, setResetSuccess] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+
+	useEffect(() => {
+    if (!isAuthLoading && user) {
+      navigate({ to: "/" });
+    }
+  }, [user, isAuthLoading, navigate]);
+
+  // Prevent Render
+  if (!isAuthLoading && user) return null;
 
 	// Check if we have a valid recovery session
 	// Note: This still uses browser client because the recovery link lands here

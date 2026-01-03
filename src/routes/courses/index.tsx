@@ -206,211 +206,213 @@ function CoursesPage() {
 
 	// Hero section to pass to AuthAwareLayout
 	const heroSection = (
-		<section className="bg-hero-gradient text-white">
-			<div className="container mx-auto max-w-6xl px-6 py-16 lg:py-20">
-				{heroCourse ? (
-					<div className="grid lg:grid-cols-2 gap-10 items-center">
-						{/* Left: Text Content */}
-						<div className="space-y-6">
-							{/* Badges */}
-							<div className="flex items-center gap-3">
-								{isBundle ? (
-									<>
-										<Badge className="bg-white/20 text-white border-0 hover:bg-white/30 flex items-center gap-1.5">
-											<Gift className="w-3.5 h-3.5" />
-											PAKET HEMAT
-										</Badge>
-										{discountPercentage > 0 && (
-											<Badge className="bg-red-500 text-white border-0">
-												-{discountPercentage}%
-											</Badge>
-										)}
-									</>
-								) : (
-									<Badge className="bg-white/20 text-white border-0 hover:bg-white/30">
-										PAKET KURSUS
-									</Badge>
-								)}
-							</div>
+    <section className="bg-hero-gradient text-white">
+      <div className="container mx-auto max-w-6xl px-6 py-16 lg:py-20">
+        {heroCourse ? (
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            {/* Left: Text Content */}
+            <div className="space-y-6">
+              {/* Badges */}
+              <div className="flex items-center gap-3">
+                {isBundle ? (
+                  <>
+                    <Badge className="bg-white/20 text-white border-0 hover:bg-white/30 flex items-center gap-1.5">
+                      <Gift className="w-3.5 h-3.5" />
+                      PAKET HEMAT
+                    </Badge>
+                    {discountPercentage > 0 && (
+                      <Badge className="bg-red-500 text-white border-0">
+                        -{discountPercentage}%
+                      </Badge>
+                    )}
+                  </>
+                ) : (
+                  <Badge className="bg-white/20 text-white border-0 hover:bg-white/30">
+                    PAKET KURSUS
+                  </Badge>
+                )}
+              </div>
 
-							<h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-								{heroCourse.title}
-							</h1>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
+                {heroCourse.title}
+              </h1>
 
-							{heroCourse.short_description && (
-								<p className="text-lg text-white/90 leading-relaxed">
-									{heroCourse.short_description}
-								</p>
-							)}
+              {heroCourse.short_description && (
+                <p className="text-lg text-white/90 leading-relaxed">
+                  {heroCourse.short_description}
+                </p>
+              )}
 
-							{/* Features list - show dynamic count for bundle */}
-							<ul className={isBundle ? "grid grid-cols-2 gap-3" : "space-y-3"}>
-								{isBundle ? (
-									<>
-										<li className="flex items-center gap-3">
-											<CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />
-											<span className="text-white/90">
-												Akses ke semua {courseCount} kursus
-											</span>
-										</li>
-										{heroCourse.metadata?.features
-											?.slice(1, 4)
-											.map((feature, index) => (
-												<li
-													key={`feature-${index}`}
-													className="flex items-center gap-3"
-												>
-													<CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />
-													<span className="text-white/90">{feature}</span>
-												</li>
-											))}
-									</>
-								) : (
-									heroCourse.metadata?.features
-										?.slice(0, 4)
-										.map((feature, index) => (
-											<li
-												key={`feature-${index}`}
-												className="flex items-center gap-3"
-											>
-												<CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />
-												<span className="text-white/90">{feature}</span>
-											</li>
-										))
-								)}
-							</ul>
+              {/* Features list - show dynamic count for bundle */}
+              <ul className={isBundle ? "grid grid-cols-2 gap-3" : "space-y-3"}>
+                {isBundle ? (
+                  <>
+                    <li className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />
+                      <span className="text-white/90">
+                        Akses ke semua {courseCount} kursus
+                      </span>
+                    </li>
+                    {heroCourse.metadata?.features
+                      ?.slice(1, 4)
+                      .map((feature, index) => (
+                        <li
+                          key={`feature-${index}`}
+                          className="flex items-center gap-3"
+                        >
+                          <CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />
+                          <span className="text-white/90">{feature}</span>
+                        </li>
+                      ))}
+                  </>
+                ) : (
+                  heroCourse.metadata?.features
+                    ?.slice(0, 4)
+                    .map((feature, index) => (
+                      <li
+                        key={`feature-${index}`}
+                        className="flex items-center gap-3"
+                      >
+                        <CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />
+                        <span className="text-white/90">{feature}</span>
+                      </li>
+                    ))
+                )}
+              </ul>
 
-							{/* Stats - different for bundle vs regular course */}
-							{!isBundle && (
-								<div className="flex items-center gap-6 text-sm text-white/80">
-									<div className="flex items-center gap-2">
-										<Clock className="w-4 h-4" />
-										<span>
-											{Math.floor(heroCourse.duration_minutes / 60)} jam
-											pelajaran
-										</span>
-									</div>
-									<div className="flex items-center gap-2">
-										<Users className="w-4 h-4" />
-										<span>
-											{heroCourse.metadata?.stats?.students || 0}+ siswa
-										</span>
-									</div>
-								</div>
-							)}
+              {/* Stats - different for bundle vs regular course */}
+              {!isBundle && (
+                <div className="flex items-center gap-6 text-sm text-white/80">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>
+                      {Math.floor(heroCourse.duration_minutes / 60)} jam
+                      pelajaran
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    <span>
+                      {heroCourse.metadata?.stats?.students || 0}+ siswa
+                    </span>
+                  </div>
+                </div>
+              )}
 
-							{/* CTA */}
-							<div className="space-y-3">
-								<div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-									{/* Show different CTA based on ownership */}
-									{isBundle && ownsAllCourses ? (
-										<div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white border border-white/30 rounded-lg px-5 py-2.5">
-											<Award className="w-5 h-5" />
-											<span className="font-medium">Semua Kursus Sudah Dimiliki</span>
-										</div>
-									) : isBundle ? (
-										<Button
-											size="lg"
-											className="bg-red-500 hover:bg-red-600 text-white font-semibold px-8"
-											onClick={handleBundlePurchase}
-											disabled={createPayment.isPending}
-										>
-											<Gift className="w-4 h-4 mr-2" />
-											{createPayment.isPending
-												? "Memproses..."
-												: "Beli Paket Lengkap"}
-										</Button>
-									) : (
-										<Button
-											size="lg"
-											className="bg-white text-brand-primary hover:bg-white/90 font-semibold px-8"
-											asChild
-										>
-											<Link
-												to="/courses/$slug"
-												params={{ slug: heroCourse.slug }}
-											>
-												Lihat Detail
-												<ArrowRight className="w-4 h-4 ml-2" />
-											</Link>
-										</Button>
-									)}
-									{/* Price - hide when user owns all courses */}
-									{!(isBundle && ownsAllCourses) && (
-									<div className="text-lg">
-										<span className="font-bold text-2xl">
-											Rp {heroCourse.price.toLocaleString("id-ID")}
-										</span>
-										{heroCourse.original_price &&
-											heroCourse.original_price > heroCourse.price && (
-												<span className="ml-2 text-white/60 line-through">
-													Rp{" "}
-													{heroCourse.original_price.toLocaleString("id-ID")}
-												</span>
-											)}
-									</div>
-									)}
-								</div>
+              {/* CTA */}
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  {/* Show different CTA based on ownership */}
+                  {isBundle && ownsAllCourses ? (
+                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white border border-white/30 rounded-lg px-5 py-2.5">
+                      <Award className="w-5 h-5" />
+                      <span className="font-medium">
+                        Semua Kursus Sudah Dimiliki
+                      </span>
+                    </div>
+                  ) : isBundle ? (
+                    <Button
+                      size="lg"
+                      className="bg-red-500 hover:bg-red-600 text-white font-semibold px-8"
+                      onClick={handleBundlePurchase}
+                      disabled={createPayment.isPending}
+                    >
+                      <Gift className="w-4 h-4 mr-2" />
+                      {createPayment.isPending
+                        ? "Memproses..."
+                        : "Beli Paket Lengkap"}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="lg"
+                      className="bg-white text-brand-primary hover:bg-white/90 font-semibold px-8"
+                      asChild
+                    >
+                      <Link
+                        to="/courses/$slug"
+                        params={{ slug: heroCourse.slug }}
+                      >
+                        Lihat Detail
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Link>
+                    </Button>
+                  )}
+                  {/* Price - hide when user owns all courses */}
+                  {!(isBundle && ownsAllCourses) && (
+                    <div className="text-lg">
+                      <span className="font-bold text-2xl">
+                        Rp {heroCourse.price.toLocaleString("id-ID")}
+                      </span>
+                      {heroCourse.original_price &&
+                        heroCourse.original_price > heroCourse.price && (
+                          <span className="ml-2 text-white/60 line-through">
+                            Rp{" "}
+                            {heroCourse.original_price.toLocaleString("id-ID")}
+                          </span>
+                        )}
+                    </div>
+                  )}
+                </div>
 
-								{/* Show normal price note for bundle - hide when user owns all */}
-								{isBundle && totalNormalPrice > 0 && !ownsAllCourses && (
-									<p className="text-sm text-white/60">
-										* Harga normal jika beli satuan: Rp{" "}
-										{totalNormalPrice.toLocaleString("id-ID")}
-									</p>
-								)}
-							</div>
-						</div>
+                {/* Show normal price note for bundle - hide when user owns all */}
+                {isBundle && totalNormalPrice > 0 && !ownsAllCourses && (
+                  <p className="text-sm text-white/60">
+                    * Harga normal jika beli satuan: Rp{" "}
+                    {totalNormalPrice.toLocaleString("id-ID")}
+                  </p>
+                )}
+              </div>
+            </div>
 
-						{/* Right: Image */}
-						<div className="relative hidden lg:block">
-							<div className="rounded-2xl overflow-hidden shadow-2xl bg-white/10">
-								{heroCourse.thumbnail_url ? (
-									<img
-										src={heroCourse.thumbnail_url}
-										alt={heroCourse.title}
-										className="w-full h-auto"
-									/>
-								) : (
-									<div className="w-full aspect-[4/3] bg-white/5 flex items-center justify-center">
-										<span className="text-6xl text-white/20">
-											{heroCourse.title.charAt(0)}
-										</span>
-									</div>
-								)}
-							</div>
-							{/* Decorative elements */}
-							<div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-							<div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
-						</div>
-					</div>
-				) : (
-					/* Default hero when no featured course */
-					<div className="text-center max-w-3xl mx-auto">
-						<h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
-							Belajar Persiapan Visa Amerika
-						</h1>
-						<p className="text-lg text-white/90 mb-8">
-							Panduan lengkap dan terpercaya untuk mendapatkan visa Amerika
-							Serikat. Belajar dari pengalaman nyata dan tips praktis.
-						</p>
-						{!isAuthenticated && (
-							<Button
-								size="lg"
-								className="bg-white text-brand-primary hover:bg-white/90 font-semibold px-8"
-								asChild
-							>
-								<Link to="/daftar">
-									Mulai Belajar Gratis
-									<ArrowRight className="w-4 h-4 ml-2" />
-								</Link>
-							</Button>
-						)}
-					</div>
-				)}
-			</div>
-		</section>
-	);
+            {/* Right: Image */}
+            <div className="relative order-first lg:order-none">
+              <div className="rounded-2xl overflow-hidden shadow-2xl bg-white/10">
+                {heroCourse.thumbnail_url ? (
+                  <img
+                    src={heroCourse.thumbnail_url}
+                    alt={heroCourse.title}
+                    className="w-full h-auto"
+                  />
+                ) : (
+                  <div className="w-full aspect-[4/3] bg-white/5 flex items-center justify-center">
+                    <span className="text-6xl text-white/20">
+                      {heroCourse.title.charAt(0)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {/* Decorative elements */}
+              <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
+              <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
+            </div>
+          </div>
+        ) : (
+          /* Default hero when no featured course */
+          <div className="text-center max-w-3xl mx-auto">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
+              Belajar Persiapan Visa Amerika
+            </h1>
+            <p className="text-lg text-white/90 mb-8">
+              Panduan lengkap dan terpercaya untuk mendapatkan visa Amerika
+              Serikat. Belajar dari pengalaman nyata dan tips praktis.
+            </p>
+            {!isAuthenticated && (
+              <Button
+                size="lg"
+                className="bg-white text-brand-primary hover:bg-white/90 font-semibold px-8"
+                asChild
+              >
+                <Link to="/daftar">
+                  Mulai Belajar Gratis
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  );
 
 	return (
 		<>

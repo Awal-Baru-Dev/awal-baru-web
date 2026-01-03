@@ -1,15 +1,54 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { LandingHeader, LandingFooter } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Check, Star, Zap } from "lucide-react";
-import { APP_NAME, BUNDLE_CONFIG } from "@/lib/config/constants";
+import { Check, Star } from "lucide-react";
+import { APP_NAME } from "@/lib/config/constants";
 import { formatPrice } from "@/lib/utils";
+import { useCreatePayment } from "@/features/payments";
+import { useUser } from "@/contexts/user-context";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/harga")({
 	component: HargaPage,
 });
 
 function HargaPage() {
+	const navigate = useNavigate();
+	const { user } = useUser();
+	const createPayment = useCreatePayment();
+
+	// Handle bundle purchase (for Paket Lengkap)
+	const handleBundlePurchase = () => {
+		if (!user) {
+			// Redirect to login with return URL
+			navigate({
+				to: "/masuk",
+				search: { redirect: "/harga" },
+			});
+			return;
+		}
+
+		// Create bundle payment
+		createPayment.mutate(
+			{ isBundle: true },
+			{
+				onSuccess: (result) => {
+					if (!result.success) {
+						toast.error("Gagal Memproses Pembayaran", {
+							description: result.error || "Silakan coba lagi.",
+						});
+					}
+					// Success case is handled by the hook (opens DOKU modal)
+				},
+				onError: () => {
+					toast.error("Gagal Memproses Pembayaran", {
+						description: "Terjadi kesalahan. Silakan coba lagi.",
+					});
+				},
+			},
+		);
+	};
+
 	return (
 		<div className="min-h-screen bg-background">
 			<LandingHeader />
@@ -31,66 +70,20 @@ function HargaPage() {
 				{/* Pricing Cards */}
 				<section className="py-20 bg-background">
 					<div className="container mx-auto px-6 lg:px-16">
-						<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-							{PRICING_TIERS.map((tier, index) => (
-								<PricingCard key={index} tier={tier} />
-							))}
-						</div>
-					</div>
-				</section>
-
-				{/* Bundle Highlight */}
-				<section className="py-20 bg-muted">
-					<div className="container mx-auto px-6 lg:px-16">
-						<div className="max-w-4xl mx-auto bg-card border-2 border-brand-primary rounded-2xl p-8 md:p-12">
-							<div className="flex items-center gap-2 mb-4">
-								<Zap className="w-6 h-6 text-brand-primary" />
-								<span className="text-brand-primary font-semibold">
-									Penawaran Terbaik
-								</span>
-							</div>
-
-							<div className="grid md:grid-cols-2 gap-8 items-center">
-								<div>
-									<h2 className="text-3xl font-bold text-foreground mb-4">
-										{BUNDLE_CONFIG.name}
-									</h2>
-									<p className="text-muted-foreground mb-6">
-										{BUNDLE_CONFIG.description}
-									</p>
-									<ul className="space-y-3">
-										{BUNDLE_CONFIG.features.map((feature, index) => (
-											<li
-												key={index}
-												className="flex items-center gap-2 text-foreground"
-											>
-												<Check className="w-5 h-5 text-green-500 shrink-0" />
-												{feature}
-											</li>
-										))}
-									</ul>
-								</div>
-
-								<div className="text-center md:text-right">
-									<div className="text-muted-foreground line-through text-lg">
-										{formatPrice(BUNDLE_CONFIG.originalPrice)}
-									</div>
-									<div className="text-4xl md:text-5xl font-bold text-brand-primary mb-2">
-										{formatPrice(BUNDLE_CONFIG.price)}
-									</div>
-									<div className="text-sm text-muted-foreground mb-6">
-										Hemat{" "}
-										{formatPrice(
-											BUNDLE_CONFIG.originalPrice - BUNDLE_CONFIG.price,
-										)}
-									</div>
-									<Link to="/daftar">
-										<Button size="lg" className="btn-cta px-8">
-											Dapatkan Sekarang
-										</Button>
-									</Link>
-								</div>
-							</div>
+						<div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+							{PRICING_TIERS.filter((tier) => tier.name !== "Konsultasi").map(
+								(tier, index) => (
+									<PricingCard
+										key={index}
+										tier={tier}
+										onBundlePurchase={
+											tier.name === "Paket Lengkap"
+												? handleBundlePurchase
+												: undefined
+										}
+									/>
+								),
+							)}
 						</div>
 					</div>
 				</section>
@@ -104,7 +97,11 @@ function HargaPage() {
 
 						<div className="max-w-3xl mx-auto space-y-6">
 							{FAQ_ITEMS.map((item, index) => (
-								<FAQItem key={index} question={item.question} answer={item.answer} />
+								<FAQItem
+									key={index}
+									question={item.question}
+									answer={item.answer}
+								/>
 							))}
 						</div>
 					</div>
@@ -130,8 +127,8 @@ const PRICING_TIERS: PricingTier[] = [
 	{
 		name: "Kursus Satuan",
 		description: "Pilih satu kursus yang kamu butuhkan",
-		price: 149000,
-		originalPrice: 299000,
+		price: 99000,
+		originalPrice: 199000,
 		features: [
 			"Akses 1 kursus pilihan",
 			"Video HD profesional",
@@ -143,8 +140,8 @@ const PRICING_TIERS: PricingTier[] = [
 	{
 		name: "Paket Lengkap",
 		description: "Akses semua kursus dengan harga spesial",
-		price: 499000,
-		originalPrice: 999000,
+		price: 249000,
+		originalPrice: 1040000,
 		features: [
 			"Akses SEMUA kursus",
 			"40+ jam konten video",
@@ -171,10 +168,17 @@ const PRICING_TIERS: PricingTier[] = [
 	},
 ];
 
-function PricingCard({ tier }: { tier: PricingTier }) {
+interface PricingCardProps {
+	tier: PricingTier;
+	onBundlePurchase?: () => void;
+}
+
+function PricingCard({ tier, onBundlePurchase }: PricingCardProps) {
+	const isPaketLengkap = tier.name === "Paket Lengkap";
+
 	return (
 		<div
-			className={`relative bg-card border rounded-2xl p-6 ${
+			className={`relative bg-card border rounded-2xl p-6 h-full flex flex-col ${
 				tier.isPopular
 					? "border-brand-primary border-2 shadow-lg"
 					: "border-border"
@@ -194,18 +198,30 @@ function PricingCard({ tier }: { tier: PricingTier }) {
 				<p className="text-sm text-muted-foreground">{tier.description}</p>
 			</div>
 
-			<div className="text-center mb-6">
+			<div className="mb-6 flex flex-col items-center justify-center">
 				{tier.originalPrice && (
-					<div className="text-muted-foreground line-through text-sm">
+					<div className="text-muted-foreground line-through text-sm mb-1">
 						{formatPrice(tier.originalPrice)}
 					</div>
 				)}
-				<div className="text-3xl font-bold text-foreground">
-					{formatPrice(tier.price)}
-				</div>
+
+				{tier.name === "Kursus Satuan" ? (
+					<div className="flex items-baseline justify-center gap-1.5 flex-wrap">
+						<span className="text-sm font-medium text-muted-foreground">
+							Mulai dari
+						</span>
+						<span className="text-3xl font-bold text-foreground">
+							{formatPrice(tier.price)}
+						</span>
+					</div>
+				) : (
+					<div className="text-3xl font-bold text-foreground">
+						{formatPrice(tier.price)}
+					</div>
+				)}
 			</div>
 
-			<ul className="space-y-3 mb-6">
+			<ul className="space-y-3 mb-8 flex-1">
 				{tier.features.map((feature, index) => (
 					<li key={index} className="flex items-start gap-2 text-sm">
 						<Check className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
@@ -214,14 +230,26 @@ function PricingCard({ tier }: { tier: PricingTier }) {
 				))}
 			</ul>
 
-			<Link to="/daftar">
-				<Button
-					className={`w-full ${tier.isPopular ? "btn-cta" : ""}`}
-					variant={tier.isPopular ? "default" : "outline"}
-				>
-					{tier.buttonText}
-				</Button>
-			</Link>
+			<div className="mt-auto">
+				{isPaketLengkap && onBundlePurchase ? (
+					<Button
+						className={`w-full ${tier.isPopular ? "btn-cta" : ""}`}
+						variant={tier.isPopular ? "default" : "outline"}
+						onClick={onBundlePurchase}
+					>
+						{tier.buttonText}
+					</Button>
+				) : (
+					<Link to="/daftar">
+						<Button
+							className={`w-full ${tier.isPopular ? "btn-cta" : ""}`}
+							variant={tier.isPopular ? "default" : "outline"}
+						>
+							{tier.buttonText}
+						</Button>
+					</Link>
+				)}
+			</div>
 		</div>
 	);
 }
@@ -245,11 +273,6 @@ const FAQ_ITEMS: FAQItemProps[] = [
 		question: "Apakah ada garansi uang kembali?",
 		answer:
 			"Ya, kami memberikan garansi 7 hari uang kembali jika kamu merasa kursus tidak sesuai ekspektasi. Tidak ada pertanyaan yang rumit.",
-	},
-	{
-		question: "Bisakah saya konsultasi langsung dengan Tedchay?",
-		answer:
-			"Tentu! Pilih paket Konsultasi untuk mendapat sesi 1-on-1 dengan Tedchay. Kamu bisa diskusi tentang kasusmu secara personal.",
 	},
 ];
 
