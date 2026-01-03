@@ -16,6 +16,7 @@ import {
   HelpCircle,
   MessageCircle,
   ChevronDown,
+  ShieldCheck
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, profile } = useUser();
   const { theme, toggleTheme } = useTheme();
   const displayName = getUserDisplayName(user, profile);
+  const isAdmin = profile?.role === "admin";
 
   // Persist collapsed state to localStorage
   useEffect(() => {
@@ -302,6 +304,23 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {isAdmin && (
+                <>
+                  <DropdownMenuItem
+                    asChild
+                    className="bg-primary/10 text-primary focus:bg-primary/20 font-medium cursor-pointer"
+                  >
+                    <Link
+                      to="/admin"
+                      className="cursor-pointer w-full flex items-center"
+                    >
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      Admin Panel
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem asChild>
                 <Link
                   to="/dashboard/profil"
@@ -397,6 +416,23 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {isAdmin && (
+                  <>
+                    <DropdownMenuItem
+                      asChild
+                      className="bg-primary/10 text-primary focus:bg-primary/20 font-medium cursor-pointer"
+                    >
+                      <Link
+                        to="/admin"
+                        className="cursor-pointer w-full flex items-center"
+                      >
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem asChild>
                   <Link to="/dashboard/profil" className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
