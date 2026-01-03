@@ -1,10 +1,7 @@
 import {
 	BookOpen,
-	Users,
 	Trophy,
 	Video,
-	MessageCircle,
-	Globe,
 	type LucideIcon,
 } from "lucide-react";
 import { APP_NAME, BRAND } from "@/lib/config/constants";
@@ -32,24 +29,6 @@ const FEATURES: Feature[] = [
 		icon: Trophy,
 		title: "Dibimbing Ahli",
 		description: `Belajar langsung dari ${BRAND.founder}, pemenang DV Lottery yang sudah sukses di Amerika.`,
-	},
-	{
-		icon: Users,
-		title: "Komunitas Aktif",
-		description:
-			"Bergabung dengan ribuan orang Indonesia lainnya yang memiliki impian yang sama.",
-	},
-	{
-		icon: MessageCircle,
-		title: "Dukungan Langsung",
-		description:
-			"Tanya jawab dan diskusi langsung dengan mentor dan sesama pelajar.",
-	},
-	{
-		icon: Globe,
-		title: "Akses Selamanya",
-		description:
-			"Sekali beli, akses selamanya. Termasuk semua update materi di masa depan.",
 	},
 ];
 

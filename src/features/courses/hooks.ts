@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import {
 	getCourses,
 	getCourseBySlug,
+	getCourseForLearning,
 	getFeaturedCourses,
 	getCourseById,
 	searchCourses,
@@ -31,6 +32,7 @@ export const courseKeys = {
   search: (query: string) => [...courseKeys.all, "search", query] as const,
   adminAll: () => [...courseKeys.all, "admin-list"] as const,
 	adminDetail: (slug: string) => [...courseKeys.all, "admin-detail", slug] as const,
+	learn: (slug: string) => [...courseKeys.all, "learn", slug] as const,
 };
 
 /**
@@ -83,6 +85,24 @@ export function useCourse(slug: string) {
 		enabled: !!slug,
 		staleTime: 5 * 60 * 1000, // 5 minutes
 	});
+}
+
+/** 
+ * Hook to fetch a single course for learning 
+ */
+export function useCourseForLearning(slug: string) {
+  return useQuery({
+    queryKey: courseKeys.learn(slug),
+    queryFn: async () => {
+      const result = await getCourseForLearning(slug);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
 /**

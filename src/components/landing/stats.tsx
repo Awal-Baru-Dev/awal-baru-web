@@ -5,7 +5,7 @@ interface StatItem {
 
 const STATS: StatItem[] = [
 	{ number: "1000+", label: "Pelajar Indonesia" },
-	{ number: "50+", label: "Video Pembelajaran" },
+	{ number: "10", label: "Video Pembelajaran" },
 	{ number: "100%", label: "Pengalaman Nyata" },
 ];
 
