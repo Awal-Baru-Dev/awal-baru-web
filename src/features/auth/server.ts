@@ -73,32 +73,6 @@ export const loginFn = createServerFn({ method: "POST" })
 	});
 
 /**
- * Sign in with Google
- */
-export const loginWithGoogleFn = createServerFn({ method: "POST" })
-  .handler(async () => {
-    const supabase = await getSupabaseServerClient();
-    const appUrl = import.meta.env.VITE_APP_URL || "";
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${appUrl}/auth/callback`,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
-      },
-    });
-
-    if (error) {
-      return { error: true, message: error.message };
-    }
-
-    return { error: false, url: data.url };
-  });
-
-/**
  * Sign up with email and password
  */
 export const signupFn = createServerFn({ method: "POST" })

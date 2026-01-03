@@ -55,10 +55,10 @@ export const NAV_LINKS = {
  * Social links
  */
 export const SOCIAL_LINKS = {
-	youtube: "https://www.youtube.com/@tedchay",
-	instagram: "https://www.instagram.com/teddy.mci11/",
-	facebook: "https://facebook.com/awalbaru.com",
-	whatsapp: "https://wa.me/1234567890",
+  youtube: "https://www.youtube.com/@tedchay",
+  instagram: "https://www.instagram.com/teddy.mci11/",
+  facebook: "https://facebook.com/awalbaru.com",
+  whatsapp: "https://wa.me/16468740315",
 } as const;
 
 /**

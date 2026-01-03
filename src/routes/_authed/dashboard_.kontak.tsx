@@ -9,16 +9,16 @@ export const Route = createFileRoute("/_authed/dashboard_/kontak")({
 
 // Contact Information - Update with real data
 const contactInfo = {
-	whatsapp: {
-		number: "+6281234567890", // Replace with real WhatsApp number
-		displayNumber: "+62 812-3456-7890",
-		message: `Halo, saya butuh bantuan dengan kursus di ${APP_NAME}`,
-	},
-	email: "support@awalbaru.com", // Replace with real email
-	hours: {
-		weekday: "Senin - Jumat: 09:00 - 17:00 WIB",
-		weekend: "Sabtu: 09:00 - 12:00 WIB",
-	},
+  whatsapp: {
+    number: "+16468740315", // Replace with real WhatsApp number
+    displayNumber: "+1 64-6874-0315",
+    message: `Halo, saya butuh bantuan dengan kursus di ${APP_NAME}`,
+  },
+  email: "support@awalbaru.com", // Replace with real email
+  hours: {
+    weekday: "Senin - Jumat: 09:00 - 17:00 WIB",
+    weekend: "Sabtu: 09:00 - 12:00 WIB",
+  },
 };
 
 function KontakPage() {

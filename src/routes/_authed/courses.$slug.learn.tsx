@@ -15,7 +15,7 @@ import { AlertCircle, ArrowLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCourse } from "@/features/courses";
+import { useCourseForLearning } from "@/features/courses";
 import { useEnrollmentStatus } from "@/features/enrollments";
 import { useUser } from "@/contexts/user-context";
 import {
@@ -25,6 +25,8 @@ import {
 } from "@/features/progress/actions";
 import { getSignedVideoUrl } from "@/lib/services/video/bunny";
 import { CourseLearnSidebar } from "@/components/course";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 // Search params schema for lesson navigation
 const learnSearchSchema = z.object({
@@ -71,7 +73,7 @@ function CourseLearnPage() {
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
 
 	// Fetch course data
-	const { data: course, isLoading: isCourseLoading } = useCourse(slug);
+	const { data: course, isLoading: isCourseLoading } = useCourseForLearning(slug);
 	const { data: enrollment, isLoading: isEnrollmentLoading } =
 		useEnrollmentStatus(course?.id ?? "");
 
@@ -328,14 +330,76 @@ function CourseLearnPage() {
 
               <div className="prose prose-sm lg:prose-base dark:prose-invert max-w-none text-muted-foreground">
                 <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Tentang Materi Ini
+                  Catatan dari Instruktur
                 </h3>
-                {course?.short_description ? (
+
+                {course?.description_for_enrolled ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      a: ({ node, ...props }) => (
+                        <a
+                          {...props}
+                          className="text-brand-primary hover:underline font-medium"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        />
+                      ),
+                      p: ({ node, ...props }) => (
+                        <p
+                          {...props}
+                          className="mb-6 leading-relaxed last:mb-0"
+                        />
+                      ),
+                      ul: ({ node, ...props }) => (
+                        <ul
+                          {...props}
+                          className="list-disc pl-5 mb-6 space-y-2"
+                        />
+                      ),
+                      ol: ({ node, ...props }) => (
+                        <ol
+                          {...props}
+                          className="list-decimal pl-5 mb-6 space-y-2"
+                        />
+                      ),
+                      li: ({ node, ...props }) => (
+                        <li {...props} className="leading-relaxed" />
+                      ),
+                      h1: ({ node, ...props }) => (
+                        <h1
+                          {...props}
+                          className="text-2xl font-bold mt-8 mb-4"
+                        />
+                      ),
+                      h2: ({ node, ...props }) => (
+                        <h2
+                          {...props}
+                          className="text-xl font-bold mt-8 mb-4"
+                        />
+                      ),
+                      h3: ({ node, ...props }) => (
+                        <h3
+                          {...props}
+                          className="text-lg font-bold mt-6 mb-3"
+                        />
+                      ),
+                      blockquote: ({ node, ...props }) => (
+                        <blockquote
+                          {...props}
+                          className="border-l-4 border-brand-primary pl-4 italic my-6 bg-muted/30 p-4 rounded-r"
+                        />
+                      ),
+                    }}
+                  >
+                    {course.description_for_enrolled.replace(/\n/g, "\n\n")}
+                  </ReactMarkdown>
+                ) : course?.short_description ? (
                   <p>{course.short_description}</p>
                 ) : (
                   <p>
-                    {course?.short_description ||
-                      "Tonton video materi ini sampai selesai untuk mendapatkan pemahaman penuh."}
+                    Tonton video materi ini sampai selesai untuk mendapatkan
+                    pemahaman penuh.
                   </p>
                 )}
               </div>

@@ -75,6 +75,13 @@ export async function getAdminCourses(): Promise<ListResult<AdminCourseListItem>
   }
 }
 
+const PUBLIC_COURSE_COLUMNS = `
+  id, slug, title, short_description, price, original_price, 
+  thumbnail_url, preview_video_url, instructor_name, instructor_title, 
+  instructor_avatar, level, category, duration_minutes, lessons_count, 
+  is_published, is_featured, updated_at, created_at, display_order
+`;
+
 /**
  * Get a single course by slug
  */
@@ -85,11 +92,11 @@ export async function getCourseBySlug(
 		const supabase = createBrowserClient();
 
 		const { data, error } = await supabase
-			.from("courses")
-			.select("*")
-			.eq("slug", slug)
-			.eq("is_published", true)
-			.single();
+      .from("courses")
+      .select(PUBLIC_COURSE_COLUMNS)
+      .eq("slug", slug)
+      .eq("is_published", true)
+      .single();
 
 		if (error) {
 			console.error("Error fetching course:", error);
@@ -99,6 +106,34 @@ export async function getCourseBySlug(
 		return { data: data as Course, error: null };
 	} catch (error) {
 		console.error("Error fetching course:", error);
+		return {
+			data: null,
+			error: error instanceof Error ? error.message : "Unknown error",
+		};
+	}
+}
+
+/**
+ * Get course by slug for learning page (includes description_for_enrolled field)
+ */
+export async function getCourseForLearning(
+	slug: string,
+): Promise<QueryResult<Course & { description_for_enrolled?: string }>> {
+	try {
+		const supabase = createBrowserClient();
+
+		const { data, error } = await supabase
+			.from("courses")
+			.select("*")
+			.eq("slug", slug)
+			.single();
+
+		if (error) {
+			return { data: null, error: error.message };
+		}
+
+		return { data: data, error: null };
+	} catch (error) {
 		return {
 			data: null,
 			error: error instanceof Error ? error.message : "Unknown error",

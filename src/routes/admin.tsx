@@ -10,7 +10,7 @@ import {
   Loader2,
   Menu,
   LogOut,
-  ChevronsUpDown,
+  ChevronDown, // FIXED: Pakai ChevronDown, bukan ChevronsUpDown
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -50,12 +50,10 @@ function AdminLayout() {
   }, [isCollapsed]);
 
   useEffect(() => {
-
     if (!isLoading) {
       if (!user) {
         navigate({ to: "/masuk" });
-      }
-      else if (!isAdmin) {
+      } else if (!isAdmin) {
         navigate({ to: "/" });
       }
     }
@@ -86,31 +84,45 @@ function AdminLayout() {
         </button>
 
         <Link to="/admin" className="flex items-center gap-2">
+          {/* FIXED: Ukuran Logo disamakan dengan Dashboard (h-10 w-10 = 40px) */}
           <img
             src="/awalbaru-logo.jpeg"
             alt={APP_NAME}
-            className="h-8 w-8 rounded-lg"
+            className="h-10 w-10 rounded-lg"
           />
           <span className="text-lg font-bold text-brand-primary">
             Admin<span className="text-foreground">Panel</span>
           </span>
         </Link>
 
-        <Link to="/" aria-label="Kembali ke Dashboard User">
-          {profile?.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt={displayName}
-              className="w-8 h-8 rounded-full object-cover border border-border"
-            />
-          ) : (
-            <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
-              <span className="text-brand-primary font-semibold text-xs">
-                {displayName ? displayName[0].toUpperCase() : "A"}
-              </span>
-            </div>
-          )}
-        </Link>
+        {/* FIXED: Mobile Header Profile pakai Dropdown (bukan direct link) agar konsisten */}
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <button className="outline-none focus:ring-0">
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={displayName}
+                  className="w-9 h-9 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div className="w-9 h-9 bg-brand-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-brand-primary font-semibold text-sm">
+                    {displayName ? displayName[0].toUpperCase() : "A"}
+                  </span>
+                </div>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate({ to: "/" })}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Kembali ke Dashboard User
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       {/* Mobile Sidebar Overlay */}
@@ -144,11 +156,12 @@ function AdminLayout() {
 
           <div className="flex items-center gap-4">
             {/* User Dropdown */}
-            <DropdownMenu>
+            {/* FIXED: modal={false} untuk mencegah pergeseran layout */}
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 pl-0 hover:bg-transparent"
+                  className="flex items-center gap-2 pl-0 hover:bg-transparent focus-visible:ring-0"
                 >
                   {profile?.avatar_url ? (
                     <img
@@ -171,7 +184,8 @@ function AdminLayout() {
                       Administrator
                     </p>
                   </div>
-                  <ChevronsUpDown className="w-4 h-4 text-muted-foreground" />
+                  {/* FIXED: Menggunakan ChevronDown agar konsisten dengan dashboard */}
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Instagram, Linkedin, Youtube } from "lucide-react";
+import { Instagram, Youtube } from "lucide-react";
 import { APP_NAME, SOCIAL_LINKS } from "@/lib/config/constants";
 
 export function LandingFooter() {
@@ -82,13 +82,6 @@ export function LandingFooter() {
 								aria-label="Instagram"
 							>
 								<Instagram className="w-5 h-5" />
-							</a>
-							<a
-								href="#"
-								className="text-muted-foreground hover:text-brand-primary transition-colors"
-								aria-label="LinkedIn"
-							>
-								<Linkedin className="w-5 h-5" />
 							</a>
 						</div>
 					</div>
