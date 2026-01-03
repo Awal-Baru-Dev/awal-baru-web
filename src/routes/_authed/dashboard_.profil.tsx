@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Camera, Loader2, User, Calendar, Lock, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -44,6 +44,7 @@ function ProfilPage() {
 	// Avatar state
 	const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 	const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+	const [imageError, setImageError] = useState(false);
 
 	// Profile form state
 	const [profileData, setProfileData] = useState<ProfileFormData>({
@@ -273,6 +274,10 @@ function ProfilPage() {
 
 	// Get current avatar URL
 	const currentAvatarUrl = avatarPreview || profile?.avatar_url;
+	
+	useEffect(() => {
+    if (avatarPreview) setImageError(false);
+  }, [avatarPreview]);
 
 	return (
 		<DashboardLayout>
@@ -303,11 +308,12 @@ function ProfilPage() {
 								{/* Avatar Preview */}
 								<div className="relative">
 									<div className="w-24 h-24 rounded-full overflow-hidden bg-muted border-2 border-border">
-										{currentAvatarUrl ? (
+										{currentAvatarUrl && !imageError ? (
 											<img
 												src={currentAvatarUrl}
 												alt="Avatar"
 												className="w-full h-full object-cover"
+												onError={() => setImageError(true)}
 											/>
 										) : (
 											<div className="w-full h-full flex items-center justify-center bg-brand-primary/10">

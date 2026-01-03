@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, User, Shield, Phone } from "lucide-react";
+import { Search, Shield, Phone } from "lucide-react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 
@@ -20,6 +20,33 @@ import { useAdminUsers } from "@/features/users/hooks";
 export const Route = createFileRoute("/admin/users/")({
   component: AdminUsersPage,
 });
+
+const UserAvatarCell = ({
+  url,
+  name,
+}: {
+  url?: string | null;
+  name: string;
+}) => {
+  const [error, setError] = useState(false);
+
+  if (url && !error) {
+    return (
+      <img
+        src={url}
+        alt={name}
+        className="h-full w-full object-cover"
+        onError={() => setError(true)}
+      />
+    );
+  }
+
+  return (
+    <div className="h-full w-full flex items-center justify-center bg-muted text-muted-foreground font-semibold">
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+};
 
 function AdminUsersPage() {
   const { data: users, isLoading } = useAdminUsers();
@@ -61,7 +88,6 @@ function AdminUsersPage() {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              {/* FIX: Tambahkan pl-4 agar sejajar dengan Course List */}
               <TableHead className="w-[80px] pl-4">Avatar</TableHead>
               <TableHead>User Info</TableHead>
               <TableHead>Role</TableHead>
@@ -74,7 +100,6 @@ function AdminUsersPage() {
               // Skeleton Loading
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {/* FIX: Tambahkan pl-4 di Skeleton juga */}
                   <TableCell className="pl-4">
                     <Skeleton className="h-10 w-10 rounded-full" />
                   </TableCell>
@@ -107,18 +132,12 @@ function AdminUsersPage() {
             ) : (
               filteredUsers?.map((user) => (
                 <TableRow key={user.id} className="hover:bg-muted/30">
-                  {/* FIX: Tambahkan pl-4 di sini */}
                   <TableCell className="pl-4">
                     <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex items-center justify-center border">
-                      {user.avatar_url ? (
-                        <img
-                          src={user.avatar_url}
-                          alt={user.full_name || ""}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <User className="h-5 w-5 text-muted-foreground" />
-                      )}
+                      <UserAvatarCell
+                        url={user.avatar_url}
+                        name={user.full_name || "?"}
+                      />
                     </div>
                   </TableCell>
                   <TableCell>

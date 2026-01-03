@@ -97,11 +97,19 @@ function AdminLayout() {
         </Link>
 
         <Link to="/" aria-label="Kembali ke Dashboard User">
-          <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
-            <span className="text-brand-primary font-semibold text-xs">
-              {displayName ? displayName[0].toUpperCase() : "A"}
-            </span>
-          </div>
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt={displayName}
+              className="w-8 h-8 rounded-full object-cover border border-border"
+            />
+          ) : (
+            <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
+              <span className="text-brand-primary font-semibold text-xs">
+                {displayName ? displayName[0].toUpperCase() : "A"}
+              </span>
+            </div>
+          )}
         </Link>
       </header>
 
@@ -142,11 +150,19 @@ function AdminLayout() {
                   variant="ghost"
                   className="flex items-center gap-2 pl-0 hover:bg-transparent"
                 >
-                  <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
-                    <span className="text-brand-primary font-semibold text-xs">
-                      A
-                    </span>
-                  </div>
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={displayName}
+                      className="w-8 h-8 rounded-full object-cover border border-border"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
+                      <span className="text-brand-primary font-semibold text-xs">
+                        {displayName ? displayName[0].toUpperCase() : "A"}
+                      </span>
+                    </div>
+                  )}
                   <div className="text-left">
                     <p className="text-sm font-medium leading-none">
                       {displayName}

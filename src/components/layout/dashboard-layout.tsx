@@ -284,11 +284,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 type="button"
                 className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-sidebar-accent transition-colors"
               >
-                <div className="w-9 h-9 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-brand-primary font-semibold text-sm">
-                    {displayName.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={displayName}
+                    className="w-9 h-9 rounded-full object-cover flex-shrink-0 border border-sidebar-border"
+                  />
+                ) : (
+                  <div className="w-9 h-9 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-brand-primary font-semibold text-sm">
+                      {displayName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0 text-left">
                   <p className="font-medium text-sidebar-foreground truncate text-sm">
                     {displayName}
@@ -394,11 +402,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   variant="ghost"
                   className="flex items-center gap-2 px-2 hover:bg-accent"
                 >
-                  <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
-                    <span className="text-brand-primary font-semibold text-sm">
-                      {displayName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={displayName}
+                      className="w-8 h-8 rounded-full object-cover border border-border"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center">
+                      <span className="text-brand-primary font-semibold text-sm">
+                        {displayName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <span className="font-medium max-w-[120px] truncate">
                     {displayName}
                   </span>
