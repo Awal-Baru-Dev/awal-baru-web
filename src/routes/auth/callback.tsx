@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getSupabaseServerClient } from "@/lib/db/supabase/server";
+import { exchangeCodeForSessionFn } from "@/features/auth/server";
 
 type CallbackSearchParams = {
   code?: string;
@@ -34,18 +34,15 @@ export const Route = createFileRoute("/auth/callback")({
       console.error("Auth Callback Error:", error_description);
       throw redirect({
         to: "/masuk",
-        search: {
-          error: error_description,
-        },
+        search: { error: error_description },
       });
     }
 
     if (code) {
-      const supabase = await getSupabaseServerClient();
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      const result = await exchangeCodeForSessionFn({ data: { code } });
 
-      if (error) {
-        console.error("Exchange Code Error:", error.message);
+      if (result.error) {
+        console.error("Exchange Code Error:", result.message);
         throw redirect({
           to: "/masuk",
           search: {
