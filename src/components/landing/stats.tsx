@@ -4,23 +4,22 @@ interface StatItem {
 }
 
 const STATS: StatItem[] = [
-	{ number: "1000+", label: "Pelajar Indonesia" },
 	{ number: "10", label: "Video Pembelajaran" },
 	{ number: "100%", label: "Pengalaman Nyata" },
 ];
 
 export function LandingStats() {
 	return (
-		<section className="bg-gradient-to-b from-muted to-background py-20">
-			<div className="container mx-auto px-6 lg:px-16">
-				<div className="grid md:grid-cols-3 gap-12">
-					{STATS.map((stat, index) => (
-						<StatCard key={index} stat={stat} />
-					))}
-				</div>
-			</div>
-		</section>
-	);
+    <section className="bg-gradient-to-b from-muted to-background py-20">
+      <div className="container mx-auto px-6 lg:px-16">
+        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 md:gap-16">
+          {STATS.map((stat, index) => (
+            <StatCard key={index} stat={stat} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 interface StatCardProps {
