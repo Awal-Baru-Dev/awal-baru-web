@@ -30,7 +30,9 @@ import { createServerClient as createSupabaseServerClient } from "@supabase/ssr"
  */
 export async function getSupabaseServerClient() {
 	// Dynamic import to prevent server-only code from being bundled into client
-	const { getCookies, setCookie } = await import("@tanstack/react-start/server");
+	const { getCookies, setCookie } = await import(
+		"@tanstack/react-start/server"
+	);
 
 	const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 	const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;

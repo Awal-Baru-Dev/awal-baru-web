@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Clock, Play, Calendar } from "lucide-react";
+import { BookOpen, Calendar, Clock, Play } from "lucide-react";
 import { useMemo } from "react";
 import { z } from "zod";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useUserEnrollments } from "@/features/enrollments";
 import { useAllCourseProgress } from "@/features/progress";
 import type { EnrollmentWithCourse } from "@/lib/db/types";
+import { cn } from "@/lib/utils";
 
 // Status filter types
 type CourseStatus = "all" | "in_progress" | "completed";
@@ -69,7 +69,9 @@ function formatRelativeDate(dateString: string | null): string {
  * - All courses are "in_progress" (0% but started by purchasing)
  * - None are "completed" yet
  */
-function getCourseStatus(progress: number): "new" | "in_progress" | "completed" {
+function getCourseStatus(
+	progress: number,
+): "new" | "in_progress" | "completed" {
 	if (progress === 0) return "new";
 	if (progress >= 100) return "completed";
 	return "in_progress";
@@ -81,7 +83,7 @@ function getCourseStatus(progress: number): "new" | "in_progress" | "completed" 
 function filterEnrollmentsByStatus(
 	enrollments: EnrollmentWithCourse[],
 	status: CourseStatus,
-	getProgress: (courseId: string) => number
+	getProgress: (courseId: string) => number,
 ): EnrollmentWithCourse[] {
 	if (status === "all") return enrollments;
 
@@ -96,23 +98,25 @@ function filterEnrollmentsByStatus(
 			return courseStatus === "completed";
 		}
 		return true;
-	})
+	});
 }
 
 function KursusSayaPage() {
 	const { status } = Route.useSearch();
 
 	// Fetch user enrollments
-	const { data: enrollments, isLoading: enrollmentsLoading } = useUserEnrollments();
+	const { data: enrollments, isLoading: enrollmentsLoading } =
+		useUserEnrollments();
 
 	// Extract course IDs for progress fetching
 	const courseIds = useMemo(
 		() => enrollments?.map((e) => e.course_id) ?? [],
-		[enrollments]
+		[enrollments],
 	);
 
 	// Fetch progress for all enrolled courses
-	const { data: progressData, isLoading: progressLoading } = useAllCourseProgress(courseIds);
+	const { data: progressData, isLoading: progressLoading } =
+		useAllCourseProgress(courseIds);
 
 	// Combined loading state
 	const isLoading = enrollmentsLoading || progressLoading;
@@ -130,14 +134,16 @@ function KursusSayaPage() {
 
 	// Count courses by status for tab badges
 	const allCount = enrollments?.length ?? 0;
-	const inProgressCount = enrollments?.filter((e) => {
-		const progress = getProgress(e.course_id);
-		return progress < 100;
-	}).length ?? 0;
-	const completedCount = enrollments?.filter((e) => {
-		const progress = getProgress(e.course_id);
-		return progress >= 100;
-	}).length ?? 0;
+	const inProgressCount =
+		enrollments?.filter((e) => {
+			const progress = getProgress(e.course_id);
+			return progress < 100;
+		}).length ?? 0;
+	const completedCount =
+		enrollments?.filter((e) => {
+			const progress = getProgress(e.course_id);
+			return progress >= 100;
+		}).length ?? 0;
 
 	return (
 		<DashboardLayout>
@@ -199,7 +205,7 @@ function KursusSayaPage() {
 				)}
 			</div>
 		</DashboardLayout>
-	)
+	);
 }
 
 /**
@@ -226,7 +232,7 @@ function StatusTab({
 				"px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors",
 				isActive
 					? "border-brand-primary text-brand-primary"
-					: "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+					: "border-transparent text-muted-foreground hover:text-foreground hover:border-border",
 			)}
 		>
 			{label}
@@ -236,14 +242,14 @@ function StatusTab({
 						"ml-2 px-2 py-0.5 rounded-full text-xs",
 						isActive
 							? "bg-brand-primary/10 text-brand-primary"
-							: "bg-muted text-muted-foreground"
+							: "bg-muted text-muted-foreground",
 					)}
 				>
 					{count}
 				</span>
 			)}
 		</Link>
-	)
+	);
 }
 
 /**
@@ -301,7 +307,10 @@ function EnrolledCourseCardExpanded({
 				{/* Play overlay on hover */}
 				<div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
 					<div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-						<Play className="w-6 h-6 text-brand-primary ml-0.5" fill="currentColor" />
+						<Play
+							className="w-6 h-6 text-brand-primary ml-0.5"
+							fill="currentColor"
+						/>
 					</div>
 				</div>
 
@@ -351,7 +360,7 @@ function EnrolledCourseCardExpanded({
 				</div>
 			</div>
 		</Link>
-	)
+	);
 }
 
 /**
@@ -372,7 +381,7 @@ function CourseCardSkeleton() {
 				</div>
 			</div>
 		</div>
-	)
+	);
 }
 
 /**
@@ -410,7 +419,7 @@ function EmptyState({
 					Lihat Semua Kursus
 				</Link>
 			</div>
-		)
+		);
 	}
 
 	// No courses at all
@@ -419,9 +428,7 @@ function EmptyState({
 			<div className="w-16 h-16 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
 				<BookOpen className="w-8 h-8 text-brand-primary" />
 			</div>
-			<h3 className="font-medium text-foreground mb-2">
-				Belum ada kursus
-			</h3>
+			<h3 className="font-medium text-foreground mb-2">Belum ada kursus</h3>
 			<p className="text-muted-foreground text-sm mb-4">
 				Mulai perjalanan belajarmu dengan membeli kursus pertama.
 			</p>
@@ -432,5 +439,5 @@ function EmptyState({
 				Jelajahi Kursus
 			</Link>
 		</div>
-	)
+	);
 }

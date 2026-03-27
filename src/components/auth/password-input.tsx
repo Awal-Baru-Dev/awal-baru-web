@@ -1,10 +1,11 @@
-import { useState, forwardRef, type InputHTMLAttributes } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { forwardRef, type InputHTMLAttributes, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-interface PasswordInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
+interface PasswordInputProps
+	extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
 	error?: boolean;
 }
 
@@ -23,7 +24,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 					className={cn(
 						"pr-10",
 						error && "border-destructive focus-visible:ring-destructive",
-						className
+						className,
 					)}
 					{...props}
 				/>
@@ -34,7 +35,9 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 					className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
 					onClick={() => setShowPassword(!showPassword)}
 					tabIndex={-1}
-					aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+					aria-label={
+						showPassword ? "Sembunyikan password" : "Tampilkan password"
+					}
 				>
 					{showPassword ? (
 						<EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -44,7 +47,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 				</Button>
 			</div>
 		);
-	}
+	},
 );
 
 PasswordInput.displayName = "PasswordInput";

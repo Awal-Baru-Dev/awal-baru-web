@@ -4,19 +4,19 @@
  * React hooks for course progress tracking.
  */
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/contexts/user-context";
 import type { Course, CourseProgress } from "@/lib/db/types";
 import {
-	getCourseProgress,
-	getAllCourseProgress,
-	updateCourseProgress,
-	calculateProgressPercent,
 	calculateLessonPosition,
-	logActivity,
-	getWeeklyActivity,
+	calculateProgressPercent,
 	getActivityStreak,
+	getAllCourseProgress,
+	getCourseProgress,
 	getTotalLearningTime,
+	getWeeklyActivity,
+	logActivity,
+	updateCourseProgress,
 } from "./actions";
 
 /**
@@ -161,7 +161,11 @@ export function isLessonCompleted(
 ): boolean {
 	if (!progress) return false;
 
-	const lessonPosition = calculateLessonPosition(course, sectionId, lessonIndex);
+	const lessonPosition = calculateLessonPosition(
+		course,
+		sectionId,
+		lessonIndex,
+	);
 	const currentPosition = calculateLessonPosition(
 		course,
 		progress.current_section_id,
@@ -268,7 +272,6 @@ export function useTotalLearningTime() {
 	});
 }
 
-
 /**
  * Aggregated weekly data for dashboard charts
  */
@@ -283,10 +286,22 @@ export interface WeeklyChartData {
  * Get formatted weekly chart data from activity logs
  */
 export function formatWeeklyChartData(
-	activityLogs: { activity_date: string; time_spent_minutes: number; lessons_completed: number }[],
+	activityLogs: {
+		activity_date: string;
+		time_spent_minutes: number;
+		lessons_completed: number;
+	}[],
 ): WeeklyChartData[] {
 	const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-	const dayNamesFull = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+	const dayNamesFull = [
+		"Minggu",
+		"Senin",
+		"Selasa",
+		"Rabu",
+		"Kamis",
+		"Jumat",
+		"Sabtu",
+	];
 
 	// Create a map of last 7 days
 	const result: WeeklyChartData[] = [];
@@ -300,8 +315,14 @@ export function formatWeeklyChartData(
 
 		// Find activity for this date (sum across all courses)
 		const dayActivity = activityLogs.filter((a) => a.activity_date === dateStr);
-		const totalMinutes = dayActivity.reduce((sum, a) => sum + a.time_spent_minutes, 0);
-		const totalLessons = dayActivity.reduce((sum, a) => sum + a.lessons_completed, 0);
+		const totalMinutes = dayActivity.reduce(
+			(sum, a) => sum + a.time_spent_minutes,
+			0,
+		);
+		const totalLessons = dayActivity.reduce(
+			(sum, a) => sum + a.lessons_completed,
+			0,
+		);
 
 		result.push({
 			day: dayNames[dayIndex],

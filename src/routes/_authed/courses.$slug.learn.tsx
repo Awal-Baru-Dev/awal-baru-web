@@ -1,32 +1,32 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect, useRef } from "react";
-import { z } from "zod";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, ArrowLeft, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useCourseForLearning } from "@/features/courses";
-import { useEnrollmentStatus } from "@/features/enrollments";
-import { useUser } from "@/contexts/user-context";
-import {
-	getCourseProgress,
-	updateCourseProgress,
-	logActivity,
-} from "@/features/progress/actions";
-import { getSignedVideoUrl } from "@/lib/services/video/bunny";
-import { CourseLearnSidebar } from "@/components/course";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { z } from "zod";
+import { CourseLearnSidebar } from "@/components/course";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useUser } from "@/contexts/user-context";
+import { useCourseForLearning } from "@/features/courses";
+import { useEnrollmentStatus } from "@/features/enrollments";
+import {
+	getCourseProgress,
+	logActivity,
+	updateCourseProgress,
+} from "@/features/progress/actions";
+import { getSignedVideoUrl } from "@/lib/services/video/bunny";
 
 // Search params schema for lesson navigation
 const learnSearchSchema = z.object({
@@ -69,11 +69,12 @@ function CourseLearnPage() {
 	const [isLoading, setIsLoading] = useState(true);
 
 	const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+	const navigate = useNavigate();
+	const [showCompleteDialog, setShowCompleteDialog] = useState(false);
 
 	// Fetch course data
-	const { data: course, isLoading: isCourseLoading } = useCourseForLearning(slug);
+	const { data: course, isLoading: isCourseLoading } =
+		useCourseForLearning(slug);
 	const { data: enrollment, isLoading: isEnrollmentLoading } =
 		useEnrollmentStatus(course?.id ?? "");
 
@@ -115,25 +116,25 @@ function CourseLearnPage() {
 		);
 
 		const currentTime = Date.now();
-    const timeDiffInMs = currentTime - lastSyncTimeRef.current;
+		const timeDiffInMs = currentTime - lastSyncTimeRef.current;
 
-    if (timeDiffInMs > 7200000) {
-      lastSyncTimeRef.current = currentTime;
-      return;
-    }
+		if (timeDiffInMs > 7200000) {
+			lastSyncTimeRef.current = currentTime;
+			return;
+		}
 
-    if (timeDiffInMs >= 30000 || isEnding) {
-      const minutesToAdd = Math.ceil(timeDiffInMs / 60000);
+		if (timeDiffInMs >= 30000 || isEnding) {
+			const minutesToAdd = Math.ceil(timeDiffInMs / 60000);
 
-      await logActivity(
-        currentUser.id,
-        currentCourse.id,
-        isEnding ? 1 : 0,
-        minutesToAdd
-      );
+			await logActivity(
+				currentUser.id,
+				currentCourse.id,
+				isEnding ? 1 : 0,
+				minutesToAdd,
+			);
 
-      lastSyncTimeRef.current = currentTime;
-    }
+			lastSyncTimeRef.current = currentTime;
+		}
 	};
 
 	const syncProgressToBackend = (seconds: number, totalDuration: number) => {
@@ -148,24 +149,24 @@ function CourseLearnPage() {
 
 	// Handle back to dashboard (update progress first)
 	const handleBackToDashboard = async () => {
-    setIsLoading(true);
+		setIsLoading(true);
 
-    try {
-      let exactTime = currentTime;
-      if (videoRef.current) {
-        videoRef.current.pause();
-        exactTime = videoRef.current.currentTime;
-      }
+		try {
+			let exactTime = currentTime;
+			if (videoRef.current) {
+				videoRef.current.pause();
+				exactTime = videoRef.current.currentTime;
+			}
 
-      await performSync(exactTime, duration);
-      await queryClient.invalidateQueries();
+			await performSync(exactTime, duration);
+			await queryClient.invalidateQueries();
 
-      navigate({ to: "/dashboard" });
-    } catch (error) {
-      console.error("Gagal sinkronisasi saat kembali:", error);
-      setIsLoading(false);
-    }
-  };
+			navigate({ to: "/dashboard" });
+		} catch (error) {
+			console.error("Gagal sinkronisasi saat kembali:", error);
+			setIsLoading(false);
+		}
+	};
 
 	// Fetch last watched time from database
 	useEffect(() => {
@@ -268,171 +269,171 @@ function CourseLearnPage() {
 
 	// Main render
 	return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header Updated: Button di kiri, Title di tengah */}
-      <header className="sticky top-0 left-0 right-0 z-50 bg-background/95 border-b backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container relative mx-auto max-w-7xl flex items-center justify-center h-16 px-4 lg:px-8">
-          {/* Button Kembali (Absolute Left) */}
-          <div className="absolute left-4 lg:left-8">
-            <Button variant="ghost" size="sm" onClick={handleBackToDashboard}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Kembali</span>
-            </Button>
-          </div>
+		<div className="min-h-screen bg-background flex flex-col">
+			{/* Header Updated: Button di kiri, Title di tengah */}
+			<header className="sticky top-0 left-0 right-0 z-50 bg-background/95 border-b backdrop-blur supports-[backdrop-filter]:bg-background/60">
+				<div className="container relative mx-auto max-w-7xl flex items-center justify-center h-16 px-4 lg:px-8">
+					{/* Button Kembali (Absolute Left) */}
+					<div className="absolute left-4 lg:left-8">
+						<Button variant="ghost" size="sm" onClick={handleBackToDashboard}>
+							<ArrowLeft className="w-4 h-4 mr-2" />
+							<span className="hidden sm:inline">Kembali</span>
+						</Button>
+					</div>
 
-          {/* Title (Centered) */}
-          <h1 className="text-sm font-semibold truncate max-w-[60%] mx-auto text-center">
-            {course?.title}
-          </h1>
-        </div>
-      </header>
+					{/* Title (Centered) */}
+					<h1 className="text-sm font-semibold truncate max-w-[60%] mx-auto text-center">
+						{course?.title}
+					</h1>
+				</div>
+			</header>
 
-      {/* Content Area */}
-      <main className="flex-1 py-8 px-4 lg:px-8">
-        <div className="container mx-auto max-w-7xl">
-          {/* GRID LAYOUT */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              {/* Video Player */}
-              <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-border/50 ring-1 ring-border/10">
-                <video
-                  ref={videoRef}
-                  src={videoUrl}
-                  controls
-                  playsInline
-                  className="w-full h-full"
-                  onLoadedMetadata={handleLoadedMetadata}
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={handleEnded}
-                  onPause={() => performSync(currentTime, duration)}
-                />
-              </div>
+			{/* Content Area */}
+			<main className="flex-1 py-8 px-4 lg:px-8">
+				<div className="container mx-auto max-w-7xl">
+					{/* GRID LAYOUT */}
+					<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+						<div className="lg:col-span-2 space-y-6">
+							{/* Video Player */}
+							<div className="aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-border/50 ring-1 ring-border/10">
+								<video
+									ref={videoRef}
+									src={videoUrl}
+									controls
+									playsInline
+									className="w-full h-full"
+									onLoadedMetadata={handleLoadedMetadata}
+									onTimeUpdate={handleTimeUpdate}
+									onEnded={handleEnded}
+									onPause={() => performSync(currentTime, duration)}
+								/>
+							</div>
 
-              {/* Judul & Deskripsi */}
-              <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-foreground leading-tight">
-                  {course?.title}
-                </h1>
+							{/* Judul & Deskripsi */}
+							<div>
+								<h1 className="text-2xl lg:text-3xl font-bold text-foreground leading-tight">
+									{course?.title}
+								</h1>
 
-                <div className="flex flex-wrap items-center gap-3 mt-4 text-sm text-muted-foreground">
-                  <Badge variant="secondary" className="font-semibold">
-                    Video Course
-                  </Badge>
-                  <span>•</span>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-4 h-4" />
-                    <span>{formatDuration(course?.duration_minutes || 0)}</span>
-                  </div>
-                </div>
-              </div>
+								<div className="flex flex-wrap items-center gap-3 mt-4 text-sm text-muted-foreground">
+									<Badge variant="secondary" className="font-semibold">
+										Video Course
+									</Badge>
+									<span>•</span>
+									<div className="flex items-center gap-1.5">
+										<Clock className="w-4 h-4" />
+										<span>{formatDuration(course?.duration_minutes || 0)}</span>
+									</div>
+								</div>
+							</div>
 
-              <div className="border-t border-border" />
+							<div className="border-t border-border" />
 
-              <div className="prose prose-sm lg:prose-base dark:prose-invert max-w-none text-muted-foreground">
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Catatan dari Instruktur
-                </h3>
+							<div className="prose prose-sm lg:prose-base dark:prose-invert max-w-none text-muted-foreground">
+								<h3 className="text-lg font-semibold text-foreground mb-2">
+									Catatan dari Instruktur
+								</h3>
 
-                {course?.description_for_enrolled ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      a: ({ node, ...props }) => (
-                        <a
-                          {...props}
-                          className="text-brand-primary hover:underline font-medium"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        />
-                      ),
-                      p: ({ node, ...props }) => (
-                        <p
-                          {...props}
-                          className="mb-6 leading-relaxed last:mb-0"
-                        />
-                      ),
-                      ul: ({ node, ...props }) => (
-                        <ul
-                          {...props}
-                          className="list-disc pl-5 mb-6 space-y-2"
-                        />
-                      ),
-                      ol: ({ node, ...props }) => (
-                        <ol
-                          {...props}
-                          className="list-decimal pl-5 mb-6 space-y-2"
-                        />
-                      ),
-                      li: ({ node, ...props }) => (
-                        <li {...props} className="leading-relaxed" />
-                      ),
-                      h1: ({ node, ...props }) => (
-                        <h1
-                          {...props}
-                          className="text-2xl font-bold mt-8 mb-4"
-                        />
-                      ),
-                      h2: ({ node, ...props }) => (
-                        <h2
-                          {...props}
-                          className="text-xl font-bold mt-8 mb-4"
-                        />
-                      ),
-                      h3: ({ node, ...props }) => (
-                        <h3
-                          {...props}
-                          className="text-lg font-bold mt-6 mb-3"
-                        />
-                      ),
-                      blockquote: ({ node, ...props }) => (
-                        <blockquote
-                          {...props}
-                          className="border-l-4 border-brand-primary pl-4 italic my-6 bg-muted/30 p-4 rounded-r"
-                        />
-                      ),
-                    }}
-                  >
-                    {course.description_for_enrolled.replace(/\n/g, "\n\n")}
-                  </ReactMarkdown>
-                ) : course?.short_description ? (
-                  <p>{course.short_description}</p>
-                ) : (
-                  <p>
-                    Tonton video materi ini sampai selesai untuk mendapatkan
-                    pemahaman penuh.
-                  </p>
-                )}
-              </div>
-            </div>
+								{course?.description_for_enrolled ? (
+									<ReactMarkdown
+										remarkPlugins={[remarkGfm]}
+										components={{
+											a: ({ node, ...props }) => (
+												<a
+													{...props}
+													className="text-brand-primary hover:underline font-medium"
+													target="_blank"
+													rel="noopener noreferrer"
+												/>
+											),
+											p: ({ node, ...props }) => (
+												<p
+													{...props}
+													className="mb-6 leading-relaxed last:mb-0"
+												/>
+											),
+											ul: ({ node, ...props }) => (
+												<ul
+													{...props}
+													className="list-disc pl-5 mb-6 space-y-2"
+												/>
+											),
+											ol: ({ node, ...props }) => (
+												<ol
+													{...props}
+													className="list-decimal pl-5 mb-6 space-y-2"
+												/>
+											),
+											li: ({ node, ...props }) => (
+												<li {...props} className="leading-relaxed" />
+											),
+											h1: ({ node, ...props }) => (
+												<h1
+													{...props}
+													className="text-2xl font-bold mt-8 mb-4"
+												/>
+											),
+											h2: ({ node, ...props }) => (
+												<h2
+													{...props}
+													className="text-xl font-bold mt-8 mb-4"
+												/>
+											),
+											h3: ({ node, ...props }) => (
+												<h3
+													{...props}
+													className="text-lg font-bold mt-6 mb-3"
+												/>
+											),
+											blockquote: ({ node, ...props }) => (
+												<blockquote
+													{...props}
+													className="border-l-4 border-brand-primary pl-4 italic my-6 bg-muted/30 p-4 rounded-r"
+												/>
+											),
+										}}
+									>
+										{course.description_for_enrolled.replace(/\n/g, "\n\n")}
+									</ReactMarkdown>
+								) : course?.short_description ? (
+									<p>{course.short_description}</p>
+								) : (
+									<p>
+										Tonton video materi ini sampai selesai untuk mendapatkan
+										pemahaman penuh.
+									</p>
+								)}
+							</div>
+						</div>
 
-            <div className="lg:col-span-1">
-              <div className="lg:sticky lg:top-24">
-                <CourseLearnSidebar course={course} progress={progress} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
+						<div className="lg:col-span-1">
+							<div className="lg:sticky lg:top-24">
+								<CourseLearnSidebar course={course} progress={progress} />
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
 
-      <AlertDialog
-        open={showCompleteDialog}
-        onOpenChange={setShowCompleteDialog}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Selamat!</AlertDialogTitle>
-            <AlertDialogDescription>
-              Kamu telah menyelesaikan materi <b>{course?.title}</b>. Progress
-              kamu telah disimpan.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={handleBackToDashboard}>
-              Kembali ke Dashboard
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
+			<AlertDialog
+				open={showCompleteDialog}
+				onOpenChange={setShowCompleteDialog}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Selamat!</AlertDialogTitle>
+						<AlertDialogDescription>
+							Kamu telah menyelesaikan materi <b>{course?.title}</b>. Progress
+							kamu telah disimpan.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogAction onClick={handleBackToDashboard}>
+							Kembali ke Dashboard
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</div>
+	);
 }

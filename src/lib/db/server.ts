@@ -13,11 +13,10 @@
  */
 
 export {
-	getSupabaseServerClient,
-	type SupabaseServerClient,
-} from "./supabase/server";
-
-export {
 	createAdminClient,
 	type SupabaseAdminClient,
 } from "./supabase/admin";
+export {
+	getSupabaseServerClient,
+	type SupabaseServerClient,
+} from "./supabase/server";

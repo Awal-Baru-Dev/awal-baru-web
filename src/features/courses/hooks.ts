@@ -4,34 +4,35 @@
  * TanStack Query hooks for fetching and caching course data.
  */
 
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-	getCourses,
+	deleteAdminCourse,
+	getAdminCourseBySlug,
+	getAdminCourses,
+	getCourseById,
 	getCourseBySlug,
 	getCourseForLearning,
+	getCourses,
 	getFeaturedCourses,
-	getCourseById,
 	searchCourses,
-	getAdminCourses,
-	getAdminCourseBySlug,
-	deleteAdminCourse
 } from "./actions";
 
 /**
  * Query keys for course-related queries
  */
 export const courseKeys = {
-  all: ["courses"] as const,
-  lists: () => [...courseKeys.all, "list"] as const,
-  list: () => [...courseKeys.lists()] as const,
-  featured: () => [...courseKeys.all, "featured"] as const,
-  details: () => [...courseKeys.all, "detail"] as const,
-  detail: (slug: string) => [...courseKeys.details(), slug] as const,
-  byId: (id: string) => [...courseKeys.all, "id", id] as const,
-  search: (query: string) => [...courseKeys.all, "search", query] as const,
-  adminAll: () => [...courseKeys.all, "admin-list"] as const,
-	adminDetail: (slug: string) => [...courseKeys.all, "admin-detail", slug] as const,
+	all: ["courses"] as const,
+	lists: () => [...courseKeys.all, "list"] as const,
+	list: () => [...courseKeys.lists()] as const,
+	featured: () => [...courseKeys.all, "featured"] as const,
+	details: () => [...courseKeys.all, "detail"] as const,
+	detail: (slug: string) => [...courseKeys.details(), slug] as const,
+	byId: (id: string) => [...courseKeys.all, "id", id] as const,
+	search: (query: string) => [...courseKeys.all, "search", query] as const,
+	adminAll: () => [...courseKeys.all, "admin-list"] as const,
+	adminDetail: (slug: string) =>
+		[...courseKeys.all, "admin-detail", slug] as const,
 	learn: (slug: string) => [...courseKeys.all, "learn", slug] as const,
 };
 
@@ -57,16 +58,16 @@ export function useCourses(options?: { enabled?: boolean }) {
  * Hook to fetch all courses for admin
  */
 export function useAdminCourses() {
-  return useQuery({
-    queryKey: courseKeys.adminAll(),
-    queryFn: async () => {
-      const result = await getAdminCourses();
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
-  });
+	return useQuery({
+		queryKey: courseKeys.adminAll(),
+		queryFn: async () => {
+			const result = await getAdminCourses();
+			if (result.error) {
+				throw new Error(result.error);
+			}
+			return result.data;
+		},
+	});
 }
 
 /**
@@ -87,22 +88,22 @@ export function useCourse(slug: string) {
 	});
 }
 
-/** 
- * Hook to fetch a single course for learning 
+/**
+ * Hook to fetch a single course for learning
  */
 export function useCourseForLearning(slug: string) {
-  return useQuery({
-    queryKey: courseKeys.learn(slug),
-    queryFn: async () => {
-      const result = await getCourseForLearning(slug);
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
-    enabled: !!slug,
-    staleTime: 5 * 60 * 1000,
-  });
+	return useQuery({
+		queryKey: courseKeys.learn(slug),
+		queryFn: async () => {
+			const result = await getCourseForLearning(slug);
+			if (result.error) {
+				throw new Error(result.error);
+			}
+			return result.data;
+		},
+		enabled: !!slug,
+		staleTime: 5 * 60 * 1000,
+	});
 }
 
 /**
@@ -181,16 +182,16 @@ export function useSearchCourses(query: string) {
  * Hook to delete a course
  */
 export function useDeleteCourse() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (id: string) => deleteAdminCourse(id),
-    onSuccess: () => {
-      toast.success("Kursus berhasil dihapus");
-      queryClient.invalidateQueries({ queryKey: courseKeys.all });
-    },
-    onError: (error) => {
-      toast.error(error.message || "Gagal menghapus kursus");
-    },
-  });
+	return useMutation({
+		mutationFn: (id: string) => deleteAdminCourse(id),
+		onSuccess: () => {
+			toast.success("Kursus berhasil dihapus");
+			queryClient.invalidateQueries({ queryKey: courseKeys.all });
+		},
+		onError: (error) => {
+			toast.error(error.message || "Gagal menghapus kursus");
+		},
+	});
 }

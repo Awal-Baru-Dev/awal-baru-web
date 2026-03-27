@@ -1,21 +1,21 @@
-import { createBrowserClient } from "@/lib/db/supabase/client";
-import { getAdminTransactions } from "@/features/transactions/server";
 import { getAdminCourses } from "@/features/courses/actions";
+import { getAdminTransactions } from "@/features/transactions/server";
+import { createBrowserClient } from "@/lib/db/supabase/client";
 
 export async function getDashboardStats() {
-  const supabase = createBrowserClient();
-  const { data, error } = await supabase.rpc("get_admin_dashboard_stats");
+	const supabase = createBrowserClient();
+	const { data, error } = await supabase.rpc("get_admin_dashboard_stats");
 
-  if (error) throw new Error(error.message);
-  return data;
+	if (error) throw new Error(error.message);
+	return data;
 }
 
 export async function getDashboardData() {
-  const [stats, recentTrx, popularCourses] = await Promise.all([
-    getDashboardStats(),
-    getAdminTransactions().then((res) => res.data?.slice(0, 5) || []),
-    getAdminCourses().then((res) => res.data?.slice(0, 5) || []),
-  ]);
+	const [stats, recentTrx, popularCourses] = await Promise.all([
+		getDashboardStats(),
+		getAdminTransactions().then((res) => res.data?.slice(0, 5) || []),
+		getAdminCourses().then((res) => res.data?.slice(0, 5) || []),
+	]);
 
-  return { stats, recentTrx, popularCourses };
+	return { stats, recentTrx, popularCourses };
 }

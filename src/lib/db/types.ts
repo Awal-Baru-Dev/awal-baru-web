@@ -40,17 +40,17 @@ export interface ListResult<T> {
  * Profile data structure
  */
 export interface Profile {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  phone: string | null;
-  role: "admin" | "user" | string;
-  created_at: string;
-  updated_at: string;
+	id: string;
+	full_name: string | null;
+	avatar_url: string | null;
+	phone: string | null;
+	role: "admin" | "user" | string;
+	created_at: string;
+	updated_at: string;
 }
 
 export interface AdminProfile extends Profile {
-  email: string;
+	email: string;
 }
 
 /**
@@ -127,8 +127,8 @@ export interface Course {
 }
 
 export interface AdminCourseListItem extends Course {
-  student_count: number;
-  total_revenue: number;
+	student_count: number;
+	total_revenue: number;
 }
 
 /**
@@ -274,16 +274,17 @@ export type TableName = keyof Database;
  * Admin transaction data structure
  */
 export interface AdminTransaction {
-  id: string;
-  created_at: string;
-  payment_status: "pending" | "paid" | "failed" | "expired" | "refunded";
-  amount_paid: number;
-  payment_method: string | null;
-  payment_channel: string | null;
-  payment_reference: string | null;
-  user_name: string | null;
-  user_email: string | null;
-  user_avatar: string | null;
-  course_title: string | null;
-  course_thumbnail: string | null;
+	id: string;
+	created_at: string;
+	payment_status: "pending" | "paid" | "failed" | "expired" | "refunded";
+	amount_paid: number;
+	payment_method: string | null;
+	payment_channel: string | null;
+	payment_reference: string | null;
+	user_name: string | null;
+	user_email: string | null;
+	user_avatar: string | null;
+	course_title: string | null;
+	course_thumbnail: string | null;
+	expires_at?: string | null;
 }

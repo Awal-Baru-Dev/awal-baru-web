@@ -336,7 +336,11 @@ export async function createDokuPayment(
  */
 export async function checkDokuPaymentStatus(
 	invoiceNumber: string,
-): Promise<{ success: boolean; data?: DokuOrderStatusResponse; error?: string }> {
+): Promise<{
+	success: boolean;
+	data?: DokuOrderStatusResponse;
+	error?: string;
+}> {
 	const config = getDokuConfig();
 
 	if (!config.clientId || !config.secretKey) {
@@ -411,7 +415,13 @@ export function verifyNotificationSignature(
  */
 export function mapChannelToPaymentMethod(
 	channel: string,
-): "virtual_account" | "credit_card" | "e_wallet" | "retail" | "direct_debit" | "paylater" {
+):
+	| "virtual_account"
+	| "credit_card"
+	| "e_wallet"
+	| "retail"
+	| "direct_debit"
+	| "paylater" {
 	if (channel.startsWith("VIRTUAL_ACCOUNT_")) return "virtual_account";
 	if (channel === "CREDIT_CARD") return "credit_card";
 	if (channel.startsWith("EMONEY_") || channel === "QRIS") return "e_wallet";

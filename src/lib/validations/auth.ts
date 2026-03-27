@@ -5,9 +5,21 @@ import { z } from "zod";
  */
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_REQUIREMENTS = [
-	{ key: "length", label: "Minimal 8 karakter", test: (p: string) => p.length >= PASSWORD_MIN_LENGTH },
-	{ key: "lowercase", label: "Huruf kecil (a-z)", test: (p: string) => /[a-z]/.test(p) },
-	{ key: "uppercase", label: "Huruf besar (A-Z)", test: (p: string) => /[A-Z]/.test(p) },
+	{
+		key: "length",
+		label: "Minimal 8 karakter",
+		test: (p: string) => p.length >= PASSWORD_MIN_LENGTH,
+	},
+	{
+		key: "lowercase",
+		label: "Huruf kecil (a-z)",
+		test: (p: string) => /[a-z]/.test(p),
+	},
+	{
+		key: "uppercase",
+		label: "Huruf besar (A-Z)",
+		test: (p: string) => /[A-Z]/.test(p),
+	},
 	{ key: "number", label: "Angka (0-9)", test: (p: string) => /[0-9]/.test(p) },
 ] as const;
 
@@ -60,9 +72,7 @@ export const loginSchema = z.object({
 		.string()
 		.min(1, "Email wajib diisi")
 		.email("Format email tidak valid"),
-	password: z
-		.string()
-		.min(1, "Password wajib diisi"),
+	password: z.string().min(1, "Password wajib diisi"),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
@@ -82,19 +92,13 @@ export const registerFieldSchemas = {
 		.email("Format email tidak valid"),
 	password: z
 		.string()
-		.min(PASSWORD_MIN_LENGTH, `Password minimal ${PASSWORD_MIN_LENGTH} karakter`)
-		.refine(
-			(p) => /[a-z]/.test(p),
-			"Password harus mengandung huruf kecil"
+		.min(
+			PASSWORD_MIN_LENGTH,
+			`Password minimal ${PASSWORD_MIN_LENGTH} karakter`,
 		)
-		.refine(
-			(p) => /[A-Z]/.test(p),
-			"Password harus mengandung huruf besar"
-		)
-		.refine(
-			(p) => /[0-9]/.test(p),
-			"Password harus mengandung angka"
-		),
+		.refine((p) => /[a-z]/.test(p), "Password harus mengandung huruf kecil")
+		.refine((p) => /[A-Z]/.test(p), "Password harus mengandung huruf besar")
+		.refine((p) => /[0-9]/.test(p), "Password harus mengandung angka"),
 	confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi"),
 };
 
@@ -129,19 +133,13 @@ export const resetPasswordSchema = z
 	.object({
 		password: z
 			.string()
-			.min(PASSWORD_MIN_LENGTH, `Password minimal ${PASSWORD_MIN_LENGTH} karakter`)
-			.refine(
-				(p) => /[a-z]/.test(p),
-				"Password harus mengandung huruf kecil"
+			.min(
+				PASSWORD_MIN_LENGTH,
+				`Password minimal ${PASSWORD_MIN_LENGTH} karakter`,
 			)
-			.refine(
-				(p) => /[A-Z]/.test(p),
-				"Password harus mengandung huruf besar"
-			)
-			.refine(
-				(p) => /[0-9]/.test(p),
-				"Password harus mengandung angka"
-			),
+			.refine((p) => /[a-z]/.test(p), "Password harus mengandung huruf kecil")
+			.refine((p) => /[A-Z]/.test(p), "Password harus mengandung huruf besar")
+			.refine((p) => /[0-9]/.test(p), "Password harus mengandung angka"),
 		confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi"),
 	})
 	.refine((data) => data.password === data.confirmPassword, {

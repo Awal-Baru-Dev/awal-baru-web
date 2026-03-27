@@ -27,19 +27,13 @@ export const changePasswordSchema = z
 		currentPassword: z.string().min(1, "Password saat ini wajib diisi"),
 		newPassword: z
 			.string()
-			.min(PASSWORD_MIN_LENGTH, `Password minimal ${PASSWORD_MIN_LENGTH} karakter`)
-			.refine(
-				(p) => /[a-z]/.test(p),
-				"Password harus mengandung huruf kecil"
+			.min(
+				PASSWORD_MIN_LENGTH,
+				`Password minimal ${PASSWORD_MIN_LENGTH} karakter`,
 			)
-			.refine(
-				(p) => /[A-Z]/.test(p),
-				"Password harus mengandung huruf besar"
-			)
-			.refine(
-				(p) => /[0-9]/.test(p),
-				"Password harus mengandung angka"
-			),
+			.refine((p) => /[a-z]/.test(p), "Password harus mengandung huruf kecil")
+			.refine((p) => /[A-Z]/.test(p), "Password harus mengandung huruf besar")
+			.refine((p) => /[0-9]/.test(p), "Password harus mengandung angka"),
 		confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi"),
 	})
 	.refine((data) => data.newPassword === data.confirmPassword, {
@@ -62,7 +56,10 @@ export const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 /**
  * Validate avatar file before upload
  */
-export function validateAvatarFile(file: File): { valid: boolean; error?: string } {
+export function validateAvatarFile(file: File): {
+	valid: boolean;
+	error?: string;
+} {
 	if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
 		return {
 			valid: false,

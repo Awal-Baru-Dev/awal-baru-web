@@ -1,14 +1,14 @@
 import {
-	useRef,
+	type WistiaPlayerElement,
+	WistiaPlayer as WistiaPlayerOfficial,
+} from "@wistia/wistia-player-react";
+import {
+	forwardRef,
 	useCallback,
 	useEffect,
 	useImperativeHandle,
-	forwardRef,
+	useRef,
 } from "react";
-import {
-	WistiaPlayer as WistiaPlayerOfficial,
-	type WistiaPlayerElement,
-} from "@wistia/wistia-player-react";
 import { cn } from "@/lib/utils";
 
 /**

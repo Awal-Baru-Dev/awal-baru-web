@@ -42,8 +42,7 @@ export function VideoLessonNav({
 
 			<Button
 				onClick={() =>
-					nextLesson &&
-					onNavigate(nextLesson.sectionId, nextLesson.lessonIndex)
+					nextLesson && onNavigate(nextLesson.sectionId, nextLesson.lessonIndex)
 				}
 				disabled={!nextLesson}
 				className="flex-1 sm:flex-none"

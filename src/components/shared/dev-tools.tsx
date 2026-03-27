@@ -13,7 +13,7 @@ const TanStackDevtoolsLazy = import.meta.env.DEV
 	? lazy(() =>
 			import("@tanstack/react-devtools").then((mod) => ({
 				default: mod.TanStackDevtools,
-			}))
+			})),
 		)
 	: () => null;
 
@@ -21,7 +21,7 @@ const TanStackRouterDevtoolsPanelLazy = import.meta.env.DEV
 	? lazy(() =>
 			import("@tanstack/react-router-devtools").then((mod) => ({
 				default: mod.TanStackRouterDevtoolsPanel,
-			}))
+			})),
 		)
 	: () => null;
 
@@ -29,7 +29,7 @@ const ReactQueryDevtoolsPanelLazy = import.meta.env.DEV
 	? lazy(() =>
 			import("@tanstack/react-query-devtools").then((mod) => ({
 				default: mod.ReactQueryDevtoolsPanel,
-			}))
+			})),
 		)
 	: () => null;
 

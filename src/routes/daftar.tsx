@@ -1,17 +1,26 @@
-import { useState, useCallback, useEffect } from "react";
-import { createFileRoute, Link, useRouter, useNavigate } from "@tanstack/react-router";
-import { Loader2, Mail, ArrowLeft, RefreshCw } from "lucide-react";
+import {
+	createFileRoute,
+	Link,
+	useNavigate,
+	useRouter,
+} from "@tanstack/react-router";
+import { ArrowLeft, Loader2, Mail, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LandingHeader, LandingFooter } from "@/components/layout";
+import { FormField, PasswordInput, PasswordStrength } from "@/components/auth";
+import { LandingFooter, LandingHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { APP_NAME } from "@/lib/config/constants";
-import { PasswordInput, PasswordStrength, FormField } from "@/components/auth";
-import { signupFn, resendConfirmationFn } from "@/features/auth/server";
-import { createBrowserClient } from "@/lib/db/supabase/client";
-import { registerSchema, registerFieldSchemas, type RegisterFormData } from "@/lib/validations/auth";
 import { useUser } from "@/contexts/user-context";
+import { resendConfirmationFn, signupFn } from "@/features/auth/server";
+import { APP_NAME } from "@/lib/config/constants";
+import { createBrowserClient } from "@/lib/db/supabase/client";
 import { cn } from "@/lib/utils";
+import {
+	type RegisterFormData,
+	registerFieldSchemas,
+	registerSchema,
+} from "@/lib/validations/auth";
 
 export const Route = createFileRoute("/daftar")({
 	component: DaftarPage,
@@ -37,57 +46,75 @@ function DaftarPage() {
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
-    if (!isAuthLoading && user) {
-      navigate({ to: "/" });
-    }
-  }, [user, isAuthLoading, navigate]);
+		if (!isAuthLoading && user) {
+			navigate({ to: "/" });
+		}
+	}, [user, isAuthLoading, navigate]);
 
-  // Prevent Render
-  if (!isAuthLoading && user) return null;
+	// Prevent Render
+	if (!isAuthLoading && user) return null;
 
 	// Validate a single field using safeParse
-	const validateField = useCallback((field: keyof RegisterFormData, value: string) => {
-		// Special handling for confirmPassword - check match directly
-		if (field === "confirmPassword") {
-			if (value.length === 0) {
-				setErrors((prev) => ({ ...prev, confirmPassword: "Konfirmasi password wajib diisi" }));
-			} else if (value !== formData.password) {
-				setErrors((prev) => ({ ...prev, confirmPassword: "Password tidak cocok" }));
-			} else {
-				setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
-			}
-			return;
-		}
-
-		// Skip error message for password - it has PasswordStrength component
-		if (field === "password") {
-			// Still update confirmPassword error if password changes and confirmPassword has content
-			if (formData.confirmPassword.length > 0) {
-				if (formData.confirmPassword !== value) {
-					setErrors((prev) => ({ ...prev, confirmPassword: "Password tidak cocok" }));
+	const validateField = useCallback(
+		(field: keyof RegisterFormData, value: string) => {
+			// Special handling for confirmPassword - check match directly
+			if (field === "confirmPassword") {
+				if (value.length === 0) {
+					setErrors((prev) => ({
+						...prev,
+						confirmPassword: "Konfirmasi password wajib diisi",
+					}));
+				} else if (value !== formData.password) {
+					setErrors((prev) => ({
+						...prev,
+						confirmPassword: "Password tidak cocok",
+					}));
 				} else {
 					setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
 				}
+				return;
 			}
-			return;
-		}
 
-		// Use safeParse for fullName and email fields
-		const result = registerFieldSchemas[field].safeParse(value);
+			// Skip error message for password - it has PasswordStrength component
+			if (field === "password") {
+				// Still update confirmPassword error if password changes and confirmPassword has content
+				if (formData.confirmPassword.length > 0) {
+					if (formData.confirmPassword !== value) {
+						setErrors((prev) => ({
+							...prev,
+							confirmPassword: "Password tidak cocok",
+						}));
+					} else {
+						setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+					}
+				}
+				return;
+			}
 
-		if (result.success) {
-			setErrors((prev) => ({ ...prev, [field]: undefined }));
-		} else {
-			// Access the first issue from the ZodError
-			const firstError = result.error.issues?.[0]?.message || "Input tidak valid";
-			setErrors((prev) => ({ ...prev, [field]: firstError }));
-		}
-	}, [formData.password, formData.confirmPassword]);
+			// Use safeParse for fullName and email fields
+			const result = registerFieldSchemas[field].safeParse(value);
+
+			if (result.success) {
+				setErrors((prev) => ({ ...prev, [field]: undefined }));
+			} else {
+				// Access the first issue from the ZodError
+				const firstError =
+					result.error.issues?.[0]?.message || "Input tidak valid";
+				setErrors((prev) => ({ ...prev, [field]: firstError }));
+			}
+		},
+		[formData.password, formData.confirmPassword],
+	);
 
 	// Check if form is valid for submit button
 	const isFormValid = useCallback(() => {
 		// Check all required fields are filled
-		if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
+		if (
+			!formData.fullName ||
+			!formData.email ||
+			!formData.password ||
+			!formData.confirmPassword
+		) {
 			return false;
 		}
 		// Check minimum requirements
@@ -102,17 +129,17 @@ function DaftarPage() {
 	}, [formData]);
 
 	// Handle field change - just update the value, don't validate
-	const handleChange = (field: keyof RegisterFormData) => (
-		e: React.ChangeEvent<HTMLInputElement>
-	) => {
-		const value = e.target.value;
-		setFormData((prev) => ({ ...prev, [field]: value }));
+	const handleChange =
+		(field: keyof RegisterFormData) =>
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const value = e.target.value;
+			setFormData((prev) => ({ ...prev, [field]: value }));
 
-		// Clear error when user starts typing again (better UX)
-		if (errors[field]) {
-			setErrors((prev) => ({ ...prev, [field]: undefined }));
-		}
-	};
+			// Clear error when user starts typing again (better UX)
+			if (errors[field]) {
+				setErrors((prev) => ({ ...prev, [field]: undefined }));
+			}
+		};
 
 	// Handle field blur - validate only on blur when field has content
 	const handleBlur = (field: keyof RegisterFormData) => () => {
@@ -126,28 +153,28 @@ function DaftarPage() {
 
 	// Handle Google login
 	const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    try {
-      const supabase = createBrowserClient();
-      const origin = window.location.origin;
+		setIsLoading(true);
+		try {
+			const supabase = createBrowserClient();
+			const origin = window.location.origin;
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${origin}/auth/callback`,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
-        },
-      });
+			const { error } = await supabase.auth.signInWithOAuth({
+				provider: "google",
+				options: {
+					redirectTo: `${origin}/auth/callback`,
+					queryParams: {
+						access_type: "offline",
+						prompt: "consent",
+					},
+				},
+			});
 
-      if (error) throw error;
-    } catch (err: any) {
-      toast.error("Gagal Login Google", { description: err.message });
-      setIsLoading(false);
-    }
-  };
+			if (error) throw error;
+		} catch (err: any) {
+			toast.error("Gagal Login Google", { description: err.message });
+			setIsLoading(false);
+		}
+	};
 
 	// Handle form submit
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -159,7 +186,9 @@ function DaftarPage() {
 			setErrors({});
 		} catch (error) {
 			if (error instanceof Error && "errors" in error) {
-				const zodError = error as { errors: Array<{ path: (string | number)[]; message: string }> };
+				const zodError = error as {
+					errors: Array<{ path: (string | number)[]; message: string }>;
+				};
 				const newErrors: FormErrors = {};
 				for (const err of zodError.errors) {
 					const field = err.path[0] as keyof RegisterFormData;
@@ -196,11 +225,13 @@ function DaftarPage() {
 
 				if (message.includes("already") || message.includes("exists")) {
 					toast.error("Email Sudah Terdaftar", {
-						description: "Email ini sudah digunakan. Silakan login atau gunakan email lain.",
+						description:
+							"Email ini sudah digunakan. Silakan login atau gunakan email lain.",
 					});
 				} else {
 					toast.error("Pendaftaran Gagal", {
-						description: result.message || "Terjadi kesalahan. Silakan coba lagi.",
+						description:
+							result.message || "Terjadi kesalahan. Silakan coba lagi.",
 					});
 				}
 				return;
@@ -235,7 +266,9 @@ function DaftarPage() {
 	const handleResend = async () => {
 		setIsLoading(true);
 		try {
-			const result = await resendConfirmationFn({ data: { email: registeredEmail } });
+			const result = await resendConfirmationFn({
+				data: { email: registeredEmail },
+			});
 			if (result?.error) {
 				toast.error("Gagal Mengirim Email", {
 					description: result.message,
@@ -356,7 +389,7 @@ function DaftarPage() {
 									placeholder="John Doe"
 									className={cn(
 										"h-12",
-										touched.fullName && errors.fullName && "border-destructive"
+										touched.fullName && errors.fullName && "border-destructive",
 									)}
 									value={formData.fullName}
 									onChange={handleChange("fullName")}
@@ -378,7 +411,7 @@ function DaftarPage() {
 									placeholder="nama@email.com"
 									className={cn(
 										"h-12",
-										touched.email && errors.email && "border-destructive"
+										touched.email && errors.email && "border-destructive",
 									)}
 									value={formData.email}
 									onChange={handleChange("email")}
@@ -398,7 +431,7 @@ function DaftarPage() {
 									placeholder="Minimal 8 karakter"
 									className={cn(
 										"h-12",
-										touched.password && errors.password && "border-destructive"
+										touched.password && errors.password && "border-destructive",
 									)}
 									value={formData.password}
 									onChange={handleChange("password")}
@@ -412,14 +445,18 @@ function DaftarPage() {
 							<FormField
 								id="confirmPassword"
 								label="Konfirmasi Password"
-								error={touched.confirmPassword ? errors.confirmPassword : undefined}
+								error={
+									touched.confirmPassword ? errors.confirmPassword : undefined
+								}
 							>
 								<PasswordInput
 									id="confirmPassword"
 									placeholder="Ulangi password"
 									className={cn(
 										"h-12",
-										touched.confirmPassword && errors.confirmPassword && "border-destructive"
+										touched.confirmPassword &&
+											errors.confirmPassword &&
+											"border-destructive",
 									)}
 									value={formData.confirmPassword}
 									onChange={handleChange("confirmPassword")}
@@ -458,7 +495,12 @@ function DaftarPage() {
 						</div>
 
 						{/* Social Login */}
-						<Button variant="outline" className="w-full h-12" onClick={handleGoogleLogin} disabled={isLoading}>
+						<Button
+							variant="outline"
+							className="w-full h-12"
+							onClick={handleGoogleLogin}
+							disabled={isLoading}
+						>
 							<svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
 								<path
 									fill="currentColor"
@@ -482,7 +524,8 @@ function DaftarPage() {
 
 						{/* Note */}
 						<p className="mt-6 text-center text-xs text-muted-foreground">
-							Dengan mendaftar, kamu menyetujui Syarat & Ketentuan serta Kebijakan Privasi kami.
+							Dengan mendaftar, kamu menyetujui Syarat & Ketentuan serta
+							Kebijakan Privasi kami.
 						</p>
 					</div>
 				</div>

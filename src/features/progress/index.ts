@@ -5,26 +5,26 @@
  */
 
 export {
-	getCourseProgress,
-	getAllCourseProgress,
-	updateCourseProgress,
-	calculateProgressPercent,
 	calculateLessonPosition,
-	logActivity,
-	getWeeklyActivity,
+	calculateProgressPercent,
 	getActivityStreak,
+	getAllCourseProgress,
+	getCourseProgress,
+	getWeeklyActivity,
+	logActivity,
+	updateCourseProgress,
 } from "./actions";
 
 export {
-	useCourseProgress,
-	useAllCourseProgress,
-	useUpdateProgress,
+	formatWeeklyChartData,
 	getProgressDisplayData,
 	isLessonCompleted,
-	useLogActivity,
-	useWeeklyActivity,
-	useActivityStreak,
-	formatWeeklyChartData,
 	type ProgressDisplayData,
+	useActivityStreak,
+	useAllCourseProgress,
+	useCourseProgress,
+	useLogActivity,
+	useUpdateProgress,
+	useWeeklyActivity,
 	type WeeklyChartData,
 } from "./hooks";

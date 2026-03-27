@@ -1,8 +1,8 @@
 import { BookOpen, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CourseCard, CourseCardSkeleton } from "./course-card";
-import { cn } from "@/lib/utils";
 import type { Course } from "@/lib/db/types";
+import { cn } from "@/lib/utils";
+import { CourseCard, CourseCardSkeleton } from "./course-card";
 
 interface CourseGridProps {
 	courses: Course[];

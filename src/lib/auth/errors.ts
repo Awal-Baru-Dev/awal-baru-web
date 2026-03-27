@@ -28,17 +28,20 @@ const ERROR_MESSAGES: Record<AuthErrorCode, AuthError> = {
 	},
 	email_not_confirmed: {
 		title: "Email Belum Diverifikasi",
-		message: "Silakan cek email kamu dan klik link verifikasi untuk melanjutkan.",
+		message:
+			"Silakan cek email kamu dan klik link verifikasi untuk melanjutkan.",
 	},
 
 	// Registration errors
 	user_already_exists: {
 		title: "Email Sudah Terdaftar",
-		message: "Email ini sudah digunakan. Silakan login atau gunakan email lain.",
+		message:
+			"Email ini sudah digunakan. Silakan login atau gunakan email lain.",
 	},
 	email_exists: {
 		title: "Email Sudah Terdaftar",
-		message: "Email ini sudah digunakan. Silakan login atau gunakan email lain.",
+		message:
+			"Email ini sudah digunakan. Silakan login atau gunakan email lain.",
 	},
 	weak_password: {
 		title: "Password Terlalu Lemah",
@@ -93,16 +96,25 @@ export function getAuthErrorMessage(error: unknown): AuthError {
 		// Check for error message patterns
 		const message = err.message?.toLowerCase() || "";
 
-		if (message.includes("invalid login credentials") || message.includes("invalid credentials")) {
+		if (
+			message.includes("invalid login credentials") ||
+			message.includes("invalid credentials")
+		) {
 			return ERROR_MESSAGES.invalid_credentials;
 		}
 		if (message.includes("email not confirmed")) {
 			return ERROR_MESSAGES.email_not_confirmed;
 		}
-		if (message.includes("user already registered") || message.includes("already exists")) {
+		if (
+			message.includes("user already registered") ||
+			message.includes("already exists")
+		) {
 			return ERROR_MESSAGES.user_already_exists;
 		}
-		if (message.includes("rate limit") || message.includes("too many requests")) {
+		if (
+			message.includes("rate limit") ||
+			message.includes("too many requests")
+		) {
 			return ERROR_MESSAGES.over_request_rate_limit;
 		}
 		if (message.includes("weak password")) {
@@ -142,11 +154,17 @@ export function isAuthError(error: unknown, code: AuthErrorCode): boolean {
 	const message = err.message?.toLowerCase() || "";
 	switch (code) {
 		case "invalid_credentials":
-			return message.includes("invalid login credentials") || message.includes("invalid credentials");
+			return (
+				message.includes("invalid login credentials") ||
+				message.includes("invalid credentials")
+			);
 		case "email_not_confirmed":
 			return message.includes("email not confirmed");
 		case "user_already_exists":
-			return message.includes("user already registered") || message.includes("already exists");
+			return (
+				message.includes("user already registered") ||
+				message.includes("already exists")
+			);
 		default:
 			return false;
 	}

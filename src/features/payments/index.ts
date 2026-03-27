@@ -6,5 +6,5 @@
  * to prevent accidental misuse in client code.
  */
 
-export * from "./types";
 export * from "./hooks";
+export * from "./types";

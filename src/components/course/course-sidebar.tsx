@@ -1,18 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import {
-	ShoppingCart,
-	PlayCircle,
-	Infinity,
 	Award,
-	Users,
-	FileText,
 	CreditCard,
+	FileText,
+	Infinity,
+	PlayCircle,
+	ShoppingCart,
+	Users,
 	Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import type { Course } from "@/lib/db/types";
+import { cn } from "@/lib/utils";
 
 interface CourseSidebarProps {
 	course: Course;
@@ -51,24 +51,18 @@ export function CourseSidebar({
 	onPurchase,
 	className,
 }: CourseSidebarProps) {
-	const discount = getDiscountPercent(
-		course.original_price || 0,
-		course.price,
-	);
+	const discount = getDiscountPercent(course.original_price || 0, course.price);
 	const features = course.metadata?.features || [];
 
 	// Default features if none provided
 	const displayFeatures =
 		features.length > 0
-			? features.filter(feature =>
-				!feature.includes("video pelajaran") &&
-				!feature.toLowerCase().includes("template")
-			)
-			: [
-					"Akses 12 bulan",
-					"Update materi gratis",
-					"Akses komunitas eksklusif",
-				];
+			? features.filter(
+					(feature) =>
+						!feature.includes("video pelajaran") &&
+						!feature.toLowerCase().includes("template"),
+				)
+			: ["Akses 12 bulan", "Update materi gratis", "Akses komunitas eksklusif"];
 
 	const featureIcons: Record<string, React.ReactNode> = {
 		akses: <Infinity className="w-4 h-4" />,
@@ -105,10 +99,7 @@ export function CourseSidebar({
 				</div>
 
 				<Button className="w-full btn-cta" size="lg" asChild>
-					<Link
-						to="/courses/$slug/learn"
-						params={{ slug: course.slug }}
-					>
+					<Link to="/courses/$slug/learn" params={{ slug: course.slug }}>
 						<PlayCircle className="w-5 h-5 mr-2" />
 						Lanjutkan Belajar
 					</Link>
@@ -206,10 +197,7 @@ export function CourseMobilePurchaseBar({
 	onPurchase,
 	className,
 }: CourseSidebarProps) {
-	const discount = getDiscountPercent(
-		course.original_price || 0,
-		course.price,
-	);
+	const discount = getDiscountPercent(course.original_price || 0, course.price);
 
 	if (isEnrolled) {
 		return (
@@ -223,10 +211,7 @@ export function CourseMobilePurchaseBar({
 					<p className="text-sm text-muted-foreground">Sudah terdaftar</p>
 				</div>
 				<Button className="btn-cta" asChild>
-					<Link
-						to="/courses/$slug/learn"
-						params={{ slug: course.slug }}
-					>
+					<Link to="/courses/$slug/learn" params={{ slug: course.slug }}>
 						Lanjutkan
 					</Link>
 				</Button>

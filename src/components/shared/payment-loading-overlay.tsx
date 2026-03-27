@@ -8,7 +8,9 @@ interface PaymentLoadingOverlayProps {
  * Shows a semi-transparent overlay with spinner while payment is being initiated.
  * Blocks user interaction but keeps the background page visible.
  */
-export function PaymentLoadingOverlay({ isLoading }: PaymentLoadingOverlayProps) {
+export function PaymentLoadingOverlay({
+	isLoading,
+}: PaymentLoadingOverlayProps) {
 	if (!isLoading) return null;
 
 	return (

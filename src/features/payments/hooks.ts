@@ -22,17 +22,21 @@ function destroyDokuCheckout(): void {
 	// Remove DOKU modal container and overlay elements
 	// DOKU creates elements with specific classes/ids
 	const dokuElements = document.querySelectorAll(
-		'[id*="jokul"], [class*="jokul"], [id*="doku"], [class*="doku-"]'
+		'[id*="jokul"], [class*="jokul"], [id*="doku"], [class*="doku-"]',
 	);
 	dokuElements.forEach((el) => el.remove());
 
 	// Also remove any modal backdrop that DOKU might create
 	const modalBackdrops = document.querySelectorAll(
-		'.modal-backdrop, [class*="overlay"], [class*="backdrop"]'
+		'.modal-backdrop, [class*="overlay"], [class*="backdrop"]',
 	);
 	modalBackdrops.forEach((el) => {
 		// Only remove if it looks like a DOKU-created element (not our own modals)
-		if (el.querySelector('iframe[src*="doku"]') || el.id?.includes('doku') || el.id?.includes('jokul')) {
+		if (
+			el.querySelector('iframe[src*="doku"]') ||
+			el.id?.includes("doku") ||
+			el.id?.includes("jokul")
+		) {
 			el.remove();
 		}
 	});
@@ -56,8 +60,14 @@ export function useCreatePayment() {
 				destroyDokuCheckout();
 
 				// Try to open DOKU checkout modal
-				if (typeof window !== "undefined" && (window as unknown as { loadJokulCheckout?: (url: string) => void }).loadJokulCheckout) {
-					(window as unknown as { loadJokulCheckout: (url: string) => void }).loadJokulCheckout(data.paymentUrl);
+				if (
+					typeof window !== "undefined" &&
+					(window as unknown as { loadJokulCheckout?: (url: string) => void })
+						.loadJokulCheckout
+				) {
+					(
+						window as unknown as { loadJokulCheckout: (url: string) => void }
+					).loadJokulCheckout(data.paymentUrl);
 				} else {
 					// Fallback: redirect to payment URL
 					window.location.href = data.paymentUrl;

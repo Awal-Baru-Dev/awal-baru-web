@@ -1,7 +1,7 @@
 import { useUser } from "@/contexts/user-context";
 import { DashboardLayout } from "./dashboard-layout";
-import { LandingHeader } from "./landing-header";
 import { LandingFooter } from "./landing-footer";
+import { LandingHeader } from "./landing-header";
 
 interface AuthAwareLayoutProps {
 	children: React.ReactNode;
