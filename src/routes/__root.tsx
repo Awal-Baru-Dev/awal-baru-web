@@ -1,21 +1,18 @@
+import type { QueryClient } from "@tanstack/react-query";
 import {
+	createRootRouteWithContext,
 	HeadContent,
+	Link,
 	Outlet,
 	Scripts,
-	Link,
-	createRootRouteWithContext,
 } from "@tanstack/react-router";
-import { Home, ArrowLeft } from "lucide-react";
-
-import { ThemeProvider, themeScript } from "@/contexts/theme-context";
-import { Toaster } from "@/components/ui/sonner";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Home } from "lucide-react";
 import { DevTools } from "@/components/shared/dev-tools";
-import { fetchUser, type AuthUser } from "@/features/auth";
-
+import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider, themeScript } from "@/contexts/theme-context";
+import { type AuthUser, fetchUser } from "@/features/auth";
 import appCss from "@/styles.css?url";
-
-import type { QueryClient } from "@tanstack/react-query";
 
 /**
  * Router context type

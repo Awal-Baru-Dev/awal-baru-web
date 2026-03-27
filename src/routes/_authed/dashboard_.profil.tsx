@@ -1,23 +1,35 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState, useRef, useEffect } from "react";
-import { Camera, Loader2, User, Calendar, Lock, Mail, Phone } from "lucide-react";
+import {
+	Calendar,
+	Camera,
+	Loader2,
+	Lock,
+	Mail,
+	Phone,
+	User,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { FormField } from "@/components/auth/form-field";
 import { PasswordInput } from "@/components/auth/password-input";
 import { PasswordStrength } from "@/components/auth/password-strength";
-import { Input } from "@/components/ui/input";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUser, getUserDisplayName } from "@/contexts/user-context";
-import { updateProfileFn, uploadAvatarFn, changePasswordFn } from "@/features/profile";
+import { getUserDisplayName, useUser } from "@/contexts/user-context";
 import {
-	profileSchema,
-	changePasswordSchema,
-	validateAvatarFile,
-	type ProfileFormData,
+	changePasswordFn,
+	updateProfileFn,
+	uploadAvatarFn,
+} from "@/features/profile";
+import {
 	type ChangePasswordFormData,
+	changePasswordSchema,
+	type ProfileFormData,
+	profileSchema,
+	validateAvatarFile,
 } from "@/lib/validations/profile";
 
 export const Route = createFileRoute("/_authed/dashboard_/profil")({
@@ -51,8 +63,12 @@ function ProfilPage() {
 		fullName: profile?.full_name || "",
 		phone: profile?.phone || "",
 	});
-	const [profileErrors, setProfileErrors] = useState<Partial<Record<keyof ProfileFormData, string>>>({});
-	const [profileTouched, setProfileTouched] = useState<Record<string, boolean>>({});
+	const [profileErrors, setProfileErrors] = useState<
+		Partial<Record<keyof ProfileFormData, string>>
+	>({});
+	const [profileTouched, setProfileTouched] = useState<Record<string, boolean>>(
+		{},
+	);
 	const [isProfileLoading, setIsProfileLoading] = useState(false);
 
 	// Password form state
@@ -61,36 +77,48 @@ function ProfilPage() {
 		newPassword: "",
 		confirmPassword: "",
 	});
-	const [passwordErrors, setPasswordErrors] = useState<Partial<Record<keyof ChangePasswordFormData, string>>>({});
-	const [passwordTouched, setPasswordTouched] = useState<Record<string, boolean>>({});
+	const [passwordErrors, setPasswordErrors] = useState<
+		Partial<Record<keyof ChangePasswordFormData, string>>
+	>({});
+	const [passwordTouched, setPasswordTouched] = useState<
+		Record<string, boolean>
+	>({});
 	const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
 	// Profile form validation
-	const validateProfileField = (field: keyof ProfileFormData, value: string) => {
+	const validateProfileField = (
+		field: keyof ProfileFormData,
+		value: string,
+	) => {
 		try {
 			const testData = { ...profileData, [field]: value };
 			profileSchema.parse(testData);
 			setProfileErrors((prev) => ({ ...prev, [field]: undefined }));
 		} catch (error) {
 			if (error instanceof Error && "errors" in error) {
-				const zodError = error as { errors: Array<{ path: string[]; message: string }> };
+				const zodError = error as {
+					errors: Array<{ path: string[]; message: string }>;
+				};
 				const fieldError = zodError.errors.find((e) => e.path[0] === field);
 				if (fieldError) {
-					setProfileErrors((prev) => ({ ...prev, [field]: fieldError.message }));
+					setProfileErrors((prev) => ({
+						...prev,
+						[field]: fieldError.message,
+					}));
 				}
 			}
 		}
 	};
 
-	const handleProfileChange = (field: keyof ProfileFormData) => (
-		e: React.ChangeEvent<HTMLInputElement>
-	) => {
-		const value = e.target.value;
-		setProfileData((prev) => ({ ...prev, [field]: value }));
-		if (profileTouched[field]) {
-			validateProfileField(field, value);
-		}
-	};
+	const handleProfileChange =
+		(field: keyof ProfileFormData) =>
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const value = e.target.value;
+			setProfileData((prev) => ({ ...prev, [field]: value }));
+			if (profileTouched[field]) {
+				validateProfileField(field, value);
+			}
+		};
 
 	const handleProfileBlur = (field: keyof ProfileFormData) => () => {
 		setProfileTouched((prev) => ({ ...prev, [field]: true }));
@@ -104,7 +132,9 @@ function ProfilPage() {
 			profileSchema.parse(profileData);
 		} catch (error) {
 			if (error instanceof Error && "errors" in error) {
-				const zodError = error as { errors: Array<{ path: string[]; message: string }> };
+				const zodError = error as {
+					errors: Array<{ path: string[]; message: string }>;
+				};
 				const newErrors: Partial<Record<keyof ProfileFormData, string>> = {};
 				const newTouched: Record<string, boolean> = {};
 
@@ -141,15 +171,21 @@ function ProfilPage() {
 	};
 
 	// Password form validation
-	const validatePasswordField = (field: keyof ChangePasswordFormData, value: string) => {
+	const validatePasswordField = (
+		field: keyof ChangePasswordFormData,
+		value: string,
+	) => {
 		try {
 			const testData = { ...passwordData, [field]: value };
 			changePasswordSchema.parse(testData);
 			setPasswordErrors({});
 		} catch (error) {
 			if (error instanceof Error && "errors" in error) {
-				const zodError = error as { errors: Array<{ path: string[]; message: string }> };
-				const newErrors: Partial<Record<keyof ChangePasswordFormData, string>> = {};
+				const zodError = error as {
+					errors: Array<{ path: string[]; message: string }>;
+				};
+				const newErrors: Partial<Record<keyof ChangePasswordFormData, string>> =
+					{};
 				for (const err of zodError.errors) {
 					const errField = err.path[0] as keyof ChangePasswordFormData;
 					if (errField === field || passwordTouched[errField]) {
@@ -161,15 +197,15 @@ function ProfilPage() {
 		}
 	};
 
-	const handlePasswordChange = (field: keyof ChangePasswordFormData) => (
-		e: React.ChangeEvent<HTMLInputElement>
-	) => {
-		const value = e.target.value;
-		setPasswordData((prev) => ({ ...prev, [field]: value }));
-		if (passwordTouched[field]) {
-			validatePasswordField(field, value);
-		}
-	};
+	const handlePasswordChange =
+		(field: keyof ChangePasswordFormData) =>
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const value = e.target.value;
+			setPasswordData((prev) => ({ ...prev, [field]: value }));
+			if (passwordTouched[field]) {
+				validatePasswordField(field, value);
+			}
+		};
 
 	const handlePasswordBlur = (field: keyof ChangePasswordFormData) => () => {
 		setPasswordTouched((prev) => ({ ...prev, [field]: true }));
@@ -183,8 +219,11 @@ function ProfilPage() {
 			changePasswordSchema.parse(passwordData);
 		} catch (error) {
 			if (error instanceof Error && "errors" in error) {
-				const zodError = error as { errors: Array<{ path: string[]; message: string }> };
-				const newErrors: Partial<Record<keyof ChangePasswordFormData, string>> = {};
+				const zodError = error as {
+					errors: Array<{ path: string[]; message: string }>;
+				};
+				const newErrors: Partial<Record<keyof ChangePasswordFormData, string>> =
+					{};
 				const newTouched: Record<string, boolean> = {};
 
 				for (const err of zodError.errors) {
@@ -274,10 +313,10 @@ function ProfilPage() {
 
 	// Get current avatar URL
 	const currentAvatarUrl = avatarPreview || profile?.avatar_url;
-	
+
 	useEffect(() => {
-    if (avatarPreview) setImageError(false);
-  }, [avatarPreview]);
+		if (avatarPreview) setImageError(false);
+	}, [avatarPreview]);
 
 	return (
 		<DashboardLayout>
@@ -360,7 +399,9 @@ function ProfilPage() {
 								<FormField
 									id="fullName"
 									label="Nama Lengkap"
-									error={profileTouched.fullName ? profileErrors.fullName : undefined}
+									error={
+										profileTouched.fullName ? profileErrors.fullName : undefined
+									}
 								>
 									<Input
 										id="fullName"
@@ -440,7 +481,11 @@ function ProfilPage() {
 						<FormField
 							id="currentPassword"
 							label="Password Saat Ini"
-							error={passwordTouched.currentPassword ? passwordErrors.currentPassword : undefined}
+							error={
+								passwordTouched.currentPassword
+									? passwordErrors.currentPassword
+									: undefined
+							}
 						>
 							<PasswordInput
 								id="currentPassword"
@@ -456,7 +501,11 @@ function ProfilPage() {
 						<FormField
 							id="newPassword"
 							label="Password Baru"
-							error={passwordTouched.newPassword ? passwordErrors.newPassword : undefined}
+							error={
+								passwordTouched.newPassword
+									? passwordErrors.newPassword
+									: undefined
+							}
 						>
 							<PasswordInput
 								id="newPassword"
@@ -473,7 +522,11 @@ function ProfilPage() {
 						<FormField
 							id="confirmPassword"
 							label="Konfirmasi Password Baru"
-							error={passwordTouched.confirmPassword ? passwordErrors.confirmPassword : undefined}
+							error={
+								passwordTouched.confirmPassword
+									? passwordErrors.confirmPassword
+									: undefined
+							}
 						>
 							<PasswordInput
 								id="confirmPassword"

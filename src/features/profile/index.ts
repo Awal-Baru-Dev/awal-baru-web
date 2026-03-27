@@ -1,5 +1,5 @@
 export {
+	changePasswordFn,
 	updateProfileFn,
 	uploadAvatarFn,
-	changePasswordFn,
 } from "./server";

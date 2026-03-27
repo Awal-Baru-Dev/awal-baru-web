@@ -1,26 +1,30 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
-import { AuthAwareLayout } from "@/components/layout";
-import { Button } from "@/components/ui/button";
 import {
 	CourseHero,
 	CourseHeroSkeleton,
+	CourseMobilePurchaseBar,
 	// CourseCurriculum,
 	// CourseCurriculumSkeleton,
 	CourseSidebar,
 	CourseSidebarSkeleton,
-	CourseMobilePurchaseBar,
 	WhatYouLearn,
 	WhatYouLearnSkeleton,
 } from "@/components/course";
+import { AuthAwareLayout } from "@/components/layout";
 import { PaymentLoadingOverlay } from "@/components/shared";
-import { useCourse } from "@/features/courses";
-import { useEnrollmentStatus, enrollmentKeys } from "@/features/enrollments";
-import { useCreatePayment, useVerifyPayment, getDokuJsUrl } from "@/features/payments";
+import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/user-context";
+import { useCourse } from "@/features/courses";
+import { enrollmentKeys, useEnrollmentStatus } from "@/features/enrollments";
+import {
+	getDokuJsUrl,
+	useCreatePayment,
+	useVerifyPayment,
+} from "@/features/payments";
 
 const courseSearchSchema = z.object({
 	payment: z.enum(["success", "cancelled"]).optional(),
@@ -86,8 +90,7 @@ function CourseDetailPage() {
 						if (result.success) {
 							if (result.status === "paid") {
 								toast.success("Pembayaran Berhasil!", {
-									description:
-										"Selamat! Kursus sudah dapat diakses.",
+									description: "Selamat! Kursus sudah dapat diakses.",
 								});
 								// Refetch enrollment status
 								refetchEnrollment();
@@ -241,31 +244,34 @@ function CourseDetailPage() {
 		<>
 			<PaymentLoadingOverlay isLoading={createPayment.isPending} />
 			<AuthAwareLayout showFooter={false}>
-			<div className="container mx-auto max-w-6xl">
-				{/* Breadcrumb */}
-				<nav className="flex items-center gap-2 text-sm mb-4" aria-label="Breadcrumb">
-					<Link
-						to="/courses"
-						className="text-muted-foreground hover:text-foreground transition-colors"
+				<div className="container mx-auto max-w-6xl">
+					{/* Breadcrumb */}
+					<nav
+						className="flex items-center gap-2 text-sm mb-4"
+						aria-label="Breadcrumb"
 					>
-						Katalog Kursus
-					</Link>
-					<span className="text-muted-foreground/50">/</span>
-					<span className="text-foreground font-medium truncate max-w-[300px]">
-						{course?.title ?? "..."}
-					</span>
-				</nav>
+						<Link
+							to="/courses"
+							className="text-muted-foreground hover:text-foreground transition-colors"
+						>
+							Katalog Kursus
+						</Link>
+						<span className="text-muted-foreground/50">/</span>
+						<span className="text-foreground font-medium truncate max-w-[300px]">
+							{course?.title ?? "..."}
+						</span>
+					</nav>
 
-				<div className="grid lg:grid-cols-3 gap-8">
-					{/* Main Content */}
-					<div className="lg:col-span-2 space-y-8">
-						<CourseHero course={course} isEnrolled={isEnrolled} />
+					<div className="grid lg:grid-cols-3 gap-8">
+						{/* Main Content */}
+						<div className="lg:col-span-2 space-y-8">
+							<CourseHero course={course} isEnrolled={isEnrolled} />
 
-						{whatYouWillLearn.length > 0 && (
-							<WhatYouLearn points={whatYouWillLearn} />
-						)}
+							{whatYouWillLearn.length > 0 && (
+								<WhatYouLearn points={whatYouWillLearn} />
+							)}
 
-						{/*
+							{/*
 						<CourseCurriculum
 							course={course}
 							isEnrolled={isEnrolled}
@@ -281,29 +287,28 @@ function CourseDetailPage() {
 							}}
 						/>
 						*/}
-					</div>
+						</div>
 
-					{/* Sidebar - Desktop */}
-					<div className="hidden lg:block">
-						<div className="sticky top-24">
-							<CourseSidebar
-								course={course}
-								isEnrolled={isEnrolled}
-								onPurchase={handlePurchase}
-							/>
+						{/* Sidebar - Desktop */}
+						<div className="hidden lg:block">
+							<div className="sticky top-24">
+								<CourseSidebar
+									course={course}
+									isEnrolled={isEnrolled}
+									onPurchase={handlePurchase}
+								/>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 
-			{/* Mobile Purchase Bar */}
-			<CourseMobilePurchaseBar
-				course={course}
-				isEnrolled={isEnrolled}
-				onPurchase={handlePurchase}
-			/>
-		</AuthAwareLayout>
+				{/* Mobile Purchase Bar */}
+				<CourseMobilePurchaseBar
+					course={course}
+					isEnrolled={isEnrolled}
+					onPurchase={handlePurchase}
+				/>
+			</AuthAwareLayout>
 		</>
 	);
 }
-

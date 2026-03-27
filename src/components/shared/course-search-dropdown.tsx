@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { AlertCircle, BookOpen, Loader2, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
-import { Search, Loader2, BookOpen, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSearchCourses } from "@/features/courses";
 import type { Course } from "@/lib/db/types";
@@ -16,7 +16,12 @@ export function CourseSearchDropdown() {
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	// Fetch results based on debounced query
-	const { data: results, isLoading, isError, refetch } = useSearchCourses(debouncedQuery);
+	const {
+		data: results,
+		isLoading,
+		isError,
+		refetch,
+	} = useSearchCourses(debouncedQuery);
 
 	// Show dropdown when typing and has query
 	const showDropdown = isOpen && query.trim().length > 0;
@@ -160,12 +165,14 @@ function SearchResultItem({ course, onClick }: SearchResultItemProps) {
 				<p className="font-medium text-foreground truncate">{course.title}</p>
 				<p className="text-sm text-muted-foreground truncate">
 					{course.category && (
-						<span className={cn(
-							"inline-block px-1.5 py-0.5 text-xs rounded mr-2",
-							course.category === "Bundle"
-								? "bg-brand-primary/10 text-brand-primary"
-								: "bg-muted"
-						)}>
+						<span
+							className={cn(
+								"inline-block px-1.5 py-0.5 text-xs rounded mr-2",
+								course.category === "Bundle"
+									? "bg-brand-primary/10 text-brand-primary"
+									: "bg-muted",
+							)}
+						>
 							{course.category}
 						</span>
 					)}

@@ -1,15 +1,18 @@
-import { useState, useCallback, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Loader2, Mail } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LandingHeader, LandingFooter } from "@/components/layout";
+import { FormField } from "@/components/auth";
+import { LandingFooter, LandingHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/auth";
-import { requestPasswordResetFn } from "@/features/auth";
-import { forgotPasswordSchema, type ForgotPasswordFormData } from "@/lib/validations/auth";
-import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/user-context";
+import { requestPasswordResetFn } from "@/features/auth";
+import { cn } from "@/lib/utils";
+import {
+	type ForgotPasswordFormData,
+	forgotPasswordSchema,
+} from "@/lib/validations/auth";
 
 export const Route = createFileRoute("/lupa-password")({
 	component: LupaPasswordPage,
@@ -17,7 +20,7 @@ export const Route = createFileRoute("/lupa-password")({
 
 function LupaPasswordPage() {
 	const { user, isLoading: isAuthLoading } = useUser();
-  const navigate = useNavigate();
+	const navigate = useNavigate();
 	const [formData, setFormData] = useState<ForgotPasswordFormData>({
 		email: "",
 	});
@@ -27,13 +30,13 @@ function LupaPasswordPage() {
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
-    if (!isAuthLoading && user) {
-      navigate({ to: "/" });
-    }
-  }, [user, isAuthLoading, navigate]);
+		if (!isAuthLoading && user) {
+			navigate({ to: "/" });
+		}
+	}, [user, isAuthLoading, navigate]);
 
-  // Prevent Render
-  if (!isAuthLoading && user) return null;
+	// Prevent Render
+	if (!isAuthLoading && user) return null;
 
 	// Validate email field
 	const validateField = useCallback((value: string) => {
@@ -83,11 +86,14 @@ function LupaPasswordPage() {
 		setIsLoading(true);
 
 		try {
-			const result = await requestPasswordResetFn({ data: { email: formData.email } });
+			const result = await requestPasswordResetFn({
+				data: { email: formData.email },
+			});
 
 			if (result?.error) {
 				toast.error("Gagal Mengirim Email", {
-					description: result.message || "Terjadi kesalahan. Silakan coba lagi.",
+					description:
+						result.message || "Terjadi kesalahan. Silakan coba lagi.",
 				});
 				return;
 			}
@@ -153,7 +159,8 @@ function LupaPasswordPage() {
 							</div>
 
 							<p className="mt-6 text-xs text-muted-foreground">
-								Tidak menerima email? Cek folder spam atau tunggu beberapa menit.
+								Tidak menerima email? Cek folder spam atau tunggu beberapa
+								menit.
 							</p>
 						</div>
 					</div>
@@ -199,7 +206,7 @@ function LupaPasswordPage() {
 									placeholder="nama@email.com"
 									className={cn(
 										"h-12",
-										touched.email && errors.email && "border-destructive"
+										touched.email && errors.email && "border-destructive",
 									)}
 									value={formData.email}
 									onChange={handleChange}

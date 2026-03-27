@@ -1,7 +1,7 @@
 // Context providers
-export { ThemeProvider, useTheme, themeScript } from "./theme-context";
+export { ThemeProvider, themeScript, useTheme } from "./theme-context";
 export {
+	getUserDisplayName,
 	UserProvider,
 	useUser,
-	getUserDisplayName,
 } from "./user-context";

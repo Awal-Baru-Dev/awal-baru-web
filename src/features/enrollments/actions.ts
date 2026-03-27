@@ -135,7 +135,9 @@ export async function getEnrolledCourseIds(
 			return { data: [], error: error.message };
 		}
 
-		const courseIds = data.map((enrollment: { course_id: string }) => enrollment.course_id);
+		const courseIds = data.map(
+			(enrollment: { course_id: string }) => enrollment.course_id,
+		);
 		return { data: courseIds, error: null };
 	} catch (error) {
 		console.error("Error fetching enrolled course IDs:", error);

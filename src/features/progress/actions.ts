@@ -6,7 +6,12 @@
  */
 
 import { createBrowserClient } from "@/lib/db/supabase/client";
-import type { Course, CourseProgress, ActivityLog, QueryResult } from "@/lib/db/types";
+import type {
+	ActivityLog,
+	Course,
+	CourseProgress,
+	QueryResult,
+} from "@/lib/db/types";
 
 /**
  * Calculate the lesson position (1-indexed) within the entire course
@@ -118,47 +123,44 @@ export async function getAllCourseProgress(
  * Update user's progress for a course (upsert)
  */
 export async function updateCourseProgress(
-    userId: string,
-    courseId: string,
-    sectionId: string,
-    lessonIndex: number,
-    progressPercent: number,
-    lastWatchedSeconds: number = 0,
+	userId: string,
+	courseId: string,
+	sectionId: string,
+	lessonIndex: number,
+	progressPercent: number,
+	lastWatchedSeconds: number = 0,
 ): Promise<QueryResult<CourseProgress>> {
-    try {
-        const supabase = createBrowserClient();
+	try {
+		const supabase = createBrowserClient();
 
-        const payload = {
-            user_id: userId,
-            course_id: courseId,
-            current_section_id: sectionId,
-            current_lesson_index: lessonIndex,
-            progress_percent: progressPercent,
-            last_watched_seconds: lastWatchedSeconds,
-            last_accessed_at: new Date().toISOString(),
-        };
+		const payload = {
+			user_id: userId,
+			course_id: courseId,
+			current_section_id: sectionId,
+			current_lesson_index: lessonIndex,
+			progress_percent: progressPercent,
+			last_watched_seconds: lastWatchedSeconds,
+			last_accessed_at: new Date().toISOString(),
+		};
 
-        const { data, error } = await supabase
-            .from("course_progress")
-            .upsert(
-                payload,
-                {
-                    onConflict: "user_id,course_id", 
-                },
-            )
-            .select()
-            .single();
+		const { data, error } = await supabase
+			.from("course_progress")
+			.upsert(payload, {
+				onConflict: "user_id,course_id",
+			})
+			.select()
+			.single();
 
-        if (error) {
-            return { data: null, error: error.message };
-        }
-        return { data: data as CourseProgress, error: null };
-    } catch (error) {
-        return {
-            data: null,
-            error: error instanceof Error ? error.message : "Unknown error",
-        };
-    }
+		if (error) {
+			return { data: null, error: error.message };
+		}
+		return { data: data as CourseProgress, error: null };
+	} catch (error) {
+		return {
+			data: null,
+			error: error instanceof Error ? error.message : "Unknown error",
+		};
+	}
 }
 
 // ============================================================================
@@ -197,8 +199,10 @@ export async function logActivity(
 			.maybeSingle();
 
 		// Calculate new values (add to existing or start fresh)
-		const newLessonsCompleted = (existing?.lessons_completed ?? 0) + lessonsCompleted;
-		const newTimeSpentMinutes = (existing?.time_spent_minutes ?? 0) + timeSpentMinutes;
+		const newLessonsCompleted =
+			(existing?.lessons_completed ?? 0) + lessonsCompleted;
+		const newTimeSpentMinutes =
+			(existing?.time_spent_minutes ?? 0) + timeSpentMinutes;
 
 		const { data, error } = await supabase
 			.from("activity_log")
@@ -235,27 +239,29 @@ export async function logActivity(
 /**
  * Get user's total cumulative learning time
  */
-export async function getTotalLearningTime(userId: string): Promise<QueryResult<number>> {
-    try {
-      const supabase = createBrowserClient();
-      const { data, error } = await supabase
-        .from("activity_log")
-        .select("time_spent_minutes")
-        .eq("user_id", userId);
+export async function getTotalLearningTime(
+	userId: string,
+): Promise<QueryResult<number>> {
+	try {
+		const supabase = createBrowserClient();
+		const { data, error } = await supabase
+			.from("activity_log")
+			.select("time_spent_minutes")
+			.eq("user_id", userId);
 
-      if (error) return { data: null, error: error.message };
+		if (error) return { data: null, error: error.message };
 
-      // Sum all minutes from every log entry
-      const totalMinutes = data.reduce(
-        (sum: number, log: { time_spent_minutes: number | null }) => {
-          return sum + (log.time_spent_minutes || 0);
-        },
-        0
-      );
-      return { data: totalMinutes, error: null };
-    } catch (error) {
-        return { data: null, error: "Failed to fetch total time" };
-    }
+		// Sum all minutes from every log entry
+		const totalMinutes = data.reduce(
+			(sum: number, log: { time_spent_minutes: number | null }) => {
+				return sum + (log.time_spent_minutes || 0);
+			},
+			0,
+		);
+		return { data: totalMinutes, error: null };
+	} catch (error) {
+		return { data: null, error: "Failed to fetch total time" };
+	}
 }
 
 /**
@@ -322,7 +328,11 @@ export async function getActivityStreak(
 		}
 
 		// Get unique dates (in case of multiple courses per day)
-		const uniqueDates = [...new Set(data.map((d: { activity_date: string }) => d.activity_date))].sort().reverse();
+		const uniqueDates = [
+			...new Set(data.map((d: { activity_date: string }) => d.activity_date)),
+		]
+			.sort()
+			.reverse();
 
 		// Calculate streak
 		let streak = 0;
@@ -337,7 +347,7 @@ export async function getActivityStreak(
 		}
 
 		// Count consecutive days
-		let expectedDate = new Date(uniqueDates[0] as string);
+		const expectedDate = new Date(uniqueDates[0] as string);
 		for (const dateStr of uniqueDates) {
 			const expectedDateStr = expectedDate.toISOString().split("T")[0];
 

@@ -5,10 +5,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useUser } from "@/contexts/user-context";
 import {
-	getUserEnrollments,
 	checkEnrollment,
-	getEnrollmentWithCourse,
 	getEnrolledCourseIds,
+	getEnrollmentWithCourse,
+	getUserEnrollments,
 } from "./actions";
 
 /**

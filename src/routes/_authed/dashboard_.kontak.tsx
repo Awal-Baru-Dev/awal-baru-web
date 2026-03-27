@@ -1,6 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+	ArrowRight,
+	Clock,
+	HelpCircle,
+	Mail,
+	MessageCircle,
+} from "lucide-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { MessageCircle, Mail, Clock, HelpCircle, ArrowRight } from "lucide-react";
 import { APP_NAME } from "@/lib/config/constants";
 
 export const Route = createFileRoute("/_authed/dashboard_/kontak")({
@@ -9,16 +15,16 @@ export const Route = createFileRoute("/_authed/dashboard_/kontak")({
 
 // Contact Information - Update with real data
 const contactInfo = {
-  whatsapp: {
-    number: "+16468740315", // Replace with real WhatsApp number
-    displayNumber: "+1 64-6874-0315",
-    message: `Halo, saya butuh bantuan dengan kursus di ${APP_NAME}`,
-  },
-  email: "support@awalbaru.com", // Replace with real email
-  hours: {
-    weekday: "Senin - Jumat: 09:00 - 17:00 WIB",
-    weekend: "Sabtu: 09:00 - 12:00 WIB",
-  },
+	whatsapp: {
+		number: "+16468740315", // Replace with real WhatsApp number
+		displayNumber: "+1 64-6874-0315",
+		message: `Halo, saya butuh bantuan dengan kursus di ${APP_NAME}`,
+	},
+	email: "support@awalbaru.com", // Replace with real email
+	hours: {
+		weekday: "Senin - Jumat: 09:00 - 17:00 WIB",
+		weekend: "Sabtu: 09:00 - 12:00 WIB",
+	},
 };
 
 function KontakPage() {
@@ -121,8 +127,7 @@ function KontakPage() {
 						Cek Pusat Bantuan
 					</h3>
 					<p className="text-muted-foreground mb-4">
-						Temukan jawaban cepat untuk pertanyaan umum di Pusat Bantuan
-						kami.
+						Temukan jawaban cepat untuk pertanyaan umum di Pusat Bantuan kami.
 					</p>
 					<Link
 						to="/dashboard/bantuan"
@@ -134,5 +139,5 @@ function KontakPage() {
 				</div>
 			</div>
 		</DashboardLayout>
-	)
+	);
 }

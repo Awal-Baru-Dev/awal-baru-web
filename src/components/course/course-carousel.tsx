@@ -1,11 +1,11 @@
-import { useState, useCallback, useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Clock, Play } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Course } from "@/lib/db/types";
 
 interface CourseWithProgress extends Course {
-  progress?: number;
+	progress?: number;
 }
 
 interface CourseCarouselProps {
@@ -118,72 +118,72 @@ export function CourseCarousel({
 function CarouselCourseCard({ course }: { course: CourseWithProgress }) {
 	const progress = course.progress ?? 0;
 	return (
-    <Link
-      to="/courses/$slug/learn"
-      params={{ slug: course.slug }}
-      className="block bg-card border border-border rounded-xl overflow-hidden hover:border-brand-primary hover:shadow-lg transition-all group"
-    >
-      <div className="relative aspect-video bg-muted">
-        {course.thumbnail_url ? (
-          <img
-            src={course.thumbnail_url}
-            alt={course.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-brand-primary/20 to-brand-primary/5">
-            <span className="text-4xl font-bold text-brand-primary/30">
-              {course.title.charAt(0)}
-            </span>
-          </div>
-        )}
+		<Link
+			to="/courses/$slug/learn"
+			params={{ slug: course.slug }}
+			className="block bg-card border border-border rounded-xl overflow-hidden hover:border-brand-primary hover:shadow-lg transition-all group"
+		>
+			<div className="relative aspect-video bg-muted">
+				{course.thumbnail_url ? (
+					<img
+						src={course.thumbnail_url}
+						alt={course.title}
+						className="w-full h-full object-cover"
+					/>
+				) : (
+					<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-brand-primary/20 to-brand-primary/5">
+						<span className="text-4xl font-bold text-brand-primary/30">
+							{course.title.charAt(0)}
+						</span>
+					</div>
+				)}
 
-        {/* 1. Badge Progres di Pojok Kanan Bawah (Kesan Modern) */}
-        {progress > 0 && (
-          <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md border border-white/10 z-10">
-            {progress}%
-          </div>
-        )}
+				{/* 1. Badge Progres di Pojok Kanan Bawah (Kesan Modern) */}
+				{progress > 0 && (
+					<div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md border border-white/10 z-10">
+						{progress}%
+					</div>
+				)}
 
-        {/* Play overlay on hover */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
-            <Play
-              className="w-5 h-5 text-brand-primary ml-0.5"
-              fill="currentColor"
-            />
-          </div>
-        </div>
+				{/* Play overlay on hover */}
+				<div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+					<div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+						<Play
+							className="w-5 h-5 text-brand-primary ml-0.5"
+							fill="currentColor"
+						/>
+					</div>
+				</div>
 
-        {/* 2. Linear Progress Bar Tipis di Dasar Thumbnail */}
-        {progress > 0 && (
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20">
-            <div
-              className="h-full bg-brand-primary transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        )}
-      </div>
+				{/* 2. Linear Progress Bar Tipis di Dasar Thumbnail */}
+				{progress > 0 && (
+					<div className="absolute bottom-0 left-0 w-full h-1 bg-white/20">
+						<div
+							className="h-full bg-brand-primary transition-all duration-500"
+							style={{ width: `${progress}%` }}
+						/>
+					</div>
+				)}
+			</div>
 
-      <div className="p-4">
-        <h3 className="font-medium text-foreground line-clamp-2 group-hover:text-brand-primary transition-colors">
-          {course.title}
-        </h3>
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Clock className="w-4 h-4" />
-            <span>{formatCourseDuration(course.duration_minutes)}</span>
-          </div>
+			<div className="p-4">
+				<h3 className="font-medium text-foreground line-clamp-2 group-hover:text-brand-primary transition-colors">
+					{course.title}
+				</h3>
+				<div className="flex items-center justify-between mt-2">
+					<div className="flex items-center gap-1 text-sm text-muted-foreground">
+						<Clock className="w-4 h-4" />
+						<span>{formatCourseDuration(course.duration_minutes)}</span>
+					</div>
 
-          {/* Status Selesai */}
-          {progress === 100 && (
-            <span className="text-[10px] font-bold text-emerald-500 uppercase">
-              Selesai
-            </span>
-          )}
-        </div>
-      </div>
-    </Link>
-  );
+					{/* Status Selesai */}
+					{progress === 100 && (
+						<span className="text-[10px] font-bold text-emerald-500 uppercase">
+							Selesai
+						</span>
+					)}
+				</div>
+			</div>
+		</Link>
+	);
 }

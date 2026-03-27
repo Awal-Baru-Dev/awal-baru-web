@@ -1,16 +1,24 @@
-import { useState, useCallback, useEffect } from "react";
-import { createFileRoute, Link, useRouter, useNavigate } from "@tanstack/react-router";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { Loader2, KeyRound, CheckCircle, AlertCircle } from "lucide-react";
+import {
+	createFileRoute,
+	Link,
+	useNavigate,
+	useRouter,
+} from "@tanstack/react-router";
+import { AlertCircle, CheckCircle, KeyRound, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LandingHeader, LandingFooter } from "@/components/layout";
+import { FormField, PasswordInput, PasswordStrength } from "@/components/auth";
+import { LandingFooter, LandingHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { PasswordInput, PasswordStrength, FormField } from "@/components/auth";
-import { resetPasswordFn } from "@/features/auth";
-import { resetPasswordSchema, type ResetPasswordFormData } from "@/lib/validations/auth";
 import { useUser } from "@/contexts/user-context";
+import { resetPasswordFn } from "@/features/auth";
 import { createBrowserClient } from "@/lib/db/supabase/client";
 import { cn } from "@/lib/utils";
+import {
+	type ResetPasswordFormData,
+	resetPasswordSchema,
+} from "@/lib/validations/auth";
 
 export const Route = createFileRoute("/reset-password")({
 	component: ResetPasswordPage,
@@ -34,13 +42,11 @@ function ResetPasswordPage() {
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
-    if (!isAuthLoading && user) {
-      navigate({ to: "/" });
-    }
-  }, [user, isAuthLoading, navigate]);
+		if (!isAuthLoading && user) {
+			navigate({ to: "/" });
+		}
+	}, [user, isAuthLoading, navigate]);
 
-  // Prevent Render
-  if (!isAuthLoading && user) return null;
 
 	// Check if we have a valid recovery session
 	// Note: This still uses browser client because the recovery link lands here
@@ -48,19 +54,23 @@ function ResetPasswordPage() {
 	useEffect(() => {
 		const checkSession = async () => {
 			const supabase = createBrowserClient();
-			const { data: { session } } = await supabase.auth.getSession();
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
 
 			// Check if this is a recovery session (from password reset link)
 			if (session) {
 				setIsValidSession(true);
 			} else {
 				// Listen for auth state change (user clicking recovery link)
-				const { data: { subscription } } = supabase.auth.onAuthStateChange(
+				const {
+					data: { subscription },
+				} = supabase.auth.onAuthStateChange(
 					(event: AuthChangeEvent, session: Session | null) => {
 						if (event === "PASSWORD_RECOVERY" && session) {
 							setIsValidSession(true);
 						}
-					}
+					},
 				);
 
 				// Give it a moment for the auth state to update
@@ -78,37 +88,40 @@ function ResetPasswordPage() {
 	}, [isValidSession]);
 
 	// Validate a single field
-	const validateField = useCallback((field: keyof ResetPasswordFormData, value: string) => {
-		const testData = { ...formData, [field]: value };
+	const validateField = useCallback(
+		(field: keyof ResetPasswordFormData, value: string) => {
+			const testData = { ...formData, [field]: value };
 
-		try {
-			resetPasswordSchema.parse(testData);
-			setErrors((prev) => ({ ...prev, [field]: undefined }));
-		} catch (error) {
-			if (error instanceof Error && "errors" in error) {
-				const zodError = error as { errors: Array<{ path: (string | number)[]; message: string }> };
-				const fieldError = zodError.errors.find(
-					(e) => e.path[0] === field
-				);
-				setErrors((prev) => ({
-					...prev,
-					[field]: fieldError?.message,
-				}));
+			try {
+				resetPasswordSchema.parse(testData);
+				setErrors((prev) => ({ ...prev, [field]: undefined }));
+			} catch (error) {
+				if (error instanceof Error && "errors" in error) {
+					const zodError = error as {
+						errors: Array<{ path: (string | number)[]; message: string }>;
+					};
+					const fieldError = zodError.errors.find((e) => e.path[0] === field);
+					setErrors((prev) => ({
+						...prev,
+						[field]: fieldError?.message,
+					}));
+				}
 			}
-		}
-	}, [formData]);
+		},
+		[formData],
+	);
 
 	// Handle field change
-	const handleChange = (field: keyof ResetPasswordFormData) => (
-		e: React.ChangeEvent<HTMLInputElement>
-	) => {
-		const value = e.target.value;
-		setFormData((prev) => ({ ...prev, [field]: value }));
+	const handleChange =
+		(field: keyof ResetPasswordFormData) =>
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const value = e.target.value;
+			setFormData((prev) => ({ ...prev, [field]: value }));
 
-		if (touched[field]) {
-			validateField(field, value);
-		}
-	};
+			if (touched[field]) {
+				validateField(field, value);
+			}
+		};
 
 	// Handle field blur
 	const handleBlur = (field: keyof ResetPasswordFormData) => () => {
@@ -125,7 +138,9 @@ function ResetPasswordPage() {
 			setErrors({});
 		} catch (error) {
 			if (error instanceof Error && "errors" in error) {
-				const zodError = error as { errors: Array<{ path: (string | number)[]; message: string }> };
+				const zodError = error as {
+					errors: Array<{ path: (string | number)[]; message: string }>;
+				};
 				const newErrors: FormErrors = {};
 				for (const err of zodError.errors) {
 					const field = err.path[0] as keyof ResetPasswordFormData;
@@ -145,11 +160,14 @@ function ResetPasswordPage() {
 		setIsLoading(true);
 
 		try {
-			const result = await resetPasswordFn({ data: { password: formData.password } });
+			const result = await resetPasswordFn({
+				data: { password: formData.password },
+			});
 
 			if (result?.error) {
 				toast.error("Gagal Mengubah Password", {
-					description: result.message || "Terjadi kesalahan. Silakan coba lagi.",
+					description:
+						result.message || "Terjadi kesalahan. Silakan coba lagi.",
 				});
 				return;
 			}
@@ -170,6 +188,9 @@ function ResetPasswordPage() {
 			setIsLoading(false);
 		}
 	};
+
+	// Prevent Render if already logged in
+	if (!isAuthLoading && user) return null;
 
 	// Loading state while checking session
 	if (isValidSession === null) {
@@ -206,14 +227,12 @@ function ResetPasswordPage() {
 							</h1>
 
 							<p className="text-muted-foreground mb-6">
-								Link reset password sudah kadaluarsa atau tidak valid.
-								Silakan minta link baru.
+								Link reset password sudah kadaluarsa atau tidak valid. Silakan
+								minta link baru.
 							</p>
 
 							<Link to="/lupa-password">
-								<Button className="w-full btn-cta">
-									Minta Link Baru
-								</Button>
+								<Button className="w-full btn-cta">Minta Link Baru</Button>
 							</Link>
 						</div>
 					</div>
@@ -240,13 +259,12 @@ function ResetPasswordPage() {
 							</h1>
 
 							<p className="text-muted-foreground mb-6">
-								Password baru kamu sudah aktif. Silakan login dengan password baru.
+								Password baru kamu sudah aktif. Silakan login dengan password
+								baru.
 							</p>
 
 							<Link to="/masuk">
-								<Button className="w-full btn-cta">
-									Login Sekarang
-								</Button>
+								<Button className="w-full btn-cta">Login Sekarang</Button>
 							</Link>
 						</div>
 					</div>
@@ -288,7 +306,7 @@ function ResetPasswordPage() {
 									placeholder="Minimal 8 karakter"
 									className={cn(
 										"h-12",
-										touched.password && errors.password && "border-destructive"
+										touched.password && errors.password && "border-destructive",
 									)}
 									value={formData.password}
 									onChange={handleChange("password")}
@@ -303,14 +321,18 @@ function ResetPasswordPage() {
 							<FormField
 								id="confirmPassword"
 								label="Konfirmasi Password Baru"
-								error={touched.confirmPassword ? errors.confirmPassword : undefined}
+								error={
+									touched.confirmPassword ? errors.confirmPassword : undefined
+								}
 							>
 								<PasswordInput
 									id="confirmPassword"
 									placeholder="Ulangi password"
 									className={cn(
 										"h-12",
-										touched.confirmPassword && errors.confirmPassword && "border-destructive"
+										touched.confirmPassword &&
+											errors.confirmPassword &&
+											"border-destructive",
 									)}
 									value={formData.confirmPassword}
 									onChange={handleChange("confirmPassword")}

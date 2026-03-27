@@ -5,8 +5,8 @@
  * These functions run on the server and handle all auth operations securely.
  */
 
-import { createServerFn } from "@tanstack/react-start";
 import { redirect } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { getSupabaseServerClient } from "@/lib/db/supabase/server";
 import type { Profile } from "@/lib/db/types";
 
@@ -76,7 +76,9 @@ export const loginFn = createServerFn({ method: "POST" })
  * Sign up with email and password
  */
 export const signupFn = createServerFn({ method: "POST" })
-	.inputValidator((d: { email: string; password: string; fullName?: string }) => d)
+	.inputValidator(
+		(d: { email: string; password: string; fullName?: string }) => d,
+	)
 	.handler(async ({ data }) => {
 		const supabase = await getSupabaseServerClient();
 

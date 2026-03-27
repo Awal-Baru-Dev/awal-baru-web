@@ -24,9 +24,7 @@ export function createAdminClient() {
 	const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
 	if (!supabaseUrl) {
-		throw new Error(
-			"Missing VITE_SUPABASE_URL environment variable.",
-		);
+		throw new Error("Missing VITE_SUPABASE_URL environment variable.");
 	}
 
 	if (!serviceRoleKey) {

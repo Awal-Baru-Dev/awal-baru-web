@@ -1,4 +1,4 @@
-import { Play, Lock, CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock, Lock, Play } from "lucide-react";
 import {
 	Accordion,
 	AccordionContent,
@@ -7,8 +7,8 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import type { Course, CourseSection } from "@/lib/db/types";
+import { cn } from "@/lib/utils";
 
 interface CourseCurriculumProps {
 	course: Course;
@@ -170,8 +170,7 @@ export function CourseCurriculum({
 												key={lessonKey}
 												type="button"
 												onClick={() =>
-													canAccess &&
-													onLessonClick?.(section.id, lessonIndex)
+													canAccess && onLessonClick?.(section.id, lessonIndex)
 												}
 												disabled={!canAccess && !lesson.isFree}
 												className={cn(

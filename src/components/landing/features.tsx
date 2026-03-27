@@ -1,9 +1,4 @@
-import {
-	BookOpen,
-	Trophy,
-	Video,
-	type LucideIcon,
-} from "lucide-react";
+import { BookOpen, type LucideIcon, Trophy, Video } from "lucide-react";
 import { APP_NAME, BRAND } from "@/lib/config/constants";
 
 interface Feature {
@@ -34,21 +29,21 @@ const FEATURES: Feature[] = [
 
 export function LandingFeatures() {
 	return (
-    <section className="py-20 bg-background">
-      <div className="container mx-auto px-6 lg:px-16">
-        <SectionHeader
-          title={`Mengapa Memilih ${APP_NAME}?`}
-          subtitle="Platform pembelajaran terlengkap untuk wujudkan impian Amerikamu"
-        />
+		<section className="py-20 bg-background">
+			<div className="container mx-auto px-6 lg:px-16">
+				<SectionHeader
+					title={`Mengapa Memilih ${APP_NAME}?`}
+					subtitle="Platform pembelajaran terlengkap untuk wujudkan impian Amerikamu"
+				/>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {FEATURES.map((feature, index) => (
-            <FeatureCard key={index} feature={feature} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+					{FEATURES.map((feature, index) => (
+						<FeatureCard key={index} feature={feature} />
+					))}
+				</div>
+			</div>
+		</section>
+	);
 }
 
 interface SectionHeaderProps {

@@ -6,15 +6,20 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { PAYMENT } from "@/lib/config/constants";
 import { getSupabaseServerClient } from "@/lib/db/supabase/server";
 import {
-	createDokuPayment,
-	checkDokuPaymentStatus,
 	ALL_PAYMENT_METHODS,
+	checkDokuPaymentStatus,
+	createDokuPayment,
 	mapChannelToPaymentMethod,
 } from "@/lib/doku";
-import { PAYMENT } from "@/lib/config/constants";
-import type { PaymentInput, CreatePaymentResult, VerifyPaymentInput, VerifyPaymentResult } from "./types";
+import type {
+	CreatePaymentResult,
+	PaymentInput,
+	VerifyPaymentInput,
+	VerifyPaymentResult,
+} from "./types";
 
 /**
  * Sanitize text for DOKU API
@@ -41,7 +46,11 @@ function generateInvoiceNumber(isBundle: boolean, courseId?: string): string {
 /**
  * Get callback URLs for payment
  */
-function getCallbackUrls(isBundle: boolean, invoiceNumber: string, courseSlug?: string) {
+function getCallbackUrls(
+	isBundle: boolean,
+	invoiceNumber: string,
+	courseSlug?: string,
+) {
 	const appUrl = process.env.VITE_APP_URL || "http://localhost:3000";
 
 	if (isBundle) {
@@ -133,12 +142,13 @@ export const createPaymentFn = createServerFn({ method: "POST" })
 				.eq("payment_status", "paid");
 
 			const paidCourseIds = new Set(
-				existingEnrollments?.map((e: { course_id: string }) => e.course_id) || []
+				existingEnrollments?.map((e: { course_id: string }) => e.course_id) ||
+					[],
 			);
 
 			// Filter to only unpurchased courses
 			const unpurchasedCourses = courses.filter(
-				(c: { id: string }) => !paidCourseIds.has(c.id)
+				(c: { id: string }) => !paidCourseIds.has(c.id),
 			);
 
 			if (unpurchasedCourses.length === 0) {
@@ -152,7 +162,9 @@ export const createPaymentFn = createServerFn({ method: "POST" })
 			callbackUrls = getCallbackUrls(true, invoiceNumber);
 
 			// Create enrollment data for all unpurchased courses
-			const expiresAt = new Date(Date.now() + PAYMENT.expiryMinutes * 60 * 1000).toISOString();
+			const expiresAt = new Date(
+				Date.now() + PAYMENT.expiryMinutes * 60 * 1000,
+			).toISOString();
 			enrollmentData = unpurchasedCourses.map((course: { id: string }) => ({
 				user_id: userId,
 				course_id: course.id,
@@ -183,7 +195,9 @@ export const createPaymentFn = createServerFn({ method: "POST" })
 			itemName = courseName;
 			callbackUrls = getCallbackUrls(false, invoiceNumber, courseSlug);
 
-			const expiresAt = new Date(Date.now() + PAYMENT.expiryMinutes * 60 * 1000).toISOString();
+			const expiresAt = new Date(
+				Date.now() + PAYMENT.expiryMinutes * 60 * 1000,
+			).toISOString();
 			enrollmentData = [
 				{
 					user_id: userId,
@@ -236,7 +250,9 @@ export const createPaymentFn = createServerFn({ method: "POST" })
 			},
 			customer: {
 				id: userId,
-				name: sanitizeForDoku(profile?.full_name || userEmail.split("@")[0]).slice(0, 255),
+				name: sanitizeForDoku(
+					profile?.full_name || userEmail.split("@")[0],
+				).slice(0, 255),
 				email: userEmail,
 				phone: profile?.phone || undefined,
 			},
@@ -265,111 +281,111 @@ export const createPaymentFn = createServerFn({ method: "POST" })
  * Checks the actual payment status and updates enrollment if needed.
  */
 export const verifyPaymentFn = createServerFn({ method: "POST" })
-  .inputValidator((data: VerifyPaymentInput) => data)
-  .handler(async ({ data }): Promise<VerifyPaymentResult> => {
-    const { invoiceNumber } = data;
-    const supabase = await getSupabaseServerClient();
+	.inputValidator((data: VerifyPaymentInput) => data)
+	.handler(async ({ data }): Promise<VerifyPaymentResult> => {
+		const { invoiceNumber } = data;
+		const supabase = await getSupabaseServerClient();
 
-    // Check authentication
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || !authData.user) {
-      return { success: false, error: "Silakan login terlebih dahulu" };
-    }
+		// Check authentication
+		const { data: authData, error: authError } = await supabase.auth.getUser();
+		if (authError || !authData.user) {
+			return { success: false, error: "Silakan login terlebih dahulu" };
+		}
 
-    // Check payment status with DOKU
-    const statusResult = await checkDokuPaymentStatus(invoiceNumber);
+		// Check payment status with DOKU
+		const statusResult = await checkDokuPaymentStatus(invoiceNumber);
 
-    if (!statusResult.success || !statusResult.data) {
-      return {
-        success: true,
-        status: "pending",
-        message: "Menunggu konfirmasi pembayaran",
-      };
-    }
+		if (!statusResult.success || !statusResult.data) {
+			return {
+				success: true,
+				status: "pending",
+				message: "Menunggu konfirmasi pembayaran",
+			};
+		}
 
-    const dokuData = statusResult.data;
-    const dokuStatus = dokuData.transaction.status;
-    const channel = dokuData.channel?.id || "";
+		const dokuData = statusResult.data;
+		const dokuStatus = dokuData.transaction.status;
+		const channel = dokuData.channel?.id || "";
 
-    // Map status
-    let paymentStatus: "pending" | "paid" | "failed" | "expired";
-    let message: string;
+		// Map status
+		let paymentStatus: "pending" | "paid" | "failed" | "expired";
+		let message: string;
 
-    switch (dokuStatus) {
-      case "SUCCESS":
-        paymentStatus = "paid";
-        message = "Pembayaran berhasil! Kursus telah dibuka.";
-        break;
-      case "FAILED":
-        paymentStatus = "failed";
-        message = "Pembayaran gagal. Silakan coba lagi.";
-        break;
-      case "EXPIRED":
-        paymentStatus = "expired";
-        message = "Pembayaran kedaluwarsa. Silakan buat transaksi baru.";
-        break;
-      default:
-        paymentStatus = "pending";
-        message = "Menunggu konfirmasi pembayaran";
-    }
+		switch (dokuStatus) {
+			case "SUCCESS":
+				paymentStatus = "paid";
+				message = "Pembayaran berhasil! Kursus telah dibuka.";
+				break;
+			case "FAILED":
+				paymentStatus = "failed";
+				message = "Pembayaran gagal. Silakan coba lagi.";
+				break;
+			case "EXPIRED":
+				paymentStatus = "expired";
+				message = "Pembayaran kedaluwarsa. Silakan buat transaksi baru.";
+				break;
+			default:
+				paymentStatus = "pending";
+				message = "Menunggu konfirmasi pembayaran";
+		}
 
-    // Update enrollments if status changed
-    if (paymentStatus === "paid") {
-      const { data: enrollments } = await supabase
-        .from("enrollments")
-        .select(
-          `
+		// Update enrollments if status changed
+		if (paymentStatus === "paid") {
+			const { data: enrollments } = await supabase
+				.from("enrollments")
+				.select(
+					`
             id,
             courses ( price )
-        `
-        )
-        .eq("payment_reference", invoiceNumber)
-        .eq("user_id", authData.user.id);
+        `,
+				)
+				.eq("payment_reference", invoiceNumber)
+				.eq("user_id", authData.user.id);
 
-      if (enrollments && enrollments.length > 0) {
-        const nextYear = new Date();
-        nextYear.setFullYear(nextYear.getFullYear() + 1);
-        const expiresAtString = nextYear.toISOString();
+			if (enrollments && enrollments.length > 0) {
+				const nextYear = new Date();
+				nextYear.setFullYear(nextYear.getFullYear() + 1);
+				const expiresAtString = nextYear.toISOString();
 
-        const updates = enrollments.map((enr) => {
-          const courseData = enr.courses as any;
-          const realPrice = Array.isArray(courseData)
-            ? courseData[0]?.price
-            : courseData?.price;
+				const updates = enrollments.map((enr) => {
+					const courseData = enr.courses as any;
+					const realPrice = Array.isArray(courseData)
+						? courseData[0]?.price
+						: courseData?.price;
 
-          return supabase
-            .from("enrollments")
-            .update({
-              payment_status: "paid",
-              purchased_at: new Date().toISOString(),
-              expires_at: expiresAtString,
-              payment_method: mapChannelToPaymentMethod(channel),
-              payment_channel: channel,
-              amount_paid: realPrice || 0,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", enr.id);
-        });
+					return supabase
+						.from("enrollments")
+						.update({
+							payment_status: "paid",
+							purchased_at: new Date().toISOString(),
+							expires_at: expiresAtString,
+							payment_method: mapChannelToPaymentMethod(channel),
+							payment_channel: channel,
+							amount_paid: realPrice || 0,
+							updated_at: new Date().toISOString(),
+						})
+						.eq("id", enr.id);
+				});
 
-        await Promise.all(updates);
-      }
-    } else if (paymentStatus !== "pending") {
-      await supabase
-        .from("enrollments")
-        .update({
-          payment_status: paymentStatus,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("payment_reference", invoiceNumber)
-        .eq("user_id", authData.user.id);
-    }
+				await Promise.all(updates);
+			}
+		} else if (paymentStatus !== "pending") {
+			await supabase
+				.from("enrollments")
+				.update({
+					payment_status: paymentStatus,
+					updated_at: new Date().toISOString(),
+				})
+				.eq("payment_reference", invoiceNumber)
+				.eq("user_id", authData.user.id);
+		}
 
-    return {
-      success: true,
-      status: paymentStatus,
-      message,
-    };
-  });
+		return {
+			success: true,
+			status: paymentStatus,
+			message,
+		};
+	});
 
 /**
  * Get pending enrollment by invoice number

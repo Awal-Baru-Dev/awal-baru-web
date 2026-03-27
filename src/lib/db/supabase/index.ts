@@ -9,9 +9,8 @@
  * Import admin client: from "@/lib/db/supabase/admin"
  */
 
+export type { SupabaseAdminClient } from "./admin";
 // Only re-export browser-safe client from barrel
 export { createBrowserClient, type SupabaseBrowserClient } from "./client";
-
 // Types are safe to export (type-only imports are tree-shaken)
 export type { SupabaseServerClient } from "./server";
-export type { SupabaseAdminClient } from "./admin";

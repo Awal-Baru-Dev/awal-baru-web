@@ -1,9 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+	ArrowRight,
+	ChevronDown,
+	HelpCircle,
+	MessageCircle,
+} from "lucide-react";
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { ChevronDown, HelpCircle, MessageCircle, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/config/constants";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authed/dashboard_/bantuan")({
 	component: BantuanPage,
@@ -22,7 +27,7 @@ const faqCategories = [
 			{
 				question: "Metode pembayaran apa saja yang tersedia?",
 				answer:
-					"Kami menerima pembayaran via Transfer Bank (Virtual Account BCA, Mandiri, BNI, BRI, dll), E-Wallet (OVO, GoPay, Dana, ShopeePay), QRIS, dan Kartu Kredit/Debit.",
+					"Kami menerima pembayaran via Transfer Bank (Virtual Account Mandiri, BNI, BRI, dll), E-Wallet (OVO, Dana, ShopeePay), QRIS, dan Kartu Kredit/Debit.",
 			},
 			{
 				question: "Apakah bisa refund jika tidak puas?",
@@ -149,7 +154,7 @@ function BantuanPage() {
 				</div>
 			</div>
 		</DashboardLayout>
-	)
+	);
 }
 
 /**
@@ -169,18 +174,18 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 				<ChevronDown
 					className={cn(
 						"w-5 h-5 text-muted-foreground flex-shrink-0 transition-transform",
-						isOpen && "rotate-180"
+						isOpen && "rotate-180",
 					)}
 				/>
 			</button>
 			<div
 				className={cn(
 					"overflow-hidden transition-all duration-200",
-					isOpen ? "max-h-96" : "max-h-0"
+					isOpen ? "max-h-96" : "max-h-0",
 				)}
 			>
 				<div className="px-4 pb-4 text-muted-foreground">{answer}</div>
 			</div>
 		</div>
-	)
+	);
 }

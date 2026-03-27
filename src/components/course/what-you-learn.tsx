@@ -48,7 +48,10 @@ export function WhatYouLearnSkeleton() {
 
 			<div className="grid sm:grid-cols-2 gap-3">
 				{[1, 2, 3, 4, 5, 6].map((i) => (
-					<div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+					<div
+						key={i}
+						className="flex items-start gap-3 p-3 rounded-lg bg-muted/50"
+					>
 						<Skeleton className="w-5 h-5 rounded-full flex-shrink-0" />
 						<Skeleton className="h-4 flex-1" />
 					</div>

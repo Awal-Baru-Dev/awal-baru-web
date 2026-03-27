@@ -1,12 +1,12 @@
 // Re-export all utilities
 export { cn } from "./cn";
 export {
-	formatPrice,
-	formatNumber,
-	formatDuration,
-	formatTime,
-	formatDate,
-	formatRelativeTime,
-	truncate,
 	capitalize,
+	formatDate,
+	formatDuration,
+	formatNumber,
+	formatPrice,
+	formatRelativeTime,
+	formatTime,
+	truncate,
 } from "./format";

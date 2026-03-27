@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Clock, CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import type { Course } from "@/lib/db/types";
+import { cn } from "@/lib/utils";
 
 interface CourseCardProps {
 	course: Course;
@@ -55,10 +55,7 @@ export function CourseCard({
 	progress = 0,
 	className,
 }: CourseCardProps) {
-	const discount = getDiscountPercent(
-		course.original_price || 0,
-		course.price,
-	);
+	const discount = getDiscountPercent(course.original_price || 0, course.price);
 	// const rating = course.metadata?.stats?.rating || 0;
 
 	return (

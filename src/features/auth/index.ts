@@ -3,13 +3,13 @@
  */
 
 export {
+	type AuthUser,
+	exchangeCodeForSessionFn,
 	fetchUser,
 	loginFn,
-	signupFn,
 	logoutFn,
 	requestPasswordResetFn,
-	resetPasswordFn,
 	resendConfirmationFn,
-	exchangeCodeForSessionFn,
-	type AuthUser,
+	resetPasswordFn,
+	signupFn,
 } from "./server";
