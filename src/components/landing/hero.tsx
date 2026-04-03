@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/contexts/user-context";
 import { APP_NAME } from "@/lib/config/constants";
 
 export function LandingHero() {
@@ -110,9 +111,11 @@ function HeroImage() {
  * Hero call-to-action buttons
  */
 function HeroActions() {
+	const { isAuthenticated } = useUser();
+
 	return (
 		<div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4">
-			<Link to="/daftar" className="w-full sm:w-auto">
+			<Link to={isAuthenticated ? "/courses" : "/daftar"} className="w-full sm:w-auto">
 				<Button
 					size="lg"
 					className="w-full sm:w-auto btn-cta text-base px-6 sm:px-8 py-5 sm:py-6 rounded-xl shadow-xl hover:shadow-2xl transition-all"
@@ -121,14 +124,16 @@ function HeroActions() {
 					<ArrowRight className="w-5 h-5 ml-2" />
 				</Button>
 			</Link>
-			<Button
-				size="lg"
-				variant="ghost"
-				className="w-full sm:w-auto text-white hover:text-white hover:bg-white/10 border-2 border-white/30 font-semibold text-base px-6 sm:px-8"
-			>
-				<Play className="w-5 h-5 mr-2 fill-current" />
-				Tonton Cerita Tedchay
-			</Button>
+			<Link to="/courses/$slug" params={{ slug: "dv-lottery-green-card" }} className="w-full sm:w-auto">
+				<Button
+					size="lg"
+					variant="ghost"
+					className="w-full sm:w-auto text-white hover:text-white hover:bg-white/10 border-2 border-white/30 font-semibold text-base px-6 sm:px-8"
+				>
+					<Play className="w-5 h-5 mr-2 fill-current" />
+					Tonton Cerita Tedchay
+				</Button>
+			</Link>
 		</div>
 	);
 }
