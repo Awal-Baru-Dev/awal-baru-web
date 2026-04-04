@@ -5,7 +5,6 @@ import {
 	Loader2,
 	Lock,
 	Mail,
-	Phone,
 	User,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -61,7 +60,7 @@ function ProfilPage() {
 	// Profile form state
 	const [profileData, setProfileData] = useState<ProfileFormData>({
 		fullName: profile?.full_name || "",
-		phone: profile?.phone || "",
+		whatsappNumber: profile?.whatsapp_number || "",
 	});
 	const [profileErrors, setProfileErrors] = useState<
 		Partial<Record<keyof ProfileFormData, string>>
@@ -155,7 +154,7 @@ function ProfilPage() {
 			const result = await updateProfileFn({
 				data: {
 					fullName: profileData.fullName,
-					phone: profileData.phone || "",
+					whatsappNumber: profileData.whatsappNumber || "",
 				},
 			});
 
@@ -431,25 +430,40 @@ function ProfilPage() {
 									</p>
 								</div>
 
-								<FormField
-									id="phone"
-									label="Nomor Telepon"
-									error={profileTouched.phone ? profileErrors.phone : undefined}
-								>
-									<div className="relative">
-										<Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-										<Input
-											id="phone"
-											value={profileData.phone}
-											onChange={handleProfileChange("phone")}
-											onBlur={handleProfileBlur("phone")}
-											placeholder="08xx-xxxx-xxxx"
-											disabled={isProfileLoading}
-											className="pl-10"
-											aria-invalid={!!profileErrors.phone}
-										/>
-									</div>
-								</FormField>
+								<div className="pt-4">
+									<Label htmlFor="whatsappNumber">Nomor WhatsApp</Label>
+									<Input
+										id="whatsappNumber"
+										type="tel"
+										placeholder="+62812... or 0812..."
+										value={profileData.whatsappNumber}
+										onChange={(e) => {
+											let val = e.target.value.replace(/[^\d+]/g, "");
+											val = val.replace(/(?!^\+)\+/g, "");
+											if (val.length > 0 && !val.startsWith("+") && val.startsWith("0")) {
+												val = "+62" + val.substring(1);
+											} else if (val.length > 0 && !val.startsWith("+")) {
+												val = "+" + val;
+											}
+											setProfileData((prev) => ({ 
+												...prev, 
+												whatsappNumber: val 
+											}));
+											if (profileTouched.whatsappNumber) {
+												validateProfileField("whatsappNumber", val);
+											}
+										}}
+										onBlur={handleProfileBlur("whatsappNumber")}
+										disabled={isProfileLoading}
+										aria-invalid={!!profileErrors.whatsappNumber}
+										className="mt-2"
+									/>
+									{profileTouched.whatsappNumber && profileErrors.whatsappNumber && (
+										<p className="text-sm font-medium text-destructive mt-1">
+											{profileErrors.whatsappNumber}
+										</p>
+									)}
+								</div>
 
 								<div className="pt-2">
 									<Button

@@ -43,7 +43,7 @@ export interface Profile {
 	id: string;
 	full_name: string | null;
 	avatar_url: string | null;
-	phone: string | null;
+	whatsapp_number: string | null;
 	role: "admin" | "user" | string;
 	created_at: string;
 	updated_at: string;
@@ -284,6 +284,7 @@ export interface AdminTransaction {
 	user_name: string | null;
 	user_email: string | null;
 	user_avatar: string | null;
+	user_whatsapp: string | null;
 	course_title: string | null;
 	course_thumbnail: string | null;
 	expires_at?: string | null;

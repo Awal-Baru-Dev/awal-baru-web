@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Check, Star } from "lucide-react";
 import { toast } from "sonner";
 import { LandingFooter, LandingHeader } from "@/components/layout";
+import { WhatsappCollectionModal } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/user-context";
 import { useCreatePayment } from "@/features/payments";
@@ -14,8 +16,9 @@ export const Route = createFileRoute("/harga")({
 
 function HargaPage() {
 	const navigate = useNavigate();
-	const { user } = useUser();
+	const { user, profile } = useUser();
 	const createPayment = useCreatePayment();
+	const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
 
 	// Handle bundle purchase (for Paket Lengkap)
 	const handleBundlePurchase = () => {
@@ -28,6 +31,15 @@ function HargaPage() {
 			return;
 		}
 
+		if (!profile?.whatsapp_number) {
+			setIsWhatsappModalOpen(true);
+			return;
+		}
+
+		executePayment();
+	};
+
+	const executePayment = () => {
 		// Create bundle payment
 		createPayment.mutate(
 			{ isBundle: true },
@@ -50,7 +62,16 @@ function HargaPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-background">
+		<>
+			<WhatsappCollectionModal
+				isOpen={isWhatsappModalOpen}
+				onClose={() => setIsWhatsappModalOpen(false)}
+				onSubmit={() => {
+					setIsWhatsappModalOpen(false);
+					executePayment();
+				}}
+			/>
+			<div className="min-h-screen bg-background">
 			<LandingHeader />
 
 			<main className="pt-20">
@@ -110,6 +131,7 @@ function HargaPage() {
 
 			<LandingFooter />
 		</div>
+		</>
 	);
 }
 

@@ -92,7 +92,7 @@ export const createPaymentFn = createServerFn({ method: "POST" })
 		// Get user profile for customer info
 		const { data: profile } = await supabase
 			.from("profiles")
-			.select("full_name, phone")
+			.select("full_name, whatsapp_number")
 			.eq("id", userId)
 			.single();
 
@@ -254,7 +254,7 @@ export const createPaymentFn = createServerFn({ method: "POST" })
 					profile?.full_name || userEmail.split("@")[0],
 				).slice(0, 255),
 				email: userEmail,
-				phone: profile?.phone || undefined,
+				phone: profile?.whatsapp_number || undefined,
 			},
 		});
 
@@ -347,11 +347,19 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
 				nextYear.setFullYear(nextYear.getFullYear() + 1);
 				const expiresAtString = nextYear.toISOString();
 
+				const isBundle = invoiceNumber.startsWith("INV-BUNDLE-");
+				const bundleTotalAmount = dokuData.order?.amount || 0;
+				const proratedAmount = isBundle 
+					? Math.round(bundleTotalAmount / enrollments.length) 
+					: 0;
+
 				const updates = enrollments.map((enr) => {
 					const courseData = enr.courses as any;
 					const realPrice = Array.isArray(courseData)
 						? courseData[0]?.price
 						: courseData?.price;
+					
+					const amountPaid = isBundle ? proratedAmount : (realPrice || 0);
 
 					return supabase
 						.from("enrollments")
@@ -361,7 +369,7 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
 							expires_at: expiresAtString,
 							payment_method: mapChannelToPaymentMethod(channel),
 							payment_channel: channel,
-							amount_paid: realPrice || 0,
+							amount_paid: amountPaid,
 							updated_at: new Date().toISOString(),
 						})
 						.eq("id", enr.id);

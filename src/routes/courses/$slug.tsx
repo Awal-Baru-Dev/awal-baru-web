@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
@@ -15,7 +15,7 @@ import {
 	WhatYouLearnSkeleton,
 } from "@/components/course";
 import { AuthAwareLayout } from "@/components/layout";
-import { PaymentLoadingOverlay } from "@/components/shared";
+import { PaymentLoadingOverlay, WhatsappCollectionModal } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/user-context";
 import { useCourse } from "@/features/courses";
@@ -41,8 +41,9 @@ function CourseDetailPage() {
 	const { payment, invoice } = Route.useSearch();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const { user, isLoading: isAuthLoading } = useUser();
+	const { user, profile, isLoading: isAuthLoading } = useUser();
 	const paymentProcessedRef = useRef(false);
+	const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
 
 	// Fetch course data
 	const {
@@ -156,6 +157,17 @@ function CourseDetailPage() {
 
 		if (!course) return;
 
+		if (!profile?.whatsapp_number) {
+			setIsWhatsappModalOpen(true);
+			return;
+		}
+
+		executePayment();
+	};
+
+	const executePayment = () => {
+		if (!course) return;
+
 		// Create payment
 		createPayment.mutate(
 			{
@@ -242,6 +254,14 @@ function CourseDetailPage() {
 
 	return (
 		<>
+			<WhatsappCollectionModal
+				isOpen={isWhatsappModalOpen}
+				onClose={() => setIsWhatsappModalOpen(false)}
+				onSubmit={() => {
+					setIsWhatsappModalOpen(false);
+					executePayment();
+				}}
+			/>
 			<PaymentLoadingOverlay isLoading={createPayment.isPending} />
 			<AuthAwareLayout showFooter={false}>
 				<div className="container mx-auto max-w-6xl">

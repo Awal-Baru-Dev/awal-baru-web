@@ -161,9 +161,9 @@ function AdminUsersPage() {
 										</Badge>
 									</TableCell>
 									<TableCell>
-										{user.phone ? (
+										{user.whatsapp_number ? (
 											<div className="flex items-center gap-1 text-sm text-muted-foreground">
-												<Phone className="w-3 h-3" /> {user.phone}
+												<Phone className="w-3 h-3" /> {user.whatsapp_number}
 											</div>
 										) : (
 											<span className="text-muted-foreground text-xs">-</span>

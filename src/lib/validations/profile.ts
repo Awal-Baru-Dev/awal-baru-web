@@ -9,12 +9,10 @@ export const profileSchema = z.object({
 		.string()
 		.min(2, "Nama minimal 2 karakter")
 		.max(100, "Nama maksimal 100 karakter"),
-	phone: z
-		.string()
-		.regex(/^(\+62|62|0)?[0-9]{9,13}$/, "Format nomor telepon tidak valid")
-		.or(z.literal(""))
-		.optional()
-		.transform((val) => val || ""),
+	whatsappNumber: z
+		.string({ message: "Nomor WhatsApp wajib diisi" })
+		.min(1, "Nomor WhatsApp wajib diisi")
+		.regex(/^\+[1-9]\d{7,14}$/, "Format nomor WhatsApp tidak valid (harus disertai kode negara)"),
 });
 
 export type ProfileFormData = z.infer<typeof profileSchema>;

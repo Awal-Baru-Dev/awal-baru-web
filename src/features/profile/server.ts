@@ -12,7 +12,7 @@ import { getSupabaseServerClient } from "@/lib/db/supabase/server";
  * Update user profile (full_name, phone)
  */
 export const updateProfileFn = createServerFn({ method: "POST" })
-	.inputValidator((d: { fullName: string; phone: string }) => d)
+	.inputValidator((d: { fullName: string; whatsappNumber: string }) => d)
 	.handler(async ({ data }): Promise<{ error: boolean; message?: string }> => {
 		const supabase = await getSupabaseServerClient();
 
@@ -27,7 +27,7 @@ export const updateProfileFn = createServerFn({ method: "POST" })
 			.from("profiles")
 			.update({
 				full_name: data.fullName,
-				phone: data.phone || null,
+				whatsapp_number: data.whatsappNumber || null,
 				updated_at: new Date().toISOString(),
 			})
 			.eq("id", userData.user.id);

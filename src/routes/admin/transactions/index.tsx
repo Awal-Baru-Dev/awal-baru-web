@@ -231,6 +231,9 @@ function AdminTransactionsPage() {
 												>
 													{trx.user_email}
 												</span>
+												<span className="text-[10px] text-muted-foreground truncate font-mono">
+													{trx.user_whatsapp || "-"}
+												</span>
 											</div>
 										</div>
 									</TableCell>
