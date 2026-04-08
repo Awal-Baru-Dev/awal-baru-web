@@ -336,6 +336,8 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
 				.select(
 					`
             id,
+            user_id,
+            course_id,
             courses ( price )
         `,
 				)
@@ -353,39 +355,55 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
 					? Math.round(bundleTotalAmount / enrollments.length) 
 					: 0;
 
-				const updates = enrollments.map((enr) => {
+				const upsertEntries = enrollments.map((enr) => {
 					const courseData = enr.courses as any;
 					const realPrice = Array.isArray(courseData)
 						? courseData[0]?.price
 						: courseData?.price;
-					
+
 					const amountPaid = isBundle ? proratedAmount : (realPrice || 0);
 
-					return supabase
-						.from("enrollments")
-						.update({
-							payment_status: "paid",
-							purchased_at: new Date().toISOString(),
-							expires_at: expiresAtString,
-							payment_method: mapChannelToPaymentMethod(channel),
-							payment_channel: channel,
-							amount_paid: amountPaid,
-							updated_at: new Date().toISOString(),
-						})
-						.eq("id", enr.id);
+					return {
+						user_id: enr.user_id,
+						course_id: enr.course_id,
+						payment_status: "paid" as const,
+						payment_reference: invoiceNumber,
+						purchased_at: new Date().toISOString(),
+						expires_at: expiresAtString,
+						payment_method: mapChannelToPaymentMethod(channel),
+						payment_channel: channel,
+						amount_paid: amountPaid,
+						updated_at: new Date().toISOString(),
+					};
 				});
 
-				await Promise.all(updates);
+				await supabase.from("enrollments").upsert(upsertEntries, {
+					onConflict: "user_id,course_id",
+					ignoreDuplicates: false,
+				});
 			}
 		} else if (paymentStatus !== "pending") {
-			await supabase
+			// For other statuses, update by payment_reference
+			// We use upsert here as well for consistency, although update is usually enough
+			const { data: existingToUpdate } = await supabase
 				.from("enrollments")
-				.update({
-					payment_status: paymentStatus,
-					updated_at: new Date().toISOString(),
-				})
+				.select("user_id, course_id")
 				.eq("payment_reference", invoiceNumber)
 				.eq("user_id", authData.user.id);
+
+			if (existingToUpdate && existingToUpdate.length > 0) {
+				const statusUpserts = existingToUpdate.map((enr) => ({
+					user_id: enr.user_id,
+					course_id: enr.course_id,
+					payment_status: paymentStatus as any,
+					updated_at: new Date().toISOString(),
+				}));
+
+				await supabase.from("enrollments").upsert(statusUpserts, {
+					onConflict: "user_id,course_id",
+					ignoreDuplicates: false,
+				});
+			}
 		}
 
 		return {

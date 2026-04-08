@@ -1,38 +1,45 @@
 import { createBrowserClient } from "@/lib/db/supabase/client";
-import type { AdminTransaction, ListResult } from "@/lib/db/types";
+import type { GroupedAdminTransaction } from "@/lib/db/types";
 
-export async function getAdminTransactions(): Promise<
-	ListResult<AdminTransaction>
-> {
+export interface PaginatedTransactionsResult {
+	data: GroupedAdminTransaction[];
+	totalCount: number;
+	error: string | null;
+}
+
+export async function getAdminTransactions(params: {
+	page: number;
+	limit: number;
+	searchQuery?: string;
+	statusFilter?: string;
+}): Promise<PaginatedTransactionsResult> {
 	try {
 		const supabase = createBrowserClient();
 
-		const { data, error } = await supabase
-			.from("admin_transactions_view")
-			.select("*")
-			.order("created_at", { ascending: false });
+		const { data, error } = await supabase.rpc(
+			"get_paginated_admin_transactions",
+			{
+				p_page: params.page,
+				p_limit: params.limit,
+				p_search_query: params.searchQuery || "",
+				p_status_filter: params.statusFilter || "all",
+			},
+		);
 
 		if (error) {
-			console.error("Error fetching transactions:", error);
-			return { data: [], error: error.message };
+			console.error("Supabase RPC Error:", error);
+			return { data: [], totalCount: 0, error: error.message };
 		}
 
-		// Dynamically expire transactions that have past their expires_at date
-		const processedData = (data as AdminTransaction[]).map(trx => {
-			if (
-				trx.payment_status === "pending" && 
-				trx.expires_at && 
-				new Date(trx.expires_at).getTime() < Date.now()
-			) {
-				return { ...trx, payment_status: "expired" } as AdminTransaction;
-			}
-			return trx;
-		});
-
-		return { data: processedData, error: null };
+		return {
+			data: (data?.[0]?.data || []) as GroupedAdminTransaction[],
+			totalCount: Number(data?.[0]?.total_count || 0),
+			error: null,
+		};
 	} catch (error) {
 		return {
 			data: [],
+			totalCount: 0,
 			error: error instanceof Error ? error.message : "Unknown error",
 		};
 	}

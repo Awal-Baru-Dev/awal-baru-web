@@ -3,15 +3,20 @@ import { getAdminUsers } from "./server";
 
 export const userKeys = {
 	all: ["admin-users"] as const,
+	list: (params: any) => ["admin-users", "list", params] as const,
 };
 
-export function useAdminUsers() {
+export function useAdminUsers(params: {
+	page: number;
+	limit: number;
+	searchQuery?: string;
+}) {
 	return useQuery({
-		queryKey: userKeys.all,
+		queryKey: userKeys.list(params),
 		queryFn: async () => {
-			const result = await getAdminUsers();
+			const result = await getAdminUsers(params);
 			if (result.error) throw new Error(result.error);
-			return result.data;
+			return result;
 		},
 	});
 }

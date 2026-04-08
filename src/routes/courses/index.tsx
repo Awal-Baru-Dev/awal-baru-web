@@ -8,7 +8,7 @@ import {
 	Gift,
 	Users,
 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
@@ -17,7 +17,7 @@ import {
 	CourseGridLoading,
 } from "@/components/course";
 import { AuthAwareLayout } from "@/components/layout";
-import { PaymentLoadingOverlay } from "@/components/shared";
+import { PaymentLoadingOverlay, WhatsappCollectionModal } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/user-context";
@@ -58,9 +58,10 @@ export const Route = createFileRoute("/courses/")({
 function CoursesPage() {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const { user, isAuthenticated } = useUser();
+	const { user, profile, isAuthenticated } = useUser();
 	const { q: searchQuery, payment, type, invoice } = Route.useSearch();
 	const paymentProcessedRef = useRef(false);
+	const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
 
 	// Determine if we're in search mode
 	const hasSearchQuery = !!searchQuery?.trim();
@@ -195,6 +196,15 @@ function CoursesPage() {
 			return;
 		}
 
+		if (!profile?.whatsapp_number) {
+			setIsWhatsappModalOpen(true);
+			return;
+		}
+
+		executePayment();
+	};
+
+	const executePayment = () => {
 		createPayment.mutate(
 			{ isBundle: true },
 			{
@@ -222,10 +232,10 @@ function CoursesPage() {
 	const discountPercentage =
 		isBundle && heroCourse?.original_price
 			? Math.round(
-					((heroCourse.original_price - heroCourse.price) /
-						heroCourse.original_price) *
-						100,
-				)
+				((heroCourse.original_price - heroCourse.price) /
+					heroCourse.original_price) *
+				100,
+			)
 			: 0;
 
 	// Hero section to pass to AuthAwareLayout
@@ -440,6 +450,14 @@ function CoursesPage() {
 
 	return (
 		<>
+			<WhatsappCollectionModal
+				isOpen={isWhatsappModalOpen}
+				onClose={() => setIsWhatsappModalOpen(false)}
+				onSubmit={() => {
+					setIsWhatsappModalOpen(false);
+					executePayment();
+				}}
+			/>
 			<PaymentLoadingOverlay isLoading={createPayment.isPending} />
 			<AuthAwareLayout heroSection={heroSection}>
 				{/* Courses Section */}

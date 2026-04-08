@@ -289,3 +289,9 @@ export interface AdminTransaction {
 	course_thumbnail: string | null;
 	expires_at?: string | null;
 }
+
+export interface GroupedAdminTransaction extends Omit<AdminTransaction, "course_title" | "course_thumbnail" | "amount_paid"> {
+	all_titles: string[];
+	item_count: number;
+	total_amount: number;
+}

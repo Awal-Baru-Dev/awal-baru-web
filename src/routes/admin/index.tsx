@@ -18,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getAdminCourses } from "@/features/courses/actions";
 import { getAdminTransactions } from "@/features/transactions/server";
 import { createBrowserClient } from "@/lib/db/supabase/client";
-import type { AdminCourseListItem } from "@/lib/db/types";
+import type { AdminCourseListItem, GroupedAdminTransaction } from "@/lib/db/types";
 
 export const Route = createFileRoute("/admin/")({
 	component: AdminDashboardPage,
@@ -35,8 +35,13 @@ function AdminDashboardPage() {
 			);
 			if (statsError) throw statsError;
 
-			const { data: trxData } = await getAdminTransactions();
-			const recentTrx = trxData?.filter((t) => t.payment_status === "paid").slice(0, 5) || [];
+			// Fetch recent grouped transactions
+			const trxResult = await getAdminTransactions({ 
+				page: 1, 
+				limit: 10,
+				statusFilter: 'paid' 
+			});
+			const recentTrx = (trxResult.data || []).slice(0, 5);
 
 			const { data: courseData } = await getAdminCourses();
 
@@ -54,7 +59,7 @@ function AdminDashboardPage() {
 					sales24h: number;
 					revenueChart: { date: string; total: number }[];
 				},
-				recentTrx,
+				recentTrx: recentTrx as GroupedAdminTransaction[],
 				popularCourses,
 				allCourses: safeCourses,
 			};
@@ -239,7 +244,10 @@ function AdminDashboardPage() {
 						<CardHeader className="flex flex-row items-center justify-between">
 							<CardTitle>Transaksi Terbaru</CardTitle>
 							<Button variant="ghost" size="sm" asChild>
-								<Link to="/admin/transactions">
+								<Link 
+									to="/admin/transactions" 
+									search={{ page: 1, limit: 10, q: "", status: "all" }}
+								>
 									Lihat Semua <ArrowRight className="ml-2 h-4 w-4" />
 								</Link>
 							</Button>
@@ -265,13 +273,15 @@ function AdminDashboardPage() {
 														{trx.user_name || "User"}
 													</p>
 													<p className="text-xs text-muted-foreground max-w-[200px] truncate">
-														{trx.course_title}
+														{trx.item_count > 1 
+															? "Paket Semua Kursus" 
+															: (trx.all_titles[0] || "Unknown Course")}
 													</p>
 												</div>
 											</div>
 											<div className="text-right">
 												<p className="text-sm font-medium">
-													{formatRupiah(trx.amount_paid)}
+													{formatRupiah(trx.total_amount)}
 												</p>
 												<p className="text-[10px] text-muted-foreground">
 													{new Date(trx.created_at).toLocaleDateString(

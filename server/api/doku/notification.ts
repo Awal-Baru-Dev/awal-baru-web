@@ -9,8 +9,15 @@
  * - Bundle purchases (INV-BUNDLE-{timestamp})
  */
 
-import { defineEventHandler, readBody } from "h3";
+import { 
+	defineEventHandler, 
+	readRawBody, 
+	createError, 
+	setResponseStatus, 
+	getRequestHeader 
+} from "h3";
 import { createClient } from "@supabase/supabase-js";
+import { verifyNotificationSignature, mapChannelToPaymentMethod } from "../../../src/lib/doku";
 
 // Types from the DOKU library
 interface DokuNotificationOrder {
@@ -34,18 +41,7 @@ interface DokuNotification {
 	channel: DokuNotificationChannel;
 }
 
-/**
- * Map DOKU channel ID to payment method
- */
-function mapChannelToPaymentMethod(channelId: string): string {
-	if (channelId.startsWith("VIRTUAL_ACCOUNT_")) return "virtual_account";
-	if (channelId === "CREDIT_CARD") return "credit_card";
-	if (channelId.startsWith("EMONEY_") || channelId === "QRIS") return "e_wallet";
-	if (channelId.startsWith("ONLINE_TO_OFFLINE_")) return "retail";
-	if (channelId.startsWith("DIRECT_DEBIT_")) return "direct_debit";
-	if (channelId.startsWith("PEER_TO_PEER_")) return "paylater";
-	return "other";
-}
+// Using centralized mapping from @/lib/doku
 
 /**
  * Format currency in IDR
@@ -60,28 +56,85 @@ function formatCurrency(amount: number): string {
 }
 
 export default defineEventHandler(async (event) => {
+	// 1. Extract Headers for Signature Verification
+	const clientId = getRequestHeader(event, "client-id");
+	const requestId = getRequestHeader(event, "request-id");
+	const requestTimestamp = getRequestHeader(event, "request-timestamp");
+	const signature = getRequestHeader(event, "signature");
+
+	// 2. Read Raw Body for Signature Verification
+	const rawBody = (await readRawBody(event, "utf8")) || "";
+
+	if (!rawBody) {
+		console.error("DOKU Notification: Empty request body");
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Bad Request",
+			message: "Payload body is empty",
+		});
+	}
+
+	// 3. Environment Configuration Check
+	const supabaseUrl = process.env.VITE_SUPABASE_URL;
+	const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+	const dokuSecretKey = process.env.DOKU_SECRET_KEY;
+	const dokuClientId = process.env.DOKU_CLIENT_ID;
+
+	if (!supabaseUrl || !serviceRoleKey || !dokuSecretKey || !dokuClientId) {
+		console.error("DOKU Notification: Missing server configuration (Supabase or DOKU keys)");
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Internal Server Error",
+			message: "Server configuration missing",
+		});
+	}
+
+	// 4. Verify Signature
+	const isSignatureValid = verifyNotificationSignature(
+		dokuClientId,
+		requestId || "",
+		requestTimestamp || "",
+		"/api/doku/notification", // Request target
+		rawBody,
+		signature || "",
+		dokuSecretKey,
+	);
+
+	if (!isSignatureValid) {
+		console.error("DOKU Notification: Invalid signature from", clientId);
+		throw createError({
+			statusCode: 401,
+			statusMessage: "Unauthorized",
+			message: "Invalid signature",
+		});
+	}
+
+	// 5. Parse Payload
+	let payload: DokuNotification;
 	try {
-		// Read the raw body
-		const payload = await readBody<DokuNotification>(event);
+		payload = JSON.parse(rawBody);
+	} catch (e) {
+		console.error("DOKU Notification: Failed to parse JSON", e);
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Bad Request",
+			message: "Invalid JSON payload",
+		});
+	}
 
-		console.log("DOKU Notification received:", JSON.stringify(payload, null, 2));
+	const { order, transaction, channel } = payload || {};
 
-		const { order, transaction, channel } = payload || {};
+	if (!order?.invoice_number || !transaction?.status || !channel?.id) {
+		console.error("DOKU Notification: Missing required fields in payload");
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Bad Request",
+			message: "Missing required fields (order, transaction, or channel)",
+		});
+	}
 
-		if (!order?.invoice_number || !transaction?.status || !channel?.id) {
-      console.error("Missing required fields in DOKU notification");
-      return { status: "error", error: "Missing required fields" };
-    }
-
-		// Create admin Supabase client
-		const supabaseUrl = process.env.VITE_SUPABASE_URL;
-		const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-		if (!supabaseUrl || !serviceRoleKey) {
-			console.error("Missing Supabase configuration");
-			return { status: "error", error: "Server configuration error" };
-		}
-
+	try {
+		// 6. Initialize Supabase Admin Client
 		const supabase = createClient(supabaseUrl, serviceRoleKey, {
 			auth: {
 				autoRefreshToken: false,
@@ -92,18 +145,29 @@ export default defineEventHandler(async (event) => {
 		const invoiceNumber = order.invoice_number;
 		const isBundle = invoiceNumber.startsWith("INV-BUNDLE-");
 
-		// Find enrollments by payment reference (invoice number)
+		// 7. Find enrollments
 		const { data: enrollments, error: findError } = await supabase
 			.from("enrollments")
 			.select("*")
 			.eq("payment_reference", invoiceNumber);
 
-		if (findError || !enrollments || enrollments.length === 0) {
-			console.error("Enrollment(s) not found for invoice:", invoiceNumber);
-			return { status: "enrollment_not_found" };
+		if (findError) {
+			console.error("DOKU Notification: Database error finding enrollments", findError);
+			throw createError({
+				statusCode: 500,
+				statusMessage: "Internal Server Error",
+				message: "Database lookup failed",
+			});
 		}
 
-		// Map DOKU transaction status to our payment status
+		if (!enrollments || enrollments.length === 0) {
+			console.warn("DOKU Notification: Enrollment not found for invoice:", invoiceNumber);
+			// We return 200 here because the invoice doesn't exist in our DB, 
+			// retry won't help if it's a completely unknown invoice.
+			return { status: "not_found", message: "Invoice not matched to any enrollment" };
+		}
+
+		// 8. Map Status
 		let paymentStatus: "pending" | "paid" | "failed" | "expired";
 		let paymentMethod: string | null = null;
 
@@ -122,7 +186,7 @@ export default defineEventHandler(async (event) => {
 				paymentStatus = "pending";
 		}
 
-		// Build update data
+		// 9. Process Update
 		const updateData: Record<string, unknown> = {
 			payment_status: paymentStatus,
 			updated_at: new Date().toISOString(),
@@ -141,18 +205,32 @@ export default defineEventHandler(async (event) => {
 			updateData.payment_channel = channel.id;
 		}
 
-		// Update ALL enrollments with this invoice number
-		const { error: updateError, count } = await supabase
+		// Use UPSERT based on (user_id, course_id) to avoid duplicate key errors (23505)
+		// This handles cases where a pending single enrollment is updated by a successful bundle payment
+		const upsertEntries = enrollments.map((enr) => ({
+			user_id: enr.user_id,
+			course_id: enr.course_id,
+			payment_reference: invoiceNumber, // Ensure latest reference
+			...updateData,
+		}));
+
+		const { error: updateError } = await supabase
 			.from("enrollments")
-			.update(updateData)
-			.eq("payment_reference", invoiceNumber);
+			.upsert(upsertEntries, {
+				onConflict: "user_id,course_id",
+				ignoreDuplicates: false,
+			});
 
 		if (updateError) {
-			console.error("Failed to update enrollment(s):", updateError);
-			return { status: "error", error: "Failed to update enrollment" };
+			console.error("DOKU Notification: Failed to update enrollments", updateError);
+			throw createError({
+				statusCode: 500,
+				statusMessage: "Internal Server Error",
+				message: "Update operation failed",
+			});
 		}
 
-		// Create notification for user
+		// 10. Notification for User
 		const userId = enrollments[0].user_id;
 		const coursesCount = enrollments.length;
 
@@ -203,28 +281,30 @@ export default defineEventHandler(async (event) => {
 			},
 		};
 
-		try {
-			await supabase.from("notifications").insert(notificationData);
-		} catch (notifError) {
-			console.error("Failed to create payment notification:", notifError);
+		const { error: notifError } = await supabase.from("notifications").insert(notificationData);
+		if (notifError) {
+			// Log but don't throw, as the enrollment update was successful
+			console.error("DOKU Notification: Failed to create in-app notification", notifError);
 		}
 
 		console.log(
-			isBundle
-				? `Bundle: ${count || enrollments.length} enrollments updated to ${paymentStatus} for invoice ${invoiceNumber}`
-				: `Enrollment ${enrollments[0].id} updated to ${paymentStatus} for invoice ${invoiceNumber}`,
+			`DOKU Notification Success: ${invoiceNumber} marked as ${paymentStatus} (${upsertEntries.length} rows processed)`,
 		);
 
+		setResponseStatus(event, 200);
 		return {
-			status: "ok",
-			message: isBundle
-				? `Bundle: ${count || enrollments.length} enrollments updated to ${paymentStatus}`
-				: `Enrollment updated to ${paymentStatus}`,
-			isBundle,
-			coursesUpdated: count || enrollments.length,
+			status: "success",
+			message: `Enrollment status updated to ${paymentStatus}`,
 		};
-	} catch (error) {
-		console.error("DOKU notification error:", error);
-		return { status: "error", message: "Internal server error" };
+	} catch (error: any) {
+		// If it's already an H3 error, rethrow it
+		if (error.statusCode) throw error;
+
+		console.error("DOKU Notification: Unexpected Error", error);
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Internal Server Error",
+			message: error.message || "An unexpected error occurred",
+		});
 	}
 });

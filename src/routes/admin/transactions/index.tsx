@@ -1,11 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import { Calendar, CreditCard, PackageCheck, Search, User } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+	Calendar,
+	Copy,
+	CreditCard,
+	Package,
+	PackageCheck,
+	Phone,
+	Search,
+	User,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTablePagination } from "@/components/ui/DataTablePagination";
 import {
 	Table,
 	TableBody,
@@ -15,80 +27,77 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAdminTransactions } from "@/features/transactions/hooks";
-import type { AdminTransaction } from "@/lib/db/types";
 import { formatPrice } from "@/lib/utils";
 
+// Search params validation schema - must match the one in useAdminTransactions hook
+const searchParamsSchema = z.object({
+	page: z.coerce.number().int().positive().default(1),
+	limit: z.coerce.number().int().positive().default(10),
+	q: z.string().optional().default(""),
+	status: z
+		.enum(["all", "pending", "paid", "failed", "expired", "refunded"])
+		.default("all"),
+});
+
+type TransactionSearchParams = z.infer<typeof searchParamsSchema>;
+
 export const Route = createFileRoute("/admin/transactions/")({
+	validateSearch: (search: Record<string, unknown>): TransactionSearchParams => {
+		return searchParamsSchema.parse(search);
+	},
 	component: AdminTransactionsPage,
 });
 
-interface GroupedTransaction extends AdminTransaction {
-	item_count: number;
-	all_titles: string[];
-	total_amount: number;
-}
-
 function AdminTransactionsPage() {
-	const { data: transactions, isLoading } = useAdminTransactions();
-	const [searchQuery, setSearchQuery] = useState("");
-	const [statusFilter, setStatusFilter] = useState("all");
+	const navigate = useNavigate();
+	const { page, limit, q, status } = Route.useSearch();
 
-	const groupedTransactions = useMemo(() => {
-		if (!transactions) return [];
+	// Local state for the search input to allow immediate typing
+	const [searchQuery, setSearchQuery] = useState(q);
 
-		const groups: Record<string, GroupedTransaction> = {};
-
-		transactions.forEach((trx) => {
-			const uniqueKey =
-				trx.payment_reference ||
-				`${trx.user_email}-${new Date(trx.created_at).getTime()}`;
-
-			if (!groups[uniqueKey]) {
-				groups[uniqueKey] = {
-					...trx,
-					item_count: 1,
-					all_titles: [trx.course_title || "Kursus"],
-					total_amount: trx.amount_paid,
-				};
-			} else {
-				groups[uniqueKey].item_count += 1;
-				groups[uniqueKey].all_titles.push(trx.course_title || "Kursus");
-				groups[uniqueKey].total_amount += trx.amount_paid;
-			}
-		});
-
-		return Object.values(groups).sort(
-			(a, b) =>
-				new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-		);
-	}, [transactions]);
-
-	const filteredData = groupedTransactions.filter((item) => {
-		const query = searchQuery.toLowerCase();
-		const matchesSearch = (
-			(item.user_name || "").toLowerCase().includes(query) ||
-			(item.user_email || "").toLowerCase().includes(query) ||
-			(item.item_count > 1 && "paket semua kursus".includes(query)) ||
-			item.all_titles.some((title) => title.toLowerCase().includes(query))
-		);
-		const matchesStatus = statusFilter === "all" || item.payment_status === statusFilter;
-		
-		return matchesSearch && matchesStatus;
+	const { data, isLoading } = useAdminTransactions({
+		page,
+		limit,
+		searchQuery: q,
+		statusFilter: status === "all" ? undefined : status,
 	});
+
+	// Synchronize local search query with URL params
+	useEffect(() => {
+		setSearchQuery(q);
+	}, [q]);
+
+	const updateParams = (newParams: Partial<TransactionSearchParams>) => {
+		navigate({
+			to: ".",
+			search: (prev: any) => ({
+				...prev,
+				...newParams,
+				// Reset to page 1 if searching or filtering unless explicitly changing page
+				page:
+					newParams.page ??
+					(newParams.q !== undefined || newParams.status !== undefined
+						? 1
+						: prev.page),
+			}),
+		});
+	};
+
+	const filteredData = data?.data || [];
+	const totalCount = data?.totalCount || 0;
 
 	const getStatusBadge = (status: string) => {
 		switch (status) {
@@ -119,6 +128,11 @@ function AdminTransactionsPage() {
 		}
 	};
 
+	const copyToClipboard = (text: string) => {
+		navigator.clipboard.writeText(text);
+		toast.success("ID Transaksi dikopi!");
+	};
+
 	return (
 		<div className="space-y-6">
 			<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -133,14 +147,17 @@ function AdminTransactionsPage() {
 			<div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-card p-4 rounded-xl border border-border shadow-sm">
 				<div className="relative flex-1 max-w-sm w-full">
 					<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-					<Input
-						placeholder="Cari user, email, atau kursus..."
-						className="pl-9 bg-background"
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
+					<form onSubmit={(e) => { e.preventDefault(); updateParams({ q: searchQuery }); }}>
+						<Input
+							placeholder="Cari user, email, atau kursus..."
+							className="pl-9 bg-background"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							onBlur={() => updateParams({ q: searchQuery })}
+						/>
+					</form>
 				</div>
-				<Select value={statusFilter} onValueChange={setStatusFilter}>
+				<Select value={status} onValueChange={(val: any) => updateParams({ status: val })}>
 					<SelectTrigger className="w-full sm:w-[180px] bg-background">
 						<SelectValue placeholder="Status Pembayaran" />
 					</SelectTrigger>
@@ -267,10 +284,20 @@ function AdminTransactionsPage() {
 										) : (
 											<div className="flex items-start gap-2">
 												<span className="font-medium text-sm leading-relaxed text-foreground">
-													{trx.course_title || "Unknown Course"}
+													{trx.all_titles[0] || "Unknown Course"}
 												</span>
 											</div>
 										)}
+										<div 
+											onClick={() => copyToClipboard(trx.payment_reference || "")}
+											className="flex items-center gap-1.5 cursor-pointer hover:bg-muted/80 py-0.5 px-1 rounded transition-colors w-fit mt-1"
+											title="Klik untuk kopi ID Transaksi"
+										>
+											<span className="text-[10px] text-muted-foreground font-mono bg-muted/50 px-1 rounded border">
+												{trx.payment_reference || "NO-REF"}
+											</span>
+											<Copy className="w-2.5 h-2.5 text-muted-foreground opacity-50" />
+										</div>
 									</TableCell>
 
 									{/* Total Amount */}
@@ -317,6 +344,17 @@ function AdminTransactionsPage() {
 					</TableBody>
 				</Table>
 			</div>
+
+			<DataTablePagination
+				page={page}
+				limit={limit}
+				totalCount={totalCount}
+				isLoading={isLoading}
+				onPageChange={(p: number) => updateParams({ page: p })}
+				onLimitChange={(l: number) => updateParams({ limit: l })}
+				itemCountOnPage={filteredData.length}
+				label="transaksi"
+			/>
 		</div>
 	);
 }
