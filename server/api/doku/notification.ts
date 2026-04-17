@@ -230,68 +230,98 @@ export default defineEventHandler(async (event) => {
 			});
 		}
 
-		// 10. Notification for User
-		const userId = enrollments[0].user_id;
-		const coursesCount = enrollments.length;
-
-		let courseLink = "/courses";
-		let courseName = "kursus";
-		if (!isBundle && enrollments.length === 1) {
-			const { data: course } = await supabase
-				.from("courses")
-				.select("slug, title")
-				.eq("id", enrollments[0].course_id)
-				.single();
-
-			if (course?.slug) {
-				courseLink = `/courses/${course.slug}`;
-				courseName = course.title || "kursus";
-			}
-		}
-
-		const notificationData = {
-			user_id: userId,
-			type: "payment",
-			title:
-				paymentStatus === "paid"
-					? "Pembayaran Berhasil!"
-					: paymentStatus === "failed"
-						? "Pembayaran Gagal"
-						: "Pembayaran Kedaluwarsa",
-			message:
-				paymentStatus === "paid"
-					? isBundle
-						? `Selamat! Pembayaran ${formatCurrency(order.amount)} untuk Paket Semua Kursus (${coursesCount} kursus) telah berhasil.`
-						: `Selamat! Pembayaran ${formatCurrency(order.amount)} untuk "${courseName}" telah berhasil.`
-					: paymentStatus === "failed"
-						? isBundle
-							? "Pembayaran untuk Paket Semua Kursus gagal. Silakan coba lagi."
-							: `Pembayaran untuk "${courseName}" gagal. Silakan coba lagi.`
-						: isBundle
-							? "Waktu pembayaran untuk Paket Semua Kursus telah habis."
-							: `Waktu pembayaran untuk "${courseName}" telah habis.`,
-			link: courseLink,
-			metadata: {
-				invoiceNumber,
-				isBundle,
-				coursesCount,
-				amount: order.amount,
-				paymentMethod,
-				status: paymentStatus,
-			},
-		};
-
-		const { error: notifError } = await supabase.from("notifications").insert(notificationData);
-		if (notifError) {
-			// Log but don't throw, as the enrollment update was successful
-			console.error("DOKU Notification: Failed to create in-app notification", notifError);
-		}
-
 		console.log(
 			`DOKU Notification Success: ${invoiceNumber} marked as ${paymentStatus} (${upsertEntries.length} rows processed)`,
 		);
 
+		// 10. Send Response Early to Prevent Timeout
+		// Kita mengirimkan respons 200 OK ke DOKU tepat setelah `enrollments` berhasil di-upsert.
+		// Hal ini mencegah Timeout > 5 detik yang bisa terjadi jika kita menunggu notifikasi & third-party fetching.
 		setResponseStatus(event, 200);
+
+		// 11. Background Task for Notifications
+		const sendNotificationBackground = async () => {
+			try {
+				const userId = enrollments[0].user_id;
+				const coursesCount = enrollments.length;
+
+				let courseLink = "/courses";
+				let courseName = "kursus";
+				if (!isBundle && enrollments.length === 1) {
+					const { data: course, error: courseError } = await supabase
+						.from("courses")
+						.select("slug, title")
+						.eq("id", enrollments[0].course_id)
+						.single();
+
+					if (courseError) {
+						console.error("DOKU Notification Background: Failed to fetch course details", courseError);
+					}
+
+					if (course?.slug) {
+						courseLink = `/courses/${course.slug}`;
+						courseName = course.title || "kursus";
+					}
+				}
+
+				const notificationData = {
+					user_id: userId,
+					type: "payment",
+					title:
+						paymentStatus === "paid"
+							? "Pembayaran Berhasil!"
+							: paymentStatus === "failed"
+								? "Pembayaran Gagal"
+								: "Pembayaran Kedaluwarsa",
+					message:
+						paymentStatus === "paid"
+							? isBundle
+								? `Selamat! Pembayaran ${formatCurrency(order.amount)} untuk Paket Semua Kursus (${coursesCount} kursus) telah berhasil.`
+								: `Selamat! Pembayaran ${formatCurrency(order.amount)} untuk "${courseName}" telah berhasil.`
+							: paymentStatus === "failed"
+								? isBundle
+									? "Pembayaran untuk Paket Semua Kursus gagal. Silakan coba lagi."
+									: `Pembayaran untuk "${courseName}" gagal. Silakan coba lagi.`
+								: isBundle
+									? "Waktu pembayaran untuk Paket Semua Kursus telah habis."
+									: `Waktu pembayaran untuk "${courseName}" telah habis.`,
+					link: courseLink,
+					metadata: {
+						invoiceNumber,
+						isBundle,
+						coursesCount,
+						amount: order.amount,
+						paymentMethod,
+						status: paymentStatus,
+					},
+				};
+
+				const { error: notifError } = await supabase.from("notifications").insert(notificationData);
+				if (notifError) {
+					console.error("DOKU Notification Background: Failed to create in-app notification", notifError);
+				}
+			} catch (err) {
+				console.error("DOKU Notification Background: Unexpected error", err);
+			}
+		};
+
+		// Execute notification safely in background using Nitro's waitUntil
+		const notifPromise = sendNotificationBackground();
+		try {
+			if (typeof event.waitUntil === "function") {
+				// Standar untuk runtime serverless edge
+				event.waitUntil(notifPromise);
+			} else if (event.context && typeof event.context.waitUntil === "function") {
+				// Standar fallbacks Nitro context
+				event.context.waitUntil(notifPromise);
+			} else {
+				// Fallback Node.js
+				notifPromise.catch(console.error);
+			}
+		} catch (e) {
+			notifPromise.catch(console.error);
+		}
+
 		return {
 			status: "success",
 			message: `Enrollment status updated to ${paymentStatus}`,
